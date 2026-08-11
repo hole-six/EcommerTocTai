@@ -8,6 +8,13 @@ import { useEffect, useState } from "react";
 import styles from "./ManMattersHome.module.css";
 
 const asset = "/sites/manmatters-com-61d14dee/root-8a5edab2/";
+const fallbackBanners = [
+  { image: "/images/anhtoctai1.avif", alt: "Banner Tóc Tai 1", cta: "Khám phá ngay", href: "/shop/all" },
+  { image: "/images/anhtoctai2.avif", alt: "Banner Tóc Tai 2", cta: "Khám phá ngay", href: "/shop/all" },
+  { image: "/images/anhtoctai3.avif", alt: "Banner Tóc Tai 3", cta: "Khám phá ngay", href: "/shop/all" },
+  { image: "/images/anhtoctai4.avif", alt: "Banner Tóc Tai 4", cta: "Khám phá ngay", href: "/shop/all" },
+];
+const tocTaiHero = { image: "/images/toc-tai-hero.png", alt: "Người phụ nữ Việt Nam với mái tóc dài khỏe mạnh", cta: "Khám phá routine", href: "/shop/all" };
 
 const heroSlides = [
   { image: "hero-wellness.png", alt: "Shop Man Matters men's wellness products", cta: "Shop Now", href: "/shop/all" },
@@ -70,36 +77,49 @@ const faqs = [
 
 export function ManMattersHome() {
   const [slide, setSlide] = useState(0);
+  const [banners, setBanners] = useState(fallbackBanners);
   const [activeCategory, setActiveCategory] = useState("Nutrition");
   const [, setCart] = useState(0);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setSlide((value) => (value + 1) % heroSlides.length), 4800);
-    return () => window.clearInterval(timer);
+    fetch("/api/banners?placement=home_hero")
+      .then((response) => response.ok ? response.json() : null)
+      .then((payload) => {
+        if (payload?.data?.length) {
+          setBanners(payload.data.map((banner: { image: string; alt: string; ctaLabel: string; ctaHref: string }) => ({ image: banner.image, alt: banner.alt, cta: banner.ctaLabel, href: banner.ctaHref })));
+          setSlide(0);
+        }
+      })
+      .catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setSlide((value) => (value + 1) % banners.length), 4800);
+    return () => window.clearInterval(timer);
+  }, [banners.length]);
 
   return (
     <main className={styles.page}>
       <SiteHeader />
 
       <section className={styles.hero}>
-        {heroSlides.map((s, index) => (
+        {banners.map((s, index) => (
           <Image
             key={s.image}
             className={`${styles.heroImage} ${index === slide ? styles.activeSlide : ""}`}
-            src={`${asset}${s.image}`}
+            src={s.image}
             alt={s.alt}
             width={1440}
             height={692}
             priority={index === 0}
           />
         ))}
-        <a className={styles.heroCta} href={heroSlides[slide].href}>
-          {heroSlides[slide].cta}
+        <a className={styles.heroCta} href={banners[slide].href}>
+          {banners[slide].cta}
         </a>
         <div className={styles.dots}>
-          {heroSlides.map((s, index) => (
+          {banners.map((s, index) => (
             <button key={s.image} onClick={() => setSlide(index)} className={index === slide ? styles.activeDot : ""} aria-label={`Show slide ${index + 1}`} />
           ))}
         </div>
@@ -108,27 +128,23 @@ export function ManMattersHome() {
       <section className={styles.statBar}>
         <div className={styles.statBarInner}>
           <div>
-            <b>10L+</b>
-            <span>Indian Men on the Platform</span>
+            <b>10.000+</b>
+            <span>Khách hàng đã tin chọn</span>
           </div>
           <div className={styles.statDivider} />
           <div>
-            <b>250+</b>
-            <span>Experts for Consultation</span>
+            <b>4.9/5</b>
+            <span>Đánh giá trung bình</span>
           </div>
         </div>
       </section>
 
       <section className={styles.section}>
-        <h1 className={styles.sectionHeading}>Explore By Concerns</h1>
+        <h1 className={styles.sectionHeading}>Chọn theo điều tóc cần</h1>
         <div className={styles.concernGrid}>
           {concerns.map((c) => (
             <a href={c.href} className={styles.concern} key={c.name}>
               <Image src={`${asset}${c.image}`} alt={c.alt} width={640} height={800} />
-              <div className={styles.concernLabel}>
-                <span>{c.name}</span>
-                <ChevronRight color="#fff" size={20} />
-              </div>
             </a>
           ))}
         </div>
@@ -145,7 +161,7 @@ export function ManMattersHome() {
       </div>
 
       <section id="shop" className={`${styles.section} ${styles.shop}`}>
-        <h2>Our Bestsellers</h2>
+        <h2>Sản phẩm được yêu thích</h2>
         <div className={styles.categoryRow}>
           {categories.map((category) => (
             <button key={category} onClick={() => setActiveCategory(category)} className={activeCategory === category ? styles.selectedCategory : ""}>
@@ -178,7 +194,7 @@ export function ManMattersHome() {
 
       <section className={styles.section}>
         <div className={styles.guessworkCard}>
-          <h2>Don&apos;t Leave Hair Loss to Guesswork</h2>
+          <h2>Đừng để mái tóc chỉ là một phỏng đoán</h2>
           <div className={styles.stepsGrid}>
             {steps.map((s) => (
               <div className={styles.step} key={s.label}>
@@ -189,13 +205,13 @@ export function ManMattersHome() {
             ))}
           </div>
           <a className={styles.guessworkCta} href="/pages/hair-form-assessment">
-            Take the hair test <ChevronRight size={16} />
+            Bắt đầu kiểm tra tóc <ChevronRight size={16} />
           </a>
         </div>
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionHeading}>Real Men. Real Reviews.</h2>
+        <h2 className={styles.sectionHeading}>Chia sẻ từ khách hàng</h2>
         <div className={styles.reviews}>
           {reviews.map((r) => (
             <Image key={r} src={`${asset}${r}`} alt="Review from a Man Matters customer" width={500} height={735} />
@@ -205,13 +221,13 @@ export function ManMattersHome() {
 
       <section className={styles.section}>
         <div className={styles.experts}>
-          <h2>Built with Leading Experts.</h2>
-          <p>Specialists with decades of combined experience, committed to clinical rigor and long-term results.</p>
+          <h2>Xây routine bằng sự thấu hiểu.</h2>
+          <p>Chăm sóc tóc là hành trình dài. Tóc Tai giúp bạn bắt đầu đơn giản và duy trì thật đều đặn.</p>
         </div>
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionHeading}>Frequently Asked Questions</h2>
+        <h2 className={styles.sectionHeading}>Câu hỏi thường gặp</h2>
         <div className={styles.faq}>
           {faqs.map((f, i) => (
             <div className={`${styles.faqItem} ${openFaq === i ? styles.faqOpen : ""}`} key={f.q}>

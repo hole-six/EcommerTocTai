@@ -1,30 +1,15 @@
 ﻿import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import localFont from "next/font/local";
+import { Lexend } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const miSans = localFont({
-  variable: "--font-misans",
-  src: [
-    { path: "../../public/sites/manmatters-com-61d14dee/shared/fonts/MiSansLatin-Medium.woff2", weight: "300 400", style: "normal" },
-    { path: "../../public/sites/manmatters-com-61d14dee/shared/fonts/MiSansLatin-Semibold.woff2", weight: "500 550", style: "normal" },
-    { path: "../../public/sites/manmatters-com-61d14dee/shared/fonts/MiSansLatin-Bold.woff2", weight: "600 700", style: "normal" },
-  ],
+const lexend = Lexend({
+  variable: "--font-lexend",
+  subsets: ["latin", "vietnamese"],
 });
 
 export const metadata: Metadata = {
-  title: "Man Matters: Men's Hair, Skin & Wellness Solutions",
-  description: "Science-backed men's hair, beard, skin and nutrition solutions.",
+  title: "Tóc Tai | Chăm sóc tóc từ sự thấu hiểu",
+  description: "Giải pháp chăm sóc tóc và da đầu được chọn lọc cho routine riêng của bạn.",
 };
 
 export default function RootLayout({
@@ -34,8 +19,8 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${miSans.variable} h-full antialiased`}
+      lang="vi"
+      className={`${lexend.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

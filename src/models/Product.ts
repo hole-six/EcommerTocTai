@@ -1,0 +1,4 @@
+import { Schema, model, models } from "mongoose";
+
+const product = new Schema({ category: { type: Schema.Types.ObjectId, ref: "Category", required: true, index: true }, name: { type: String, required: true, trim: true }, slug: { type: String, required: true, unique: true, lowercase: true }, shortDescription: { type: String, default: "" }, description: { type: String, default: "" }, price: { type: Number, required: true, min: 0 }, salePrice: { type: Number, min: 0 }, inventory: { type: Number, required: true, min: 0, default: 0 }, sku: { type: String, required: true, unique: true, uppercase: true }, images: { type: [String], default: [] }, specifications: { type: Map, of: Schema.Types.Mixed, default: {} }, status: { type: String, enum: ["draft", "active", "archived"], default: "draft" } }, { timestamps: true });
+export const Product = models.Product || model("Product", product);

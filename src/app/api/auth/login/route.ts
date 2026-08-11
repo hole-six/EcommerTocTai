@@ -1,0 +1,20 @@
+import bcrypt from "bcryptjs";
+import { NextResponse } from "next/server";
+import { connectDb } from "@/lib/server/db";
+import { apiError } from "@/lib/server/http";
+import { createSession, sessionCookie } from "@/lib/server/auth";
+import { loginSchema } from "@/lib/server/validators";
+import { User } from "@/models/User";
+
+export async function POST(request: Request) {
+  try {
+    const data = loginSchema.parse(await request.json());
+    await connectDb();
+    const user = await User.findOne(data.phone ? { phone: data.phone } : { email: data.email }).lean();
+    if (!user || !(await bcrypt.compare(data.password, user.passwordHash))) return NextResponse.json({ error: "Thông tin đăng nhập không đúng" }, { status: 401 });
+    const token = await createSession({ id: user._id.toString(), role: user.role, phone: user.phone });
+    const response = NextResponse.json({ data: { id: user._id.toString(), fullName: user.fullName, role: user.role } });
+    response.cookies.set(sessionCookie(token));
+    return response;
+  } catch (error) { return apiError(error); }
+}

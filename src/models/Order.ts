@@ -1,0 +1,6 @@
+import { Schema, model, models } from "mongoose";
+
+const address = new Schema({ recipientName: String, phone: String, province: String, district: String, ward: String, addressLine: String }, { _id: false });
+const item = new Schema({ product: { type: Schema.Types.ObjectId, ref: "Product", required: true }, name: String, sku: String, quantity: { type: Number, min: 1 }, unitPrice: Number, image: String }, { _id: false });
+const order = new Schema({ orderNumber: { type: String, required: true, unique: true, index: true }, user: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true }, customer: { fullName: String, phone: { type: String, index: true }, email: String }, shippingAddress: { type: address, required: true }, items: { type: [item], default: [] }, subtotal: Number, shippingFee: Number, total: Number, note: { type: String, default: "" }, status: { type: String, enum: ["pending", "confirmed", "processing", "shipping", "completed", "cancelled"], default: "pending" }, paymentStatus: { type: String, enum: ["unpaid", "paid", "refunded"], default: "unpaid" }, paymentMethod: { type: String, enum: ["cod", "bank_transfer", "vnpay"], default: "cod" } }, { timestamps: true });
+export const Order = models.Order || model("Order", order);

@@ -1,0 +1,5 @@
+import { Schema, model, models } from "mongoose";
+
+const address = new Schema({ recipientName: { type: String, required: true }, phone: { type: String, required: true }, province: { type: String, required: true }, district: { type: String, required: true }, ward: { type: String, required: true }, addressLine: { type: String, required: true }, isDefault: { type: Boolean, default: false } }, { _id: true });
+const user = new Schema({ fullName: { type: String, required: true, trim: true }, email: { type: String, lowercase: true, trim: true, unique: true, sparse: true }, phone: { type: String, required: true, unique: true, trim: true }, passwordHash: { type: String, required: true }, role: { type: String, enum: ["customer", "admin"], default: "customer" }, addresses: { type: [address], default: [] } }, { timestamps: true });
+export const User = models.User || model("User", user);

@@ -1,4 +1,4 @@
-.page{--navy:#143461;--blue:#22548a;--yellow:#f6ca4c;--linkblue:#0876e3;--bg-light:#f2f7fc;--bg-mid:#ebf0f5;--bg-tint:#d0def1;--ink:#333437;--muted:#757575;font-family:var(--font-misans),Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#000;background:#fff}
+.page{--navy:#143461;--blue:#22548a;--yellow:#f6ca4c;--linkblue:#0876e3;--bg-light:#f2f7fc;--bg-mid:#ebf0f5;--bg-tint:#d0def1;--ink:#333437;--muted:#757575;font-family:var(--font-lexend),ui-sans-serif,system-ui,sans-serif;color:#000;background:#fff}
 
 .hero{position:relative;max-width:1210px;margin:24px auto 0;padding:0 16px;aspect-ratio:2.08}
 .heroImage{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s ease;border-radius:14px}
@@ -20,7 +20,6 @@
 .concernGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
 .concern{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:0.8;text-decoration:none;background:#e8e2da}
 .concern img{width:100%;height:100%;object-fit:cover}
-.concern:after{content:"";position:absolute;inset:55% 0 0;background:linear-gradient(transparent,rgba(0,0,0,.75))}
 .concernLabel{position:absolute;left:16px;right:16px;bottom:14px;z-index:1;display:flex;justify-content:space-between;align-items:center;color:#fff}
 .concernLabel span{font-size:20px;font-weight:600}
 

@@ -47,3 +47,7 @@ next-env.d.ts
 
 # Local temp files
 temp/
+
+# Local reference projects and agent worktrees
+.claude/worktrees/
+san-bong-main/
