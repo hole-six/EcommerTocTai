@@ -1,9 +1,2 @@
-export default function Home() {
-  return (
-    <main className="flex min-h-screen items-center justify-center">
-      <p className="text-muted-foreground">
-        Clone target not yet built. Run <code className="font-mono text-foreground">/clone-website</code> to start.
-      </p>
-    </main>
-  );
-}
+﻿import { ManMattersHome } from "@/components/sites/manmatters-com-61d14dee/root-8a5edab2/ManMattersHome";
+export default function Home() { return <ManMattersHome />; }
