@@ -1,22 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import {
-  ChevronDown,
-  ChevronRight,
-  Menu,
-  Plus,
-  Search,
-  ShoppingBag,
-  UserRound,
-  X,
-  ClipboardList,
-  Package,
-  Stethoscope,
-  CalendarCheck,
-} from "lucide-react";
-import { FacebookIcon, InstagramIcon, XIcon, YoutubeIcon } from "../shared/SocialIcons";
+import { ChevronDown, ChevronRight, Plus, ClipboardList, Package, Stethoscope, CalendarCheck } from "lucide-react";
+import { SiteHeader } from "../shared/SiteHeader";
+import { SiteFooter } from "../shared/SiteFooter";
 import { useEffect, useState } from "react";
 import styles from "./ManMattersHome.module.css";
 
@@ -84,8 +71,7 @@ const faqs = [
 export function ManMattersHome() {
   const [slide, setSlide] = useState(0);
   const [activeCategory, setActiveCategory] = useState("Nutrition");
-  const [cart, setCart] = useState(0);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [, setCart] = useState(0);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
@@ -95,43 +81,7 @@ export function ManMattersHome() {
 
   return (
     <main className={styles.page}>
-      <div className={styles.promo}>
-        Use MM Wallet and save upto 30%
-        <button>Download App</button>
-      </div>
-
-      <div className={styles.headerWrap}>
-        <header className={styles.header}>
-          <button className={styles.menuButton} onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">
-            {menuOpen ? <X /> : <Menu />}
-          </button>
-          <Link href="/">
-            <Image className={styles.logo} src={`${asset}logo.png`} alt="Man Matters" width={150} height={41} priority />
-          </Link>
-          <nav className={`${styles.nav} ${menuOpen ? styles.open : ""}`}>
-            <a href="/login">Login</a>
-            <Link href="/">Home</Link>
-            <button>
-              Choose Product <ChevronDown size={14} />
-            </button>
-            <a href="/shop/all">All Products</a>
-            <a href="/habit/honest-report">Honest Reports</a>
-            <a href="/pages/hair-form-assessment">Hair Assessment</a>
-          </nav>
-          <div className={styles.actions}>
-            <button aria-label="Search">
-              <Search size={20} />
-            </button>
-            <button aria-label="Profile">
-              <UserRound size={20} />
-            </button>
-            <button className={styles.bag} aria-label="Cart" onClick={() => setCart((v) => v + 1)}>
-              <ShoppingBag size={20} />
-              {cart > 0 && <b>{cart}</b>}
-            </button>
-          </div>
-        </header>
-      </div>
+      <SiteHeader />
 
       <section className={styles.hero}>
         {heroSlides.map((s, index) => (
@@ -277,56 +227,7 @@ export function ManMattersHome() {
         </div>
       </section>
 
-      <footer className={styles.footer}>
-        <div className={styles.footerInner}>
-          <div className={styles.footerTop}>
-            <Image src={`${asset}logo.png`} alt="Man Matters" width={150} height={41} />
-            <div className={styles.appBadges}>
-              <a href="https://play.google.com/store">
-                <Image src={`${asset}app-google.png`} alt="Get it on Google Play" width={130} height={40} />
-              </a>
-              <a href="https://apps.apple.com">
-                <Image src={`${asset}app-apple.png`} alt="Download on the App Store" width={130} height={44} />
-              </a>
-            </div>
-          </div>
-          <div className={styles.linkGroup}>
-            <a href="/hair-matters">Hair Matters</a>
-            <a href="/beard-matters">Beard Matters</a>
-            <a href="/nutrition-matters">Nutrition Matters</a>
-          </div>
-          <div className={styles.linkGroup}>
-            <a href="/refunds-policy">Returns & Refunds</a>
-            <a href="/contact-us">Contact Us</a>
-            <a href="/privacy-policy">Privacy Policy</a>
-          </div>
-          <div className={styles.linkGroup}>
-            <a href="/faq">FAQs</a>
-            <a href="/about-us">About Us</a>
-            <a href="/sitemap">Site Map</a>
-            <a href="/terms-and-conditions">Terms & Conditions</a>
-            <a href="/blog">Blog</a>
-          </div>
-          <div className={styles.footerBottom}>
-            © 2020-25 Mosaic Wellness PVT LTD. All rights reserved.
-            <a href="/terms-and-conditions">Terms of Service</a>
-          </div>
-          <div className={styles.socials}>
-            <a href="https://facebook.com" aria-label="Facebook">
-              <FacebookIcon size={16} />
-            </a>
-            <a href="https://instagram.com" aria-label="Instagram">
-              <InstagramIcon size={16} />
-            </a>
-            <a href="https://twitter.com" aria-label="X">
-              <XIcon size={16} />
-            </a>
-            <a href="https://youtube.com" aria-label="YouTube">
-              <YoutubeIcon size={16} />
-            </a>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }

@@ -1,0 +1,37 @@
+.root{--navy:#143461;--blue:#22548a;--yellow:#f6ca4c;--linkblue:#0876e3;--bg-light:#f2f7fc;--bg-mid:#ebf0f5;--bg-tint:#d0def1;--ink:#333437;--muted:#757575;font-family:var(--font-misans),Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+
+.promo{background:var(--navy);color:#fff;height:36px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:13px;font-weight:600}
+.promo button{background:#fff;color:var(--navy);border:0;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer}
+
+.headerWrap{position:sticky;top:0;z-index:10;background:#fff}
+.header{height:60px;display:flex;align-items:center;padding:0 32px;gap:28px;border-bottom:1px solid #eee}
+.logo{height:32px;width:auto}
+.menuButton{display:none;background:none;border:0;cursor:pointer;color:var(--navy)}
+.nav{display:flex;align-items:center;gap:26px;flex:1}
+.nav a,.nav button{font-size:14px;color:#1a1a1a;text-decoration:none;background:none;border:0;padding:0;cursor:pointer;white-space:nowrap}
+.nav button{display:flex;align-items:center;gap:4px;font-weight:400}
+.actions{display:flex;gap:20px;align-items:center}
+.actions button{background:none;border:0;padding:0;cursor:pointer;color:#1a1a1a}
+.bag{position:relative}
+.bag b{position:absolute;top:-8px;right:-9px;background:var(--navy);color:#fff;border-radius:50%;font-size:9px;width:15px;height:15px;display:grid;place-items:center;font-weight:700}
+
+.footer{background:var(--navy);color:#dbe4f0;padding:48px 16px 20px;margin-top:56px}
+.footerInner{max-width:1210px;margin:0 auto}
+.footerTop{display:flex;flex-direction:column;align-items:flex-start;gap:16px;margin-bottom:28px}
+.footerTop img:first-child{height:34px;width:auto;filter:brightness(0) invert(1)}
+.appBadges{display:flex;gap:10px}
+.appBadges img{height:38px;width:auto;border-radius:6px}
+.linkGroup{display:flex;flex-wrap:wrap;gap:24px;padding:14px 0;border-top:1px solid rgba(255,255,255,.15)}
+.linkGroup a{color:#dbe4f0;text-decoration:none;font-size:13px}
+.footerBottom{margin-top:24px;text-align:center;font-size:12px;color:#a9bcd6}
+.footerBottom a{color:#a9bcd6;display:block;margin-top:4px}
+.socials{display:flex;justify-content:center;gap:14px;margin-top:18px}
+.socials a{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.12);display:grid;place-items:center;color:#fff}
+
+@media(max-width:900px){
+  .header{padding:0 16px;gap:0}
+  .menuButton{display:block}
+  .nav{display:none;position:absolute;top:60px;left:0;right:0;background:#fff;padding:20px;box-shadow:0 12px 18px rgba(0,0,0,.12);flex-direction:column;align-items:flex-start;gap:16px}
+  .nav.open{display:flex}
+  .actions{margin-left:auto}
+}
