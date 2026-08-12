@@ -218,10 +218,10 @@ export function AdminShell({
         <div className={styles.brandRow}>
           <Link href="/" className={styles.brand}>
             <NextImage
-              src="/images/logocarewise-trimmed.png"
+              src="/images/logocarewise.png"
               alt="CareWise"
-              width={1429}
-              height={277}
+              width={1536}
+              height={1024}
               className={styles.brandLogo}
               priority
             />
