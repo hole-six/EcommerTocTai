@@ -1,0 +1,619 @@
+.admin {
+  --admin-ink: #101828;
+  --admin-muted: #667085;
+  --admin-faint: #98a2b3;
+  --admin-border: #eaecf0;
+  --admin-blue: #1570ef;
+  --admin-blue-dark: #175cd3;
+  --admin-navy: #101828;
+  --admin-soft: #fbfbfc;
+  --admin-surface: #ffffff;
+  min-height: 100vh;
+  background: var(--admin-soft);
+  color: var(--admin-ink);
+  font-family: var(--font-lexend), ui-sans-serif, system-ui, sans-serif;
+}
+.sidebar {
+  position: fixed;
+  z-index: 30;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 264px;
+  background: var(--admin-surface);
+  border-right: 1px solid var(--admin-border);
+  padding: 20px 14px;
+  display: flex;
+  flex-direction: column;
+}
+.brandRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 10px 0;
+}
+.brand {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.13em;
+  color: var(--admin-navy);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.brand i {
+  font:
+    400 24px Georgia,
+    serif;
+}
+.brand small {
+  color: #84958d;
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  margin-left: 5px;
+}
+.brandLogo {
+  height: 24px;
+  width: auto;
+}
+.brandRow > button {
+  border: 0;
+  background: none;
+  display: none;
+  color: var(--admin-muted);
+}
+.workspace {
+  margin: 26px 6px 18px;
+}
+.workspace span {
+  display: block;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  color: var(--admin-faint);
+  margin-bottom: 8px;
+}
+.workspace button {
+  width: 100%;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-soft);
+  border-radius: 9px;
+  padding: 9px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--admin-ink);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+.sidebar nav {
+  display: grid;
+  gap: 2px;
+  overflow-y: auto;
+  padding-top: 2px;
+}
+.sidebar nav a,
+.sidebarBottom > button {
+  border: 0;
+  background: transparent;
+  color: var(--admin-muted);
+  width: 100%;
+  height: 38px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 11px;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
+}
+.sidebar nav a:hover {
+  background: var(--admin-soft);
+  color: var(--admin-ink);
+}
+.sidebar .activeNav {
+  background: #eff6ff;
+  color: var(--admin-blue-dark);
+  font-weight: 700;
+}
+.sidebar .activeNav svg {
+  color: var(--admin-blue);
+}
+.sidebar nav b {
+  margin-left: auto;
+  background: var(--admin-blue);
+  color: #fff;
+  border-radius: 99px;
+  font-size: 9px;
+  padding: 3px 6px;
+  font-weight: 700;
+}
+.sidebarBottom {
+  margin-top: auto;
+  border-top: 1px solid var(--admin-border);
+  padding-top: 10px;
+  display: grid;
+  gap: 2px;
+}
+.userWrap {
+  position: relative;
+  margin: 8px 0 0;
+}
+.user {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: var(--admin-soft);
+  display: flex;
+  align-items: center;
+  padding: 9px 10px;
+  gap: 9px;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.user > div,
+.mobileUser {
+  background: var(--admin-blue);
+  color: #fff;
+  border-radius: 50%;
+  height: 28px;
+  width: 28px;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.user span {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.user b {
+  font-size: 11.5px;
+  color: var(--admin-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.user small {
+  font-size: 9px;
+  color: var(--admin-faint);
+}
+.user svg:last-child {
+  color: var(--admin-faint);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+.userChevronOpen {
+  transform: rotate(180deg);
+}
+.userMenu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 6px);
+  background: #fff;
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(16, 24, 40, 0.12);
+  padding: 6px;
+  z-index: 40;
+}
+.userMenuEmail {
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--admin-faint);
+  border-bottom: 1px solid var(--admin-border);
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.userMenu button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #b42318;
+  cursor: pointer;
+  text-align: left;
+}
+.userMenu button:hover {
+  background: #fef3f2;
+}
+.content {
+  margin-left: 264px;
+  padding: 0 clamp(24px, 3.4vw, 56px) 60px;
+  max-width: 1680px;
+}
+.topbar {
+  height: 68px;
+  border-bottom: 1px solid var(--admin-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  z-index: 20;
+}
+.breadcrumb {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--admin-faint);
+}
+.breadcrumb strong {
+  color: var(--admin-ink);
+  font-weight: 700;
+}
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.search {
+  height: 34px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-soft);
+  border-radius: 8px;
+  width: 210px;
+  color: var(--admin-faint);
+  font-size: 11.5px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+}
+.search kbd {
+  margin-left: auto;
+  color: var(--admin-faint);
+  font-size: 9px;
+  border: 1px solid var(--admin-border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  background: #fff;
+}
+.iconButton {
+  height: 34px;
+  width: 34px;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--admin-muted);
+  position: relative;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.iconButton:hover {
+  background: var(--admin-soft);
+}
+.iconButton i {
+  position: absolute;
+  right: 7px;
+  top: 6px;
+  width: 6px;
+  height: 6px;
+  background: #f04438;
+  border: 1.5px solid white;
+  border-radius: 50%;
+}
+.notificationWrap {
+  position: relative;
+}
+.notificationPanel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  width: min(360px, calc(100vw - 26px));
+  max-height: 460px;
+  overflow: hidden;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 18px 44px rgba(16, 24, 40, 0.16);
+  z-index: 55;
+}
+.notificationHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--admin-border);
+}
+.notificationHead b {
+  color: var(--admin-ink);
+  font-size: 13px;
+}
+.notificationHead button {
+  border: 0;
+  background: transparent;
+  color: var(--admin-blue-dark);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.notificationList {
+  max-height: 395px;
+  overflow-y: auto;
+}
+.notificationList p {
+  margin: 0;
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--admin-faint);
+  font-size: 12px;
+}
+.notificationList a {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--admin-border);
+  color: inherit;
+  text-decoration: none;
+}
+.notificationList a:hover {
+  background: var(--admin-soft);
+}
+.notificationList strong {
+  color: var(--admin-ink);
+  font-size: 12px;
+}
+.notificationList span {
+  color: var(--admin-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.notificationList small {
+  color: var(--admin-faint);
+  font-size: 10px;
+}
+.unreadNotification {
+  background: #eff8ff;
+}
+.menu,
+.mobileUser,
+.mobileBackdrop {
+  display: none;
+}
+@media (max-width: 1160px) {
+  .sidebar {
+    width: 230px;
+  }
+  .content {
+    margin-left: 230px;
+  }
+}
+@media (max-width: 760px) {
+  .sidebar {
+    z-index: 80;
+    width: min(300px, 85vw);
+    padding: 18px 12px;
+    transform: translateX(-105%);
+    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 18px 56px rgba(16, 24, 40, 0.24);
+  }
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+  .mobileBackdrop {
+    display: block;
+    position: fixed;
+    z-index: 70;
+    inset: 0;
+    border: 0;
+    background: rgba(8, 24, 44, 0.44);
+    backdrop-filter: blur(2px);
+  }
+  .brandRow {
+    padding: 6px 12px 2px;
+  }
+  .brandRow > button {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--admin-border);
+    border-radius: 9px;
+    background: #fff;
+  }
+  .workspace {
+    margin: 22px 6px 16px;
+  }
+  .sidebar nav {
+    gap: 4px;
+  }
+  .sidebar nav a,
+  .sidebarBottom > button {
+    height: 44px;
+    border-radius: 10px;
+    font-size: 13px;
+  }
+  .sidebarBottom {
+    padding: 12px 2px 0;
+  }
+  .user {
+    padding: 10px;
+  }
+  .content {
+    margin: 0;
+    padding: 0 16px 35px;
+  }
+  .topbar {
+    height: 60px;
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+  .menu {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--admin-border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--admin-ink);
+  }
+  .breadcrumb {
+    display: none;
+  }
+  .search {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+  .search span,
+  .search kbd {
+    display: none;
+  }
+  .mobileUser {
+    display: grid;
+  }
+  .topActions {
+    gap: 8px;
+  }
+}
+.admin :global(.banner-subtitle) {
+  display: block;
+  margin-top: 10px;
+  color: #71849a;
+  font-size: 12px;
+}
+.admin :global(.banner-slot-section) {
+  margin: 26px 0 34px;
+}
+.admin :global(.banner-slot-heading) {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  margin-bottom: 13px;
+}
+.admin :global(.banner-slot-heading p) {
+  margin: 0 0 6px;
+  color: #8295a9;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+.admin :global(.banner-slot-heading h2) {
+  margin: 0;
+  color: #16324f;
+  font-size: 19px;
+}
+.admin :global(.banner-slot-heading > span) {
+  color: #71849a;
+  font-size: 11px;
+}
+.admin :global(.banner-slot-grid) {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.admin :global(.banner-slot-card) {
+  position: relative;
+  padding: 13px;
+  border: 1px solid #dfe8f1;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 7px 20px #173e6410;
+}
+.admin :global(.banner-slot-preview) {
+  height: 150px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 9px;
+  background: #eef4fa;
+  margin-bottom: 12px;
+}
+.admin :global(.banner-slot-preview img) {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.admin :global(.banner-slot-preview > div) {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  color: #8aa0b5;
+}
+.admin :global(.banner-slot-preview > div span) {
+  font-size: 11px;
+}
+.admin :global(.banner-slot-preview > b) {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: #143461e8;
+  color: #fff;
+  font-size: 10px;
+}
+.admin :global(.banner-slot-meta) {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  margin-bottom: 10px;
+  color: #16324f;
+  font-size: 12px;
+}
+.admin :global(.banner-slot-meta small) {
+  color: #71849a;
+}
+.admin :global(.banner-slot-actions) {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 11px;
+}
+.admin :global(.banner-slot-actions button) {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.admin :global(.banner-live) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 9px;
+  color: #25835c;
+  font-size: 10px;
+  font-weight: 700;
+}
+@media (max-width: 900px) {
+  .admin :global(.banner-slot-grid) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .admin :global(.banner-slot-grid) {
+    grid-template-columns: 1fr;
+  }
+  .admin :global(.banner-slot-heading) {
+    align-items: flex-start;
+    gap: 8px;
+    flex-direction: column;
+  }
+}

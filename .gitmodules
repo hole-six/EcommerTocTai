@@ -1,3 +1,0 @@
-[submodule "wave-store-admin"]
-	path = references/wave-store-admin
-	url = https://github.com/hole-six/wave-stores.git

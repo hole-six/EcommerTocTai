@@ -1,0 +1,1307 @@
+"use client";
+
+import {
+  BookOpen,
+  ChevronDown,
+  CircleAlert,
+  ExternalLink,
+  FileText,
+  Images,
+  ImagePlus,
+  Info,
+  LayoutGrid,
+  Layers,
+  ListChecks,
+  Package,
+  Plus,
+  Route,
+  SlidersHorizontal,
+  Tag,
+  Trash2,
+  type LucideIcon,
+} from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { MediaLibraryModal } from "@/components/admin/MediaLibraryModal";
+import panel from "@/components/admin/admin-panel.module.css";
+import styles from "@/components/admin/product-form.module.css";
+
+type CategoryOption = { _id: string; label: string };
+type Item = {
+  id?: string;
+  targetProductId?: string;
+  targetProductSlug?: string;
+  title: string;
+  description: string;
+  image: string;
+  label: string;
+  period: string;
+  name: string;
+  value: string;
+  type?: string;
+};
+type Option = Item & { id: string; priceAdjustment: number };
+type OptionGroup = {
+  id: string;
+  title: string;
+  code: string;
+  required: boolean;
+  displayType: "card" | "button" | "radio" | "dropdown";
+  options: Option[];
+};
+type StageProductOption = { id: string; slug: string; name: string };
+export type ProductInitial = {
+  _id?: string;
+  category: string | { _id: string };
+  name: string;
+  slug: string;
+  shortDescription: string;
+  description: string;
+  price: number;
+  salePrice?: number;
+  inventory: number;
+  sku: string;
+  images: string[];
+  specifications?: Record<string, string | number | boolean>;
+  specificationRows?: Item[];
+  optionGroups?: OptionGroup[];
+  contentBlocks?: Item[];
+  stageImages?: Item[];
+  howToUse?: Item;
+  rootCauses?: Item[];
+  treatmentKit?: Item[];
+  treatmentJourney?: Item[];
+  status: "draft" | "active" | "archived";
+  variantGroup?: string;
+  variantLabel?: string;
+  variantOrder?: number;
+};
+
+const emptyItem = (): Item => ({
+  title: "",
+  description: "",
+  image: "",
+  label: "",
+  period: "",
+  name: "",
+  value: "",
+});
+const emptyOption = (): Option => ({
+  ...emptyItem(),
+  id: `option-${Date.now()}-${Math.random()}`,
+  priceAdjustment: 0,
+});
+const emptyGroup = (): OptionGroup => ({
+  id: `group-${Date.now()}-${Math.random()}`,
+  title: "",
+  code: "",
+  required: false,
+  displayType: "card",
+  options: [emptyOption()],
+});
+const slugify = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/đ/gi, "d")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+const statusLabel = {
+  draft: "Bản nháp",
+  active: "Đang bán",
+  archived: "Ngừng bán",
+} as const;
+
+const navItems = [
+  ["basic", Info, "Thông tin cơ bản"],
+  ["pricing", Tag, "Giá & tồn kho"],
+  ["description", FileText, "Mô tả"],
+  ["images", Images, "Ảnh sản phẩm"],
+  ["stages", Layers, "Ảnh Stage"],
+  ["causes", CircleAlert, "Nguyên nhân"],
+  ["howto", BookOpen, "Hướng dẫn dùng"],
+  ["kit", Package, "Thành phần bộ"],
+  ["journey", Route, "Lộ trình điều trị"],
+  ["specs", ListChecks, "Thông số"],
+  ["blocks", LayoutGrid, "Nội dung tùy biến"],
+  ["variants", SlidersHorizontal, "Biến thể"],
+] as const;
+
+export function UploadField({
+  value,
+  onChange,
+  label = "Chọn ảnh",
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  label?: string;
+}) {
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  return (
+    <div className={panel["admin-upload"]}>
+      {value && (
+        <div className={panel["admin-upload-preview"]}>
+          <img src={value} alt="" />
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            aria-label="Xóa ảnh"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      )}
+      <button
+        type="button"
+        className={panel["admin-upload-button"]}
+        onClick={() => setLibraryOpen(true)}
+      >
+        <ImagePlus size={14} /> {value ? "Đổi ảnh" : label}
+      </button>
+      {libraryOpen && (
+        <MediaLibraryModal
+          initialSelected={value ? [value] : []}
+          onClose={() => setLibraryOpen(false)}
+          onSelect={(urls) => onChange(urls[0] ?? "")}
+        />
+      )}
+    </div>
+  );
+}
+
+function ItemEditor({
+  item,
+  onChange,
+  onRemove,
+  heading = "Nội dung",
+}: {
+  item: Item;
+  onChange: (patch: Partial<Item>) => void;
+  onRemove: () => void;
+  heading?: string;
+}) {
+  return (
+    <div className={panel["admin-repeat-card"]}>
+      <div className={panel["admin-repeat-head"]}>
+        <b>{heading}</b>
+        <button type="button" className={panel.dangerButton} onClick={onRemove}>
+          <Trash2 size={14} /> Xóa
+        </button>
+      </div>
+      <div className={panel.grid2}>
+        <div className={panel.grid2}>
+          <label>
+            Tiêu đề
+            <input
+              value={item.title}
+              onChange={(event) => onChange({ title: event.target.value })}
+            />
+          </label>
+          <label>
+            Nhãn / mốc thời gian
+            <input
+              value={item.label || item.period}
+              onChange={(event) =>
+                onChange({
+                  label: event.target.value,
+                  period: event.target.value,
+                })
+              }
+            />
+          </label>
+          <label style={{ gridColumn: "1 / -1" }}>
+            Mô tả
+            <textarea
+              rows={3}
+              value={item.description || item.value}
+              onChange={(event) =>
+                onChange({
+                  description: event.target.value,
+                  value: event.target.value,
+                })
+              }
+            />
+          </label>
+          <label>
+            Tên hiển thị
+            <input
+              value={item.name}
+              onChange={(event) => onChange({ name: event.target.value })}
+            />
+          </label>
+          <label>
+            Giá trị
+            <input
+              value={item.value}
+              onChange={(event) => onChange({ value: event.target.value })}
+            />
+          </label>
+          <div>
+            <span className={panel["admin-field-label"]}>Ảnh minh họa</span>
+            <UploadField
+              value={item.image}
+              onChange={(image) => onChange({ image })}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StageEditor({
+  item,
+  index,
+  productOptions,
+  onChange,
+  onRemove,
+}: {
+  item: Item;
+  index: number;
+  productOptions: StageProductOption[];
+  onChange: (patch: Partial<Item>) => void;
+  onRemove: () => void;
+}) {
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  return (
+    <div className={panel["admin-repeat-card"]}>
+      <div className={panel["admin-repeat-head"]}>
+        <b>Stage {index + 1}</b>
+        <button type="button" className={panel.dangerButton} onClick={onRemove}>
+          <Trash2 size={14} /> Xóa
+        </button>
+      </div>
+      <div className={styles.stageCard}>
+        {item.image ? (
+          <div className={styles.stageImagePreview}>
+            <img src={item.image} alt="" />
+            <button
+              type="button"
+              onClick={() => onChange({ image: "" })}
+              aria-label="Xóa ảnh"
+            >
+              <Trash2 size={13} />
+            </button>
+            <button
+              type="button"
+              className={styles.stageImageChange}
+              onClick={() => setLibraryOpen(true)}
+            >
+              Đổi ảnh
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className={styles.stageImageEmpty}
+            onClick={() => setLibraryOpen(true)}
+          >
+            <ImagePlus size={22} /> Tải ảnh Stage
+          </button>
+        )}
+        <div className={styles.stageFields}>
+          <label>
+            Tên giai đoạn
+            <input
+              value={item.title}
+              onChange={(event) => onChange({ title: event.target.value })}
+              placeholder="VD: Stage 1 – Mới rụng tóc"
+            />
+          </label>
+          <label>
+            Sản phẩm liên kết
+            <select
+              value={item.targetProductId ?? ""}
+              onChange={(event) => {
+                const selected = productOptions.find(
+                  (product) => product.id === event.target.value,
+                );
+                onChange({
+                  targetProductId: selected?.id ?? "",
+                  targetProductSlug: selected?.slug ?? "",
+                });
+              }}
+            >
+              <option value="">— Chọn sản phẩm —</option>
+              {productOptions.map((product) => (
+                <option key={product.id} value={product.id}>
+                  {product.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </div>
+      {libraryOpen && (
+        <MediaLibraryModal
+          initialSelected={item.image ? [item.image] : []}
+          onClose={() => setLibraryOpen(false)}
+          onSelect={(urls) => onChange({ image: urls[0] ?? "" })}
+        />
+      )}
+    </div>
+  );
+}
+
+function Section({
+  id,
+  icon: Icon,
+  title,
+  description,
+  badge,
+  defaultOpen = true,
+  children,
+}: {
+  id: string;
+  icon: LucideIcon;
+  title: string;
+  description?: string;
+  badge?: string;
+  defaultOpen?: boolean;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className={panel.panel} id={id}>
+      <button
+        type="button"
+        className={styles.sectionHeader}
+        onClick={() => setOpen((value) => !value)}
+      >
+        <span className={styles.sectionIcon}>
+          <Icon size={16} />
+        </span>
+        <span className={styles.sectionMeta}>
+          <b>{title}</b>
+          {description && <span>{description}</span>}
+        </span>
+        {badge && <span className={styles.sectionBadge}>{badge}</span>}
+        <ChevronDown
+          size={16}
+          className={`${styles.chevron} ${open ? styles.chevronOpen : ""}`}
+        />
+      </button>
+      {open && <div className={styles.sectionBody}>{children}</div>}
+    </div>
+  );
+}
+
+export function ProductForm({ initial }: { initial?: ProductInitial }) {
+  const router = useRouter();
+  const productId = initial?._id;
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [stageProducts, setStageProducts] = useState<StageProductOption[]>([]);
+  const [name, setName] = useState(initial?.name ?? "");
+  const [slug, setSlug] = useState(initial?.slug ?? "");
+  const [slugTouched, setSlugTouched] = useState(Boolean(initial));
+  const [category, setCategory] = useState(
+    typeof initial?.category === "string"
+      ? initial.category
+      : (initial?.category?._id ?? ""),
+  );
+  const [sku, setSku] = useState(initial?.sku ?? "");
+  const [price, setPrice] = useState(String(initial?.price ?? ""));
+  const [salePrice, setSalePrice] = useState(
+    initial?.salePrice ? String(initial.salePrice) : "",
+  );
+  const [discountPercent, setDiscountPercent] = useState(() =>
+    initial?.salePrice && initial.price > 0
+      ? String(Math.round((1 - initial.salePrice / initial.price) * 100))
+      : "0",
+  );
+  const [inventory, setInventory] = useState(String(initial?.inventory ?? "0"));
+  const [status, setStatus] = useState<ProductInitial["status"]>(
+    initial?.status ?? "draft",
+  );
+  const [shortDescription, setShortDescription] = useState(
+    initial?.shortDescription ?? "",
+  );
+  const [description, setDescription] = useState(initial?.description ?? "");
+  const [images, setImages] = useState<string[]>(initial?.images ?? []);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [specs, setSpecs] = useState<Item[]>(
+    initial?.specificationRows?.length
+      ? initial.specificationRows
+      : Object.entries(initial?.specifications ?? {}).map(([key, value]) => ({
+          ...emptyItem(),
+          name: key,
+          value: String(value),
+          type: "text",
+        })),
+  );
+  const [stageImages, setStageImages] = useState<Item[]>(
+    initial?.stageImages ?? [],
+  );
+  const [rootCauses, setRootCauses] = useState<Item[]>(
+    initial?.rootCauses ?? [],
+  );
+  const [treatmentKit, setTreatmentKit] = useState<Item[]>(
+    initial?.treatmentKit ?? [],
+  );
+  const [journey, setJourney] = useState<Item[]>(
+    initial?.treatmentJourney ?? [],
+  );
+  const [howToUse, setHowToUse] = useState<Item>(
+    initial?.howToUse ?? emptyItem(),
+  );
+  const [blocks, setBlocks] = useState<Item[]>(initial?.contentBlocks ?? []);
+  const [groups, setGroups] = useState<OptionGroup[]>(
+    initial?.optionGroups ?? [],
+  );
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  useEffect(() => {
+    fetch("/api/categories?tree=true")
+      .then((response) => response.json())
+      .then((body) => {
+        const options: CategoryOption[] = [];
+        for (const root of body.data ?? []) {
+          options.push({ _id: root._id, label: root.name });
+          for (const child of root.children ?? [])
+            options.push({ _id: child._id, label: `— ${child.name}` });
+        }
+        setCategories(options);
+      });
+  }, []);
+  useEffect(() => {
+    fetch("/api/commerce/products?status=all")
+      .then((response) => response.json())
+      .then((body) =>
+        setStageProducts(
+          (body.data ?? [])
+            .map(
+              (product: {
+                _id?: string;
+                id?: string;
+                slug: string;
+                name: string;
+              }) => ({
+                id: String(product._id ?? product.id),
+                slug: product.slug,
+                name: product.name,
+              }),
+            )
+            .filter((product: StageProductOption) => product.id !== productId),
+        ),
+      );
+  }, [productId]);
+  function updateList(
+    list: Item[],
+    setList: (next: Item[]) => void,
+    index: number,
+    patch: Partial<Item>,
+  ) {
+    setList(
+      list.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, ...patch } : item,
+      ),
+    );
+  }
+  function updateOriginalPrice(value: string) {
+    setPrice(value);
+    const original = Number(value);
+    const percent = Number(discountPercent);
+    if (original > 0 && percent > 0)
+      setSalePrice(String(Math.round(original * (1 - percent / 100))));
+  }
+  function applyDiscount(value: string) {
+    setDiscountPercent(value);
+    const original = Number(price);
+    const percent = Number(value);
+    if (original > 0 && percent > 0)
+      setSalePrice(String(Math.round(original * (1 - percent / 100))));
+    if (value === "0") setSalePrice("");
+  }
+  function updateSalePrice(value: string) {
+    setSalePrice(value);
+    const original = Number(price);
+    const actual = Number(value);
+    if (original > 0 && actual > 0 && actual <= original)
+      setDiscountPercent(String(Math.round((1 - actual / original) * 100)));
+    if (!value) setDiscountPercent("0");
+  }
+  async function submit() {
+    setMessage("");
+    const original = Number(price);
+    const actual = salePrice ? Number(salePrice) : undefined;
+    if (actual !== undefined && actual > original) {
+      setMessage("Giá bán thực tế không thể cao hơn giá gốc.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = {
+        category,
+        name,
+        slug,
+        shortDescription,
+        description,
+        price: original,
+        salePrice: actual,
+        inventory: Number(inventory),
+        sku,
+        images: images.filter(Boolean),
+        specifications: Object.fromEntries(
+          specs
+            .filter((item) => item.name.trim())
+            .map((item) => [item.name.trim(), item.value]),
+        ),
+        specificationRows: specs,
+        stageImages,
+        howToUse,
+        rootCauses,
+        treatmentKit,
+        treatmentJourney: journey,
+        contentBlocks: blocks,
+        optionGroups: groups,
+        status,
+        variantGroup: initial?.variantGroup ?? "",
+        variantLabel: initial?.variantLabel ?? "",
+        variantOrder: initial?.variantOrder ?? 0,
+      };
+      const response = await fetch(
+        productId
+          ? `/api/commerce/products/${productId}`
+          : "/api/commerce/products",
+        {
+          method: productId ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error ?? "Lưu sản phẩm thất bại");
+      setMessage(productId ? "Đã cập nhật sản phẩm." : "Đã tạo sản phẩm mới.");
+      if (!productId) router.push(`/admin/products/${body.data._id}`);
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Lưu sản phẩm thất bại",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const repeat = (
+    id: string,
+    icon: LucideIcon,
+    title: string,
+    hint: string,
+    list: Item[],
+    setList: (next: Item[]) => void,
+    heading: string,
+  ) => (
+    <Section
+      id={id}
+      icon={icon}
+      title={title}
+      description={hint}
+      badge={list.length ? `${list.length}` : undefined}
+      defaultOpen={list.length > 0}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          marginBottom: list.length ? 14 : 0,
+        }}
+      >
+        <button
+          type="button"
+          className={panel.secondaryButton}
+          onClick={() => setList([...list, emptyItem()])}
+        >
+          <Plus size={14} /> Thêm dòng
+        </button>
+      </div>
+      {list.map((item, index) => (
+        <ItemEditor
+          key={index}
+          item={item}
+          heading={`${heading} ${index + 1}`}
+          onChange={(patch) => updateList(list, setList, index, patch)}
+          onRemove={() =>
+            setList(list.filter((_, itemIndex) => itemIndex !== index))
+          }
+        />
+      ))}
+      {!list.length && (
+        <p className={panel.empty} style={{ padding: "20px 0" }}>
+          Chưa có nội dung. Bấm &quot;Thêm dòng&quot; để bắt đầu.
+        </p>
+      )}
+    </Section>
+  );
+
+  const canSave = Boolean(name && slug && sku && category && price);
+
+  return (
+    <div className={styles.layout}>
+      <div className={styles.main}>
+        <Section
+          id="basic"
+          icon={Info}
+          title="Thông tin cơ bản"
+          description="Tên, đường dẫn và mã sản phẩm"
+        >
+          <div className={panel.grid2}>
+            <label>
+              Tên sản phẩm
+              <input
+                value={name}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setName(value);
+                  if (!slugTouched) setSlug(slugify(value));
+                }}
+              />
+            </label>
+            <label>
+              Slug
+              <input
+                value={slug}
+                onChange={(event) => {
+                  setSlugTouched(true);
+                  setSlug(event.target.value);
+                }}
+              />
+            </label>
+            <label>
+              SKU
+              <input
+                value={sku}
+                onChange={(event) => setSku(event.target.value.toUpperCase())}
+              />
+            </label>
+          </div>
+        </Section>
+
+        <Section
+          id="pricing"
+          icon={Tag}
+          title="Giá & tồn kho"
+          description="Giá gốc, giá bán thực tế và số lượng trong kho"
+        >
+          <div className={panel.grid3}>
+            <label>
+              Giá gốc (đ)
+              <input
+                min="0"
+                type="number"
+                value={price}
+                onChange={(event) => updateOriginalPrice(event.target.value)}
+              />
+            </label>
+            <label>
+              Giảm giá
+              <select
+                value={discountPercent}
+                onChange={(event) => applyDiscount(event.target.value)}
+              >
+                <option value="0">Không giảm</option>
+                <option value="5">Giảm 5%</option>
+                <option value="10">Giảm 10%</option>
+                <option value="15">Giảm 15%</option>
+                <option value="20">Giảm 20%</option>
+                <option value="25">Giảm 25%</option>
+                <option value="30">Giảm 30%</option>
+                <option value="40">Giảm 40%</option>
+                <option value="50">Giảm 50%</option>
+              </select>
+            </label>
+            <label>
+              Giá bán thực tế (đ)
+              <input
+                min="0"
+                max={price || undefined}
+                type="number"
+                value={salePrice}
+                onChange={(event) => updateSalePrice(event.target.value)}
+                placeholder="Bằng giá gốc nếu không giảm"
+              />
+            </label>
+            <label>
+              Tồn kho
+              <input
+                type="number"
+                value={inventory}
+                onChange={(event) => setInventory(event.target.value)}
+              />
+            </label>
+          </div>
+          <p className={styles.priceHint}>
+            Giá gốc là giá trước giảm. Chọn phần trăm để tự tính giá bán thực
+            tế, hoặc nhập giá bán thực tế để hệ thống tự quy ra phần trăm.
+          </p>
+        </Section>
+
+        <Section
+          id="description"
+          icon={FileText}
+          title="Mô tả sản phẩm"
+          description="Hiện trên thẻ sản phẩm và trang chi tiết"
+        >
+          <div className={panel.grid2}>
+            <label style={{ gridColumn: "1 / -1" }}>
+              Mô tả ngắn
+              <input
+                value={shortDescription}
+                onChange={(event) => setShortDescription(event.target.value)}
+              />
+            </label>
+            <label style={{ gridColumn: "1 / -1" }}>
+              Mô tả chi tiết
+              <textarea
+                rows={6}
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+              />
+            </label>
+          </div>
+        </Section>
+
+        <Section
+          id="images"
+          icon={Images}
+          title="Ảnh sản phẩm"
+          description="Ảnh đầu tiên sẽ là ảnh chính"
+          badge={images.length ? `${images.length}` : undefined}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              marginBottom: images.length ? 14 : 0,
+            }}
+          >
+            <button
+              type="button"
+              className={panel.secondaryButton}
+              onClick={() => setGalleryOpen(true)}
+            >
+              <Images size={14} /> Chọn ảnh từ thư viện
+            </button>
+          </div>
+          {images.length > 0 ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill,minmax(84px,1fr))",
+                gap: 10,
+              }}
+            >
+              {images.map((image, index) => (
+                <div
+                  key={image + index}
+                  style={{
+                    position: "relative",
+                    aspectRatio: "1",
+                    borderRadius: 9,
+                    overflow: "hidden",
+                    border: "1px solid var(--admin-border)",
+                    background: "var(--admin-soft)",
+                  }}
+                >
+                  <img
+                    src={image}
+                    alt=""
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setImages(
+                        images.filter((_, itemIndex) => itemIndex !== index),
+                      )
+                    }
+                    aria-label="Xóa ảnh"
+                    style={{
+                      position: "absolute",
+                      top: 4,
+                      right: 4,
+                      width: 20,
+                      height: 20,
+                      borderRadius: "50%",
+                      background: "rgba(0,0,0,.6)",
+                      color: "#fff",
+                      display: "grid",
+                      placeItems: "center",
+                      border: 0,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <Trash2 size={11} />
+                  </button>
+                  {index === 0 && (
+                    <span
+                      style={{
+                        position: "absolute",
+                        bottom: 4,
+                        left: 4,
+                        background: "var(--admin-blue)",
+                        color: "#fff",
+                        fontSize: 9,
+                        fontWeight: 700,
+                        padding: "2px 6px",
+                        borderRadius: 4,
+                      }}
+                    >
+                      Ảnh chính
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className={panel.empty} style={{ padding: "20px 0" }}>
+              Chưa có ảnh nào. Bấm &quot;Chọn ảnh từ thư viện&quot; để thêm.
+            </p>
+          )}
+        </Section>
+
+        <Section
+          id="stages"
+          icon={Layers}
+          title="Stage / giai đoạn sản phẩm"
+          description="Ảnh + tên giai đoạn — bấm vào sẽ chuyển thẳng sang đúng sản phẩm của giai đoạn đó"
+          badge={stageImages.length ? `${stageImages.length}` : undefined}
+          defaultOpen={stageImages.length > 0}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              marginBottom: stageImages.length ? 14 : 0,
+            }}
+          >
+            <button
+              type="button"
+              className={panel.secondaryButton}
+              onClick={() => setStageImages([...stageImages, emptyItem()])}
+            >
+              <Plus size={14} /> Thêm Stage
+            </button>
+          </div>
+          {stageImages.map((item, index) => (
+            <StageEditor
+              key={index}
+              index={index}
+              item={item}
+              productOptions={stageProducts}
+              onChange={(patch) =>
+                updateList(stageImages, setStageImages, index, patch)
+              }
+              onRemove={() =>
+                setStageImages(
+                  stageImages.filter((_, itemIndex) => itemIndex !== index),
+                )
+              }
+            />
+          ))}
+          {!stageImages.length && (
+            <p className={panel.empty} style={{ padding: "20px 0" }}>
+              Chưa có Stage nào. Mỗi Stage chỉ cần 3 thứ: ảnh, tên giai đoạn và
+              sản phẩm sẽ mở ra khi bấm vào.
+            </p>
+          )}
+        </Section>
+        {repeat(
+          "causes",
+          CircleAlert,
+          "Nguyên nhân",
+          "Giải thích nguyên nhân của vấn đề",
+          rootCauses,
+          setRootCauses,
+          "Nguyên nhân",
+        )}
+
+        <Section
+          id="howto"
+          icon={BookOpen}
+          title="Hướng dẫn sử dụng"
+          description="Cách dùng sản phẩm"
+          defaultOpen={Boolean(
+            howToUse.title || howToUse.description || howToUse.image,
+          )}
+        >
+          <ItemEditor
+            item={howToUse}
+            onChange={(patch) => setHowToUse({ ...howToUse, ...patch })}
+            onRemove={() => setHowToUse(emptyItem())}
+            heading="Hướng dẫn"
+          />
+        </Section>
+
+        {repeat(
+          "kit",
+          Package,
+          "Thành phần bộ sản phẩm",
+          "Các sản phẩm có trong bộ (treatment kit)",
+          treatmentKit,
+          setTreatmentKit,
+          "Thành phần",
+        )}
+        {repeat(
+          "journey",
+          Route,
+          "Lộ trình điều trị",
+          "Các giai đoạn sử dụng theo thời gian",
+          journey,
+          setJourney,
+          "Giai đoạn",
+        )}
+        {repeat(
+          "specs",
+          ListChecks,
+          "Thông số sản phẩm",
+          "Thông số kỹ thuật mở rộng",
+          specs,
+          setSpecs,
+          "Thông số",
+        )}
+        {repeat(
+          "blocks",
+          LayoutGrid,
+          "Nội dung tùy biến",
+          "Block nội dung tự do khác",
+          blocks,
+          setBlocks,
+          "Block",
+        )}
+
+        <Section
+          id="variants"
+          icon={SlidersHorizontal}
+          title="Biến thể / các bước lựa chọn"
+          description="Ví dụ Stage, độ tuổi, thời gian, pack size"
+          badge={groups.length ? `${groups.length}` : undefined}
+          defaultOpen={groups.length > 0}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              marginBottom: groups.length ? 14 : 0,
+            }}
+          >
+            <button
+              type="button"
+              className={panel.secondaryButton}
+              onClick={() => setGroups([...groups, emptyGroup()])}
+            >
+              <Plus size={14} /> Thêm nhóm
+            </button>
+          </div>
+          {groups.map((group, groupIndex) => (
+            <div className={panel["admin-repeat-card"]} key={group.id}>
+              <div className={panel["admin-repeat-head"]}>
+                <b>Nhóm {groupIndex + 1}</b>
+                <button
+                  type="button"
+                  className={panel.dangerButton}
+                  onClick={() =>
+                    setGroups(groups.filter((_, index) => index !== groupIndex))
+                  }
+                >
+                  <Trash2 size={14} /> Xóa nhóm
+                </button>
+              </div>
+              <div className={panel.grid3}>
+                <label>
+                  Tên bước
+                  <input
+                    value={group.title}
+                    onChange={(event) =>
+                      setGroups(
+                        groups.map((item, index) =>
+                          index === groupIndex
+                            ? { ...item, title: event.target.value }
+                            : item,
+                        ),
+                      )
+                    }
+                  />
+                </label>
+                <label>
+                  Mã nhóm
+                  <input
+                    value={group.code}
+                    onChange={(event) =>
+                      setGroups(
+                        groups.map((item, index) =>
+                          index === groupIndex
+                            ? { ...item, code: event.target.value }
+                            : item,
+                        ),
+                      )
+                    }
+                  />
+                </label>
+                <label>
+                  Kiểu hiển thị
+                  <select
+                    value={group.displayType}
+                    onChange={(event) =>
+                      setGroups(
+                        groups.map((item, index) =>
+                          index === groupIndex
+                            ? {
+                                ...item,
+                                displayType: event.target
+                                  .value as OptionGroup["displayType"],
+                              }
+                            : item,
+                        ),
+                      )
+                    }
+                  >
+                    <option value="card">Thẻ ảnh</option>
+                    <option value="button">Nút</option>
+                    <option value="radio">Radio</option>
+                    <option value="dropdown">Dropdown</option>
+                  </select>
+                </label>
+              </div>
+              <label className={panel["admin-checkbox"]}>
+                <input
+                  type="checkbox"
+                  checked={group.required}
+                  onChange={(event) =>
+                    setGroups(
+                      groups.map((item, index) =>
+                        index === groupIndex
+                          ? { ...item, required: event.target.checked }
+                          : item,
+                      ),
+                    )
+                  }
+                />{" "}
+                Bắt buộc chọn
+              </label>
+              {group.options.map((option, optionIndex) => (
+                <div className={panel["admin-option-row"]} key={option.id}>
+                  <input
+                    placeholder="Tên option"
+                    value={option.label || option.title}
+                    onChange={(event) =>
+                      setGroups(
+                        groups.map((item, index) =>
+                          index === groupIndex
+                            ? {
+                                ...item,
+                                options: item.options.map(
+                                  (current, childIndex) =>
+                                    childIndex === optionIndex
+                                      ? {
+                                          ...current,
+                                          label: event.target.value,
+                                          title: event.target.value,
+                                          value: event.target.value,
+                                        }
+                                      : current,
+                                ),
+                              }
+                            : item,
+                        ),
+                      )
+                    }
+                  />
+                  <input
+                    type="number"
+                    placeholder="Cộng thêm"
+                    value={option.priceAdjustment}
+                    onChange={(event) =>
+                      setGroups(
+                        groups.map((item, index) =>
+                          index === groupIndex
+                            ? {
+                                ...item,
+                                options: item.options.map(
+                                  (current, childIndex) =>
+                                    childIndex === optionIndex
+                                      ? {
+                                          ...current,
+                                          priceAdjustment: Number(
+                                            event.target.value,
+                                          ),
+                                        }
+                                      : current,
+                                ),
+                              }
+                            : item,
+                        ),
+                      )
+                    }
+                  />
+                  <UploadField
+                    value={option.image}
+                    onChange={(image) =>
+                      setGroups(
+                        groups.map((item, index) =>
+                          index === groupIndex
+                            ? {
+                                ...item,
+                                options: item.options.map(
+                                  (current, childIndex) =>
+                                    childIndex === optionIndex
+                                      ? { ...current, image }
+                                      : current,
+                                ),
+                              }
+                            : item,
+                        ),
+                      )
+                    }
+                    label="Upload ảnh"
+                  />
+                  <button
+                    type="button"
+                    className={panel.dangerButton}
+                    onClick={() =>
+                      setGroups(
+                        groups.map((item, index) =>
+                          index === groupIndex
+                            ? {
+                                ...item,
+                                options: item.options.filter(
+                                  (_, childIndex) => childIndex !== optionIndex,
+                                ),
+                              }
+                            : item,
+                        ),
+                      )
+                    }
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                className={panel.ghostButton}
+                onClick={() =>
+                  setGroups(
+                    groups.map((item, index) =>
+                      index === groupIndex
+                        ? { ...item, options: [...item.options, emptyOption()] }
+                        : item,
+                    ),
+                  )
+                }
+              >
+                <Plus size={14} /> Thêm option
+              </button>
+            </div>
+          ))}
+          {!groups.length && (
+            <p className={panel.empty} style={{ padding: "20px 0" }}>
+              Chưa có nhóm biến thể nào.
+            </p>
+          )}
+        </Section>
+      </div>
+
+      <div className={styles.sidebar}>
+        <div className={styles.sidebarCard}>
+          <h3>Lưu &amp; xuất bản</h3>
+          <div className={styles.saveRow}>
+            <label>
+              Trạng thái
+              <select
+                value={status}
+                onChange={(event) =>
+                  setStatus(event.target.value as ProductInitial["status"])
+                }
+              >
+                {Object.entries(statusLabel).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              className={panel.saveButton}
+              disabled={saving || !canSave}
+              onClick={() => void submit()}
+            >
+              {saving
+                ? "Đang lưu..."
+                : productId
+                  ? "Cập nhật sản phẩm"
+                  : "Tạo sản phẩm"}
+            </button>
+            {productId && (
+              <a
+                href={`/san-pham/${slug}`}
+                target="_blank"
+                rel="noreferrer"
+                className={styles.previewLink}
+              >
+                Xem trang sản phẩm <ExternalLink size={12} />
+              </a>
+            )}
+            {message && (
+              <p className={panel.message} style={{ margin: 0 }}>
+                {message}
+              </p>
+            )}
+            {!canSave && (
+              <p
+                style={{ fontSize: 11, color: "var(--admin-faint)", margin: 0 }}
+              >
+                Cần điền tên, slug, SKU, danh mục và giá trước khi lưu.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className={styles.sidebarCard}>
+          <h3>Tổ chức</h3>
+          <div className={styles.saveRow}>
+            <label>
+              Danh mục
+              <select
+                value={category}
+                onChange={(event) => setCategory(event.target.value)}
+              >
+                <option value="">— Chọn danh mục —</option>
+                {categories.map((option) => (
+                  <option key={option._id} value={option._id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div className={styles.sidebarCard}>
+          <h3>Điều hướng nhanh</h3>
+          <nav className={styles.navList}>
+            {navItems.map(([id, Icon, label]) => (
+              <a key={id} href={`#${id}`}>
+                <Icon size={14} /> {label}
+              </a>
+            ))}
+          </nav>
+        </div>
+      </div>
+
+      {galleryOpen && (
+        <MediaLibraryModal
+          multiple
+          initialSelected={images}
+          onClose={() => setGalleryOpen(false)}
+          onSelect={(urls) => setImages(urls)}
+        />
+      )}
+    </div>
+  );
+}

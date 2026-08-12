@@ -1,0 +1,5 @@
+import { Schema, model, models } from "mongoose";
+const catalogProductSchema = new Schema({
+  id: { type: String, required: true, unique: true, index: true }, slug: { type: String, required: true, unique: true, lowercase: true, index: true }, sku: { type: String, required: true }, name: { type: String, required: true, trim: true }, category: { type: String, required: true, index: true }, status: { type: String, enum: ["draft", "active", "archived"], default: "draft" }, shortDescription: { type: String, default: "" }, price: { type: Number, min: 0, required: true }, compareAtPrice: { type: Number, min: 0 }, inventory: { type: Number, min: 0, default: 0 }, reservedInventory: { type: Number, min: 0, default: 0 }, rating: Number, reviewCount: Number, soldCount: Number, images: { type: [String], default: [] }, optionGroups: { type: [Schema.Types.Mixed], default: [] }, variants: { type: [Schema.Types.Mixed], default: [] }, blocks: { type: [Schema.Types.Mixed], default: [] }, seo: { type: Schema.Types.Mixed, default: {} },
+}, { timestamps: true, minimize: false });
+export const CatalogProduct = models.CatalogProduct || model("CatalogProduct", catalogProductSchema);

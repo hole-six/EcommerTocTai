@@ -16,4 +16,16 @@ export async function GET(request: Request) {
     return NextResponse.json({ data });
   } catch (error) { return apiError(error); }
 }
-export async function POST(request: Request) { try { await requireAdmin(); const data = categorySchema.parse(await request.json()); await connectDb(); return NextResponse.json({ data: await Category.create(data) }, { status: 201 }); } catch (error) { return apiError(error); } }
+export async function POST(request: Request) {
+  try {
+    await requireAdmin();
+    const data = categorySchema.parse(await request.json());
+    await connectDb();
+    if (data.parent) {
+      const parent = await Category.findById(data.parent).select("parent isActive").lean();
+      if (!parent || !parent.isActive) return NextResponse.json({ error: "Danh mục cha không tồn tại hoặc đang ẩn." }, { status: 422 });
+      if (parent.parent) return NextResponse.json({ error: "Chỉ hỗ trợ cấu trúc danh mục cha và một cấp danh mục con." }, { status: 422 });
+    }
+    return NextResponse.json({ data: await Category.create(data) }, { status: 201 });
+  } catch (error) { return apiError(error); }
+}

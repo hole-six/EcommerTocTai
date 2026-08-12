@@ -20,8 +20,7 @@
 .concernGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
 .concern{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:0.8;text-decoration:none;background:#e8e2da}
 .concern img{width:100%;height:100%;object-fit:cover}
-.concernLabel{position:absolute;left:16px;right:16px;bottom:14px;z-index:1;display:flex;justify-content:space-between;align-items:center;color:#fff}
-.concernLabel span{font-size:20px;font-weight:600}
+.concernLabel{position:absolute;left:16px;right:16px;bottom:14px;z-index:1;display:flex;justify-content:flex-end;align-items:center;color:#fff}
 
 .marqueeWrap{margin-top:56px;background:var(--bg-light);overflow:hidden;padding:16px 0}
 .marquee{display:flex;gap:28px;white-space:nowrap;animation:scroll-left 22s linear infinite;width:max-content}
@@ -31,15 +30,15 @@
 .shop{text-align:center;padding-top:56px}
 .shop h2{font-size:30px;font-weight:700;margin:0 0 24px}
 .categoryRow{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:32px}
-.categoryRow button{border:0;border-radius:10px;background:var(--bg-mid);color:var(--navy);padding:12px 22px;font-size:14px;font-weight:600;cursor:pointer}
+.categoryButton{display:inline-flex;text-decoration:none;border:0;border-radius:10px;background:var(--bg-mid);color:var(--navy);padding:12px 22px;font-size:14px;font-weight:600;cursor:pointer}
 .categoryRow .selectedCategory{background:var(--navy);color:#fff}
 .productGrid{display:grid;grid-template-columns:repeat(4,1fr);text-align:left;gap:16px}
 .product{background:#fff;border:1px solid #eee;border-radius:12px;overflow:hidden;min-width:0}
-.productImage{background:#f7f6f4;aspect-ratio:1}
+.productImage{display:block;background:#f7f6f4;aspect-ratio:1;text-decoration:none;overflow:hidden}
 .productImage img{width:100%;height:100%;object-fit:contain}
 .productBody{padding:14px}
 .productBody p{margin:0 0 6px;color:var(--linkblue);font-size:12px;line-height:1.3;height:31px;overflow:hidden}
-.productBody h3{font-size:14px;line-height:1.3;font-weight:700;margin:0;height:37px;overflow:hidden;color:#111}
+.productTitleLink{display:block;text-decoration:none;color:inherit}.productBody h3{font-size:14px;line-height:1.3;font-weight:700;margin:0;height:37px;overflow:hidden;color:#111}
 .priceRow{display:flex;align-items:center;gap:7px;margin:10px 0}
 .priceRow strong{font-size:16px;color:#111}
 .priceRow del{font-size:12px;color:#999;font-weight:400}
@@ -80,3 +79,5 @@
   .statBarInner{flex-direction:column;gap:16px}
   .statDivider{display:none}
 }
+.promoBanners{display:grid;gap:12px;max-width:1440px;margin:18px auto 0;padding:0 20px}.promoBanners a{display:block;overflow:hidden;border-radius:12px}.promoBanners img{display:block;width:100%;height:auto;max-height:360px;object-fit:cover}
+@media(max-width:480px){.hero{aspect-ratio:1.2;margin-top:12px}.heroCta{left:20px;bottom:20px;padding:10px 16px;font-size:12px}.dots button{width:6px;height:6px}.dots .activeDot{width:16px}.sectionHeading{font-size:22px;margin-bottom:16px}.concernGrid{grid-template-columns:1fr}.productGrid{grid-template-columns:repeat(2,1fr);gap:10px}.productBody{padding:10px}.productBody h3{font-size:12px;height:32px}.productBody button{height:34px;font-size:10px}.shop h2{font-size:22px}.categoryButton{padding:10px 16px;font-size:12px}.guessworkCard{padding:24px 16px}.guessworkCard h2{font-size:22px}.experts{padding:24px 16px;border-radius:12px}.experts h2{font-size:22px}.faqItem button{font-size:13px;padding:16px 0}.statBarInner{padding:16px;gap:12px}.statBarInner b{font-size:20px}.statBarInner span{font-size:11px}.section{padding-top:36px}.reviews img{height:200px}}

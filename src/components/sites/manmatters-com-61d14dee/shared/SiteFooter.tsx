@@ -1,20 +1,10 @@
+import Image from "next/image";
+import Link from "next/link";
 import styles from "./SiteChrome.module.css";
 import { FacebookIcon, InstagramIcon, XIcon, YoutubeIcon } from "./SocialIcons";
-
-export function SiteFooter() {
-  return (
-    <footer className={`${styles.root} ${styles.footer}`}>
-      <div className={styles.footerInner}>
-        <div className={styles.footerTop}>
-          <div className={styles.textLogo}>TÓC<i>TAI</i><small>STUDIO</small></div>
-          <div className={styles.appBadges}><span>Routine chăm sóc tóc cá nhân hóa</span></div>
-        </div>
-        <div className={styles.linkGroup}><a href="/hair-matters">Giải pháp tóc rụng</a><a href="/beard-matters">Chăm sóc da đầu</a><a href="/nutrition-matters">Phục hồi tóc</a></div>
-        <div className={styles.linkGroup}><a href="/refunds-policy">Đổi trả & hoàn tiền</a><a href="/contact-us">Liên hệ</a><a href="/privacy-policy">Chính sách bảo mật</a></div>
-        <div className={styles.linkGroup}><a href="/faq">Câu hỏi thường gặp</a><a href="/about-us">Về Tóc Tai</a><a href="/sitemap">Sơ đồ website</a><a href="/terms-and-conditions">Điều khoản sử dụng</a><a href="/blog">Tạp chí tóc</a></div>
-        <div className={styles.footerBottom}>© 2026 Tóc Tai Studio. All rights reserved.<a href="/terms-and-conditions">Điều khoản dịch vụ</a></div>
-        <div className={styles.socials}><a href="https://facebook.com" aria-label="Facebook"><FacebookIcon size={16} /></a><a href="https://instagram.com" aria-label="Instagram"><InstagramIcon size={16} /></a><a href="https://twitter.com" aria-label="X"><XIcon size={16} /></a><a href="https://youtube.com" aria-label="YouTube"><YoutubeIcon size={16} /></a></div>
-      </div>
-    </footer>
-  );
-}
+const groups = [
+  { title: "Kh\u00e1m ph\u00e1", links: [["S\u1ea3n ph\u1ea9m", "/shop/all"], ["Ch\u1ecdn theo nhu c\u1ea7u", "/"], ["Ki\u1ec3m tra t\u00f3c", "/pages/hair-form-assessment"], ["C\u1ea9m nang t\u00f3c", "/habit/honest-report"]] },
+  { title: "H\u1ed7 tr\u1ee3 kh\u00e1ch h\u00e0ng", links: [["C\u00e2u h\u1ecfi th\u01b0\u1eddng g\u1eb7p", "/faq"], ["Li\u00ean h\u1ec7", "/contact-us"], ["\u0110\u1ed5i tr\u1ea3 & ho\u00e0n ti\u1ec1n", "/refunds-policy"], ["Theo d\u00f5i \u0111\u01a1n h\u00e0ng", "/account"]] },
+  { title: "V\u1ec1 T\u00f3c Tai", links: [["V\u1ec1 ch\u00fang t\u00f4i", "/about-us"], ["Ch\u00ednh s\u00e1ch b\u1ea3o m\u1eadt", "/privacy-policy"], ["\u0110i\u1ec1u kho\u1ea3n s\u1eed d\u1ee5ng", "/terms-and-conditions"], ["S\u01a1 \u0111\u1ed3 website", "/sitemap"]] },
+] as const;
+export function SiteFooter() { return <footer className={`${styles.root} ${styles.footer}`}><div className={styles.footerInner}><div className={styles.footerTop}><div><Image src="/images/logocarewise-trimmed.png" alt="CareWise" width={1429} height={277} className={styles.footerLogo} /><p className={styles.footerIntro}>{"Ch\u0103m s\u00f3c t\u00f3c v\u00e0 s\u1ee9c kh\u1ecfe nam gi\u1edbi"}<br />{"\u0110\u01a1n gi\u1ea3n, khoa h\u1ecdc, ph\u00f9 h\u1ee3p v\u1edbi b\u1ea1n."}</p></div><div className={styles.footerCta}><b>{"B\u1eaft \u0111\u1ea7u routine c\u1ee7a b\u1ea1n"}</b><span>{"Kh\u00e1m ph\u00e1 gi\u1ea3i ph\u00e1p ph\u00f9 h\u1ee3p v\u1edbi nhu c\u1ea7u."}</span><Link href="/shop/all">{"Xem s\u1ea3n ph\u1ea9m"} <span aria-hidden="true">-&gt;</span></Link></div></div><div className={styles.footerLinks}>{groups.map((group) => <div className={styles.linkColumn} key={group.title}><h3>{group.title}</h3>{group.links.map(([label, href]) => <Link href={href} key={href}>{label}</Link>)}</div>)}</div><div className={styles.footerBottom}><span>{"(c) 2026 T\u00f3c Tai Studio. B\u1ea3o l\u01b0u m\u1ecdi quy\u1ec1n."}</span><div className={styles.socials}><a href="https://facebook.com" aria-label="Facebook"><FacebookIcon size={16} /></a><a href="https://instagram.com" aria-label="Instagram"><InstagramIcon size={16} /></a><a href="https://twitter.com" aria-label="X"><XIcon size={16} /></a><a href="https://youtube.com" aria-label="YouTube"><YoutubeIcon size={16} /></a></div><Link href="/terms-and-conditions">{"\u0110i\u1ec1u kho\u1ea3n d\u1ecbch v\u1ee5"}</Link></div></div></footer>; }

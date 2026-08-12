@@ -1,0 +1,13 @@
+.drawer{position:fixed;z-index:70;top:0;right:0;bottom:0;width:min(560px,calc(100vw - 28px));display:flex;flex-direction:column;background:#fff;box-shadow:-18px 0 48px rgba(16,49,82,.2);transform:translateX(105%);transition:transform .24s ease;overflow:hidden}
+.open{transform:translateX(0)}
+.drawerBody{flex:1;min-height:0;overflow-y:auto;padding:0 28px 30px}
+.drawerHeader{display:flex;justify-content:space-between;gap:16px;margin:0 -28px 26px;padding:30px 72px 26px 28px;background:linear-gradient(135deg,#07579e,#126dc0);color:#fff}
+.drawerHeader span{display:block;margin-bottom:9px;color:#d9ecff;font-size:10px;font-weight:900;letter-spacing:.15em}
+.drawerHeader h2{margin:0;font-size:23px;letter-spacing:-.03em}.drawerHeader p{margin:8px 0 0;color:#e4f2ff;font-size:12px}
+.drawerHeader button{position:absolute;right:18px;top:18px;width:38px;height:38px;display:grid;place-items:center;border:0;border-radius:50%;background:#ffffff2e;color:#fff;cursor:pointer}
+.formGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.formGrid label{display:grid;gap:7px;color:#243b53;font-size:12px;font-weight:700}.formGrid label:first-child,.formGrid label:nth-child(4),.formGrid label:last-child{grid-column:1/-1}
+.formGrid input,.formGrid select{width:100%;min-height:42px;box-sizing:border-box;border:1px solid #cbdbea;border-radius:8px;padding:10px 12px;background:#fff;color:#16324f;font:500 12px var(--font-lexend),sans-serif}.formGrid input:focus,.formGrid select:focus{outline:3px solid #1677c21c;border-color:#1677c2}
+.drawerFooter{flex:none;display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:20px 28px 22px;border-top:1px solid #d9e2ec;background:#fff;box-shadow:0 -5px 18px rgba(16,49,82,.06)}
+.drawerFooter button{width:100%;min-height:44px}.cancelButton{border:1px solid #d0d5dd;border-radius:8px;background:#fff;color:#475467;font:600 12px var(--font-lexend),sans-serif;cursor:pointer}.backdrop{position:fixed;z-index:60;inset:0;border:0;background:#0b22395c;cursor:pointer}
+@media(max-width:600px){.drawer{width:calc(100vw - 12px)}.drawerBody{padding:0 18px 24px}.drawerHeader{margin:0 -18px 22px;padding:25px 66px 21px 18px}.formGrid{grid-template-columns:1fr}.formGrid label{grid-column:1/-1!important}.drawerFooter{padding:16px 18px 18px;gap:12px}}

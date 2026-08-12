@@ -1,28 +1,8 @@
 {
-  "name": "ai-website-clone-template",
-  "version": "0.4.0",
+  "name": "carewise",
+  "version": "1.0.0",
   "private": true,
-  "description": "Clone any website into a clean, modern Next.js codebase using AI coding agents",
-  "author": "JCodesMore",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/JCodesMore/ai-website-cloner-template.git"
-  },
-  "homepage": "https://github.com/JCodesMore/ai-website-cloner-template",
-  "bugs": {
-    "url": "https://github.com/JCodesMore/ai-website-cloner-template/issues"
-  },
-  "keywords": [
-    "claude-code",
-    "website-clone",
-    "reverse-engineering",
-    "nextjs",
-    "ai",
-    "template",
-    "tailwindcss",
-    "shadcn-ui"
-  ],
+  "description": "CareWise (Tóc Tai) - nền tảng thương mại điện tử chăm sóc tóc & sức khỏe nam giới",
   "engines": {
     "node": ">=24"
   },
@@ -32,7 +12,11 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "check": "npm run lint && npm run typecheck && npm run build"
+    "check": "npm run lint && npm run typecheck && npm run build",
+    "seed:catalog": "node scripts/seed-full-catalog.mjs",
+    "seed:banners": "node scripts/seed-banner-slots.mjs",
+    "seed:orders": "node scripts/seed-orders.mjs",
+    "seed:admin": "node scripts/seed-admin.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",

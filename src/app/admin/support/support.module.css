@@ -1,0 +1,190 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.88fr) minmax(420px, 1.35fr);
+  gap: 18px;
+}
+.threadList,
+.chatPanel {
+  min-height: 610px;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  border-bottom: 1px solid var(--admin-border);
+}
+.search {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #cbdbea;
+  border-radius: 9px;
+  padding: 0 11px;
+  min-height: 40px;
+  color: #71849a;
+}
+.search input {
+  border: 0;
+  outline: 0;
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  font: 600 12px var(--font-lexend), sans-serif;
+}
+.toolbar select,
+.statusSelect {
+  min-height: 40px;
+  border: 1px solid #cbdbea;
+  border-radius: 9px;
+  padding: 0 10px;
+  background: #fff;
+  color: #143461;
+  font: 700 12px var(--font-lexend), sans-serif;
+}
+.threads {
+  display: grid;
+}
+.thread {
+  border: 0;
+  border-bottom: 1px solid var(--admin-border);
+  background: #fff;
+  padding: 15px 16px;
+  text-align: left;
+  display: grid;
+  gap: 7px;
+  cursor: pointer;
+}
+.thread:hover,
+.active {
+  background: #f4f9ff;
+}
+.threadTop,
+.chatTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.thread b,
+.chatTop b {
+  color: #143461;
+  font-size: 13px;
+}
+.thread p {
+  margin: 0;
+  color: #61758b;
+  font-size: 11.5px;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.thread small {
+  color: #8ba0b5;
+  font-size: 10.5px;
+}
+.badge {
+  min-width: 22px;
+  height: 22px;
+  border-radius: 99px;
+  background: #1570ef;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 900;
+}
+.chatPanel {
+  display: flex;
+  flex-direction: column;
+}
+.chatHeader {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--admin-border);
+  background: linear-gradient(135deg, #f8fbff, #fff);
+}
+.chatHeader p {
+  margin: 6px 0 0;
+  color: #71849a;
+  font-size: 11.5px;
+}
+.messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #f7fbff;
+}
+.bubble {
+  max-width: 76%;
+  padding: 11px 13px;
+  border-radius: 13px;
+  background: #fff;
+  border: 1px solid #dce7f0;
+  color: #143461;
+  font-size: 12px;
+  line-height: 1.48;
+}
+.bubble small {
+  display: block;
+  margin-bottom: 4px;
+  color: #7b8fa4;
+  font-size: 10px;
+  font-weight: 800;
+}
+.adminBubble {
+  align-self: flex-end;
+  background: #143461;
+  border-color: #143461;
+  color: #fff;
+}
+.adminBubble small {
+  color: #cde4ff;
+}
+.composer {
+  border-top: 1px solid var(--admin-border);
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+  background: #fff;
+}
+.composer textarea {
+  width: 100%;
+  min-height: 92px;
+  resize: none;
+  box-sizing: border-box;
+  border: 1px solid #cbdbea;
+  border-radius: 10px;
+  padding: 12px;
+  color: #143461;
+  font: 600 12px var(--font-lexend), sans-serif;
+}
+.composer button {
+  justify-self: end;
+  min-height: 40px;
+}
+.empty {
+  margin: auto;
+  text-align: center;
+  color: #71849a;
+  font-size: 13px;
+}
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .threadList,
+  .chatPanel {
+    min-height: auto;
+  }
+  .chatPanel {
+    min-height: 560px;
+  }
+}

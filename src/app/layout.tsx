@@ -1,5 +1,7 @@
 ﻿import type { Metadata } from "next";
 import { Lexend } from "next/font/google";
+import { CartProvider } from "@/contexts/CartContext";
+import { SupportChatWidget } from "@/components/support/SupportChatWidget";
 import "./globals.css";
 
 const lexend = Lexend({
@@ -22,7 +24,12 @@ export default function RootLayout({
       lang="vi"
       className={`${lexend.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <CartProvider>
+          {children}
+          <SupportChatWidget />
+        </CartProvider>
+      </body>
     </html>
   );
 }
