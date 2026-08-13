@@ -20,7 +20,6 @@ type Banner = {
   isActive: boolean;
   sortOrder: number;
 };
-type Category = { slug: string; name: string };
 type Slot = {
   key: string;
   page: string;
@@ -41,23 +40,12 @@ const homeSlots: Slot[] = [1, 2, 3].map((number) => ({
   defaultHref: "/shop/all",
   sort: number - 1,
 }));
-const allProductSlot: Slot = {
-  key: "all-products-top",
-  page: "Trang tất cả sản phẩm",
-  label: "Banner đầu trang tất cả sản phẩm",
-  placement: "all_products",
-  defaultAlt: "Banner tất cả sản phẩm",
-  defaultHref: "/shop/all",
-  sort: 0,
-};
-
 function normalize(value: string) {
   return value.toLocaleLowerCase("vi-VN");
 }
 
 export default function AdminBannersPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
@@ -66,21 +54,9 @@ export default function AdminBannersPage() {
 
   async function load() {
     setLoading(true);
-    const [bannerResponse, categoryResponse] = await Promise.all([
-      fetch("/api/banners?placement=all&all=true"),
-      fetch("/api/categories?tree=true"),
-    ]);
+    const bannerResponse = await fetch("/api/banners?placement=all&all=true");
     const bannerBody = await bannerResponse.json();
-    const categoryBody = await categoryResponse.json();
     setBanners(bannerBody.data ?? []);
-    setCategories(
-      (categoryBody.data ?? []).map(
-        (category: { slug: string; name: string }) => ({
-          slug: category.slug,
-          name: category.name,
-        }),
-      ),
-    );
     setLoading(false);
   }
 
@@ -88,23 +64,7 @@ export default function AdminBannersPage() {
     void load();
   }, []);
 
-  const slots = useMemo(
-    () => [
-      ...homeSlots,
-      allProductSlot,
-      ...categories.map((category, index) => ({
-        key: `category-${category.slug}`,
-        page: "Danh mục cha",
-        label: `Banner ${category.name}`,
-        placement: "category" as const,
-        categorySlug: category.slug,
-        defaultAlt: `Banner ${category.name}`,
-        defaultHref: `/shop/${category.slug}`,
-        sort: index,
-      })),
-    ],
-    [categories],
-  );
+  const slots = useMemo(() => [...homeSlots], []);
 
   const filteredSlots = useMemo(() => {
     const term = normalize(search.trim());
@@ -279,18 +239,7 @@ export default function AdminBannersPage() {
             right={<strong>{filteredSlots.length} vị trí</strong>}
           />
           <div className={panel.panelPad}>
-            {renderSection(
-              "Trang chủ · 3 banner cố định",
-              filteredSlots.filter((slot) => slot.placement === "home_hero"),
-            )}
-            {renderSection(
-              "Trang tất cả sản phẩm",
-              filteredSlots.filter((slot) => slot.placement === "all_products"),
-            )}
-            {renderSection(
-              "Banner từng danh mục cha",
-              filteredSlots.filter((slot) => slot.placement === "category"),
-            )}
+            {renderSection("Trang chủ · 3 banner cố định", filteredSlots)}
           </div>
         </div>
       )}
