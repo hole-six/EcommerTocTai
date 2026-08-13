@@ -5,7 +5,7 @@ export default function PolicyLayout({ children }: { children: React.ReactNode }
   return (
     <>
       <SiteHeader />
-      <main style={{ minHeight: "calc(100vh - 200px)", padding: "120px 20px 60px", maxWidth: "800px", margin: "0 auto", color: "#18345a" }}>
+      <main style={{ minHeight: "calc(100vh - 200px)", padding: "120px 20px 60px", maxWidth: "800px", margin: "0 auto", color: "#5a2a18" }}>
         {children}
       </main>
       <SiteFooter />

@@ -360,7 +360,13 @@ export function HairLossQuiz() {
           <ArrowLeft size={20} />
         </button>
         <Link href="/" className={styles.quizLogo}>
-          <Image src="/images/logocarewise.png" alt="CareWise" width={132} height={88} />
+          <Image
+            src="/images/logocarewise.png"
+            alt="CareWise"
+            width={132}
+            height={88}
+            style={{ filter: "hue-rotate(150deg) saturate(1.15)" }}
+          />
         </Link>
         <span className={styles.headerSpacer} />
       </header>

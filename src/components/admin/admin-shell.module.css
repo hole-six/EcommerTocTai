@@ -1,11 +1,11 @@
 .admin {
-  --admin-ink: #101828;
+  --admin-ink: #281610;
   --admin-muted: #667085;
   --admin-faint: #98a2b3;
   --admin-border: #eaecf0;
-  --admin-blue: #1570ef;
-  --admin-blue-dark: #175cd3;
-  --admin-navy: #101828;
+  --admin-blue: #e2521c;
+  --admin-blue-dark: #b8390f;
+  --admin-navy: #281610;
   --admin-soft: #fbfbfc;
   --admin-surface: #ffffff;
   min-height: 100vh;
@@ -55,6 +55,7 @@
 .brandLogo {
   height: 56px;
   width: auto;
+  filter: hue-rotate(150deg) saturate(1.15);
 }
 .brandRow > button {
   border: 0;
@@ -120,7 +121,7 @@
   color: var(--admin-ink);
 }
 .sidebar .activeNav {
-  background: #eff6ff;
+  background: #fff1ec;
   color: var(--admin-blue-dark);
   font-weight: 700;
 }
@@ -389,7 +390,7 @@
   font-size: 10px;
 }
 .unreadNotification {
-  background: #eff8ff;
+  background: #fff3ef;
 }
 .menu,
 .mobileUser,
@@ -540,7 +541,7 @@
     transform: translateY(1px);
   }
   .bottomNavActive {
-    background: #eff6ff !important;
+    background: #fff1ec !important;
     color: var(--admin-blue-dark) !important;
   }
 }
@@ -581,7 +582,7 @@
 }
 .admin :global(.banner-slot-heading h2) {
   margin: 0;
-  color: #16324f;
+  color: #4f2516;
   font-size: 19px;
 }
 .admin :global(.banner-slot-heading > span) {
@@ -596,17 +597,17 @@
 .admin :global(.banner-slot-card) {
   position: relative;
   padding: 13px;
-  border: 1px solid #dfe8f1;
+  border: 1px solid #f1e4df;
   border-radius: 12px;
   background: #fff;
-  box-shadow: 0 7px 20px #173e6410;
+  box-shadow: 0 7px 20px #642c1710;
 }
 .admin :global(.banner-slot-preview) {
   height: 150px;
   position: relative;
   overflow: hidden;
   border-radius: 9px;
-  background: #eef4fa;
+  background: #faf1ee;
   margin-bottom: 12px;
 }
 .admin :global(.banner-slot-preview img) {
@@ -632,7 +633,7 @@
   bottom: 8px;
   padding: 4px 7px;
   border-radius: 5px;
-  background: #143461e8;
+  background: #7a1c0de8;
   color: #fff;
   font-size: 10px;
 }
@@ -641,7 +642,7 @@
   gap: 7px;
   align-items: center;
   margin-bottom: 10px;
-  color: #16324f;
+  color: #4f2516;
   font-size: 12px;
 }
 .admin :global(.banner-slot-meta small) {

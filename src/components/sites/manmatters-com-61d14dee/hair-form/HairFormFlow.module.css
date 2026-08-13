@@ -24,7 +24,7 @@
   background: none;
   border: 0;
   font-size: 23px;
-  color: #22548a;
+  color: #d2451a;
   cursor: pointer;
 }
 .intro,
@@ -45,14 +45,14 @@
   display: grid;
   place-items: center;
   position: relative;
-  color: #22548a;
+  color: #d2451a;
   font-size: 60px;
 }
 .illustration i {
   position: absolute;
   right: 0;
   bottom: 16px;
-  background: #22548a;
+  background: #d2451a;
   color: #fff;
   width: 45px;
   height: 45px;
@@ -63,7 +63,7 @@
   place-items: center;
 }
 .kicker {
-  color: #22548a;
+  color: #d2451a;
   font-size: 11px;
   letter-spacing: 1.4px;
   font-weight: 700;
@@ -91,7 +91,7 @@
   align-items: center;
   gap: 35px;
   border: 0;
-  background: #22548a;
+  background: #d2451a;
   color: #fff;
   border-radius: 4px;
   padding: 15px 20px;
@@ -118,7 +118,7 @@
   display: block;
   width: 55%;
   height: 100%;
-  background: #22548a;
+  background: #d2451a;
   border-radius: 99px;
 }
 .progress i.full {
@@ -150,9 +150,9 @@
   cursor: pointer;
 }
 .options button.selected {
-  border: 2px solid #22548a;
+  border: 2px solid #d2451a;
   background: #eef7f7;
-  color: #22548a;
+  color: #d2451a;
 }
 .next {
   margin: 28px 0 0;
@@ -182,13 +182,13 @@
   height: 54px;
   border-radius: 50%;
   background: #e7f2f2;
-  color: #22548a;
+  color: #d2451a;
   display: grid;
   place-items: center;
   font-size: 28px;
 }
 .uploadCard label {
-  background: #22548a;
+  background: #d2451a;
   color: #fff;
   padding: 12px 18px;
   border-radius: 4px;
@@ -202,7 +202,7 @@
 }
 .skip {
   text-align: center;
-  color: #22548a;
+  color: #d2451a;
   text-decoration: underline;
   font-size: 13px;
   margin: 20px;

@@ -22,7 +22,7 @@ type Product = { inventory: number; status: string };
 
 const money = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 });
 const statusTone: Record<OrderStatus, string> = { pending: "violet", confirmed: "blue", processing: "orange", shipping: "blue", completed: "green", cancelled: "red", returned: "gray" };
-const statusBarColor: Record<OrderStatus, string> = { pending: "#5925dc", confirmed: "#175cd3", processing: "#b54708", shipping: "#175cd3", completed: "#027a48", cancelled: "#b42318", returned: "#475467" };
+const statusBarColor: Record<OrderStatus, string> = { pending: "#5925dc", confirmed: "#b8390f", processing: "#b54708", shipping: "#b8390f", completed: "#027a48", cancelled: "#b42318", returned: "#475467" };
 
 export default function AdminPage() {
   const [report, setReport] = useState<Report | null>(null);

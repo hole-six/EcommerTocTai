@@ -6,9 +6,9 @@
 }
 .metrics article {
   padding: 19px 20px;
-  border: 1px solid #dce7f0;
+  border: 1px solid #f0e1dc;
   border-radius: 13px;
-  background: linear-gradient(145deg, #fff, #f5faff);
+  background: linear-gradient(145deg, #fff, #fff8f5);
 }
 .metrics span {
   display: block;
@@ -20,7 +20,7 @@
 .metrics strong {
   display: block;
   margin: 9px 0 4px;
-  color: #143b65;
+  color: #652a14;
   font-size: 25px;
   letter-spacing: -0.03em;
 }
@@ -36,11 +36,11 @@
   align-items: center;
   gap: 12px;
   padding: 17px 20px;
-  border-bottom: 1px solid #e5edf4;
+  border-bottom: 1px solid #f4e9e5;
 }
 .toolbar > b {
   margin-left: auto;
-  color: #1677c2;
+  color: #e2521c;
   font-size: 12px;
 }
 .search,
@@ -48,7 +48,7 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  border: 1px solid #cbdbea;
+  border: 1px solid #ead3cb;
   border-radius: 9px;
   background: #fff;
   padding: 0 11px;
@@ -71,7 +71,7 @@
   background: transparent !important;
   box-shadow: none !important;
   outline: 0 !important;
-  color: #16324f !important;
+  color: #4f2516 !important;
   font:
     500 12px var(--font-lexend),
     sans-serif !important;
@@ -84,7 +84,7 @@
   border: 0;
   background: transparent;
   outline: 0;
-  color: #16324f;
+  color: #4f2516;
   font:
     500 12px var(--font-lexend),
     sans-serif;
@@ -104,12 +104,12 @@
   display: block;
 }
 .table td b {
-  color: #16324f;
+  color: #4f2516;
   font-size: 12px;
 }
 .table td strong {
   margin-top: 5px;
-  color: #12365d;
+  color: #5d2612;
   font-size: 13px;
 }
 .table td small {
@@ -121,10 +121,10 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  border: 1px solid #b9d6ee;
+  border: 1px solid #eec7b9;
   border-radius: 8px;
-  background: #eff8ff;
-  color: #126cb2;
+  background: #fff3ef;
+  color: #b23d12;
   padding: 8px 10px;
   font:
     750 11px var(--font-lexend),
@@ -137,11 +137,11 @@
   color: #8295a9;
 }
 .empty svg {
-  color: #1677c2;
+  color: #e2521c;
 }
 .empty h3 {
   margin: 12px 0 5px;
-  color: #16324f;
+  color: #4f2516;
   font-size: 15px;
 }
 .empty p {
@@ -158,7 +158,7 @@
   display: flex;
   flex-direction: column;
   background: #fff;
-  box-shadow: -18px 0 48px #10315233;
+  box-shadow: -18px 0 48px #52221033;
   transform: translateX(105%);
   transition: transform 0.24s;
   overflow: hidden;
@@ -175,13 +175,13 @@
   display: flex;
   justify-content: space-between;
   padding: 30px 72px 26px 28px;
-  background: linear-gradient(135deg, #07579e, #126dc0);
+  background: linear-gradient(135deg, #7a1c0d, #c04012);
   color: #fff;
 }
 .drawerHeader span {
   display: block;
   margin-bottom: 9px;
-  color: #d9ecff;
+  color: #ffe3d9;
   font-size: 10px;
   font-weight: 900;
   letter-spacing: 0.15em;
@@ -192,7 +192,7 @@
 }
 .drawerHeader p {
   margin: 7px 0 0;
-  color: #e4f2ff;
+  color: #ffebe4;
   font-size: 12px;
 }
 .drawerHeader button {
@@ -214,12 +214,12 @@
 .form {
   margin: 22px 24px;
   padding: 17px;
-  border: 1px solid #dce7f0;
+  border: 1px solid #f0e1dc;
   border-radius: 10px;
 }
 .customer b,
 .items > b {
-  color: #16324f;
+  color: #4f2516;
   font-size: 12px;
 }
 .customer p {
@@ -241,10 +241,10 @@
   gap: 4px;
 }
 .orderItem span b {
-  color: #16324f;
+  color: #4f2516;
 }
 .orderItem em {
-  color: #126cb2;
+  color: #b23d12;
   font-style: normal;
   font-weight: 800;
 }
@@ -255,13 +255,13 @@
 .orderItem code {
   width: max-content;
   border-radius: 5px;
-  background: #f2f6fb;
+  background: #fbf4f2;
   color: #71849a;
   padding: 2px 5px;
   font-size: 10px;
 }
 .items strong {
-  color: #16324f;
+  color: #4f2516;
 }
 .form {
   display: grid;
@@ -270,18 +270,18 @@
 .form label {
   display: grid;
   gap: 7px;
-  color: #243b53;
+  color: #533124;
   font-size: 12px;
   font-weight: 700;
 }
 .form input,
 .form select {
   min-height: 42px;
-  border: 1px solid #cbdbea;
+  border: 1px solid #ead3cb;
   border-radius: 8px;
   padding: 10px 12px;
   background: #fff;
-  color: #16324f;
+  color: #4f2516;
   font:
     500 12px var(--font-lexend),
     sans-serif;
@@ -291,7 +291,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 14px;
   padding: 20px 24px;
-  border-top: 1px solid #d9e2ec;
+  border-top: 1px solid #ecded9;
   background: #fff;
 }
 .drawerFooter button {
@@ -308,14 +308,14 @@
 .drawerFooter .saveButton {
   border: 0;
   color: #fff;
-  background: #1570ef;
+  background: #e2521c;
 }
 .backdrop {
   position: fixed;
   z-index: 60;
   inset: 0;
   border: 0;
-  background: #0b22395c;
+  background: #39170b5c;
 }
 @media (max-width: 900px) {
   .metrics {
@@ -368,7 +368,7 @@
   margin-top: 8px;
   border: 0;
   background: transparent;
-  color: #126cb2;
+  color: #b23d12;
   padding: 0;
   font:
     700 10.5px var(--font-lexend),

@@ -610,7 +610,7 @@ export default function AdminCustomersPage() {
                     </a>
                   </div>
                 ) : (
-                  <div className={styles.confirmBox} style={{ borderColor: "#b2ddff", background: "#eff8ff", color: "#143461" }}>
+                  <div className={styles.confirmBox} style={{ borderColor: "#ffc7b2", background: "#fff3ef", color: "#7a1c0d" }}>
                     <input
                       placeholder="Mật khẩu mới (tối thiểu 8 ký tự), hoặc để trống để tạo tự động"
                       value={resetPassword}

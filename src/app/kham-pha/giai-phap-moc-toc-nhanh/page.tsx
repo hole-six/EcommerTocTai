@@ -34,7 +34,7 @@ export default function GiaiPhapMocTocNhanhPage() {
       <p>Sử dụng dầu gội chuyên dụng tẩy tế bào chết chứa BHA (Salicylic Acid) 1-2 lần mỗi tuần để thanh tẩy nang tóc, giúp serum mọc tóc thẩm thấu sâu đến tận lớp trung bì.</p>
 
       <h2>Kết luận</h2>
-      <p>Để chữa rụng tóc thành công, sự kết hợp "Trong Uống - Ngoài Thoa" cùng một da đầu sạch sẽ là công thức bất bại. Khám phá <a href="/shop/all" style={{ color: "#143461", fontWeight: 600 }}>các dòng sản phẩm kích mọc tóc</a> được tuyển chọn khắt khe tại CareWise.</p>
+      <p>Để chữa rụng tóc thành công, sự kết hợp "Trong Uống - Ngoài Thoa" cùng một da đầu sạch sẽ là công thức bất bại. Khám phá <a href="/shop/all" style={{ color: "#7a1c0d", fontWeight: 600 }}>các dòng sản phẩm kích mọc tóc</a> được tuyển chọn khắt khe tại CareWise.</p>
     </article>
   );
 }
