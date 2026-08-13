@@ -1,7 +1,7 @@
 .page {
   min-height: 100vh;
-  background: #fcf7f5;
-  color: #562310;
+  background: #f5f8fc;
+  color: #102d56;
 }
 .shell {
   min-height: 100vh;
@@ -12,7 +12,7 @@
   position: relative;
   overflow: hidden;
   min-height: 100vh;
-  background: #732c12;
+  background: #123b73;
   color: #fff;
 }
 .visual::after {
@@ -69,7 +69,7 @@
 .eyebrow {
   display: block;
   margin-bottom: 17px;
-  color: #ffb99f;
+  color: #9fc6ff;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.16em;
@@ -83,14 +83,14 @@
 .visual p {
   max-width: 420px;
   margin: 24px 0 0;
-  color: #ffe8e0;
+  color: #e0edff;
   font-size: 17px;
   line-height: 1.65;
 }
 .trust {
   display: flex;
   gap: 28px;
-  color: #fcdbcf;
+  color: #cfe1fc;
   font-size: 13px;
 }
 .trust strong {
@@ -121,11 +121,11 @@
   text-decoration: none;
 }
 .back:hover {
-  color: #c64212;
+  color: #1263c6;
 }
 .title {
   margin: 0;
-  color: #562310;
+  color: #102d56;
   font-size: 36px;
   line-height: 1.1;
   letter-spacing: -0.055em;
@@ -143,18 +143,18 @@
 .field {
   display: grid;
   gap: 8px;
-  color: #533124;
+  color: #243653;
   font-size: 13px;
   font-weight: 700;
 }
 .input {
   width: 100%;
   height: 52px;
-  border: 1px solid #eedcd6;
+  border: 1px solid #d6e1ee;
   border-radius: 11px;
   background: #fff;
   padding: 0 15px;
-  color: #512414;
+  color: #142d51;
   font: inherit;
   font-size: 15px;
   outline: none;
@@ -163,7 +163,7 @@
     box-shadow 0.15s;
 }
 .input:focus {
-  border-color: #df4e19;
+  border-color: #1976df;
   box-shadow: 0 0 0 4px rgba(25, 118, 223, 0.1);
 }
 .input::placeholder {
@@ -181,7 +181,7 @@
   height: 53px;
   border: 0;
   border-radius: 11px;
-  background: #cc4412;
+  background: #1268cc;
   color: #fff;
   font-size: 15px;
   font-weight: 800;
@@ -192,7 +192,7 @@
     background 0.15s;
 }
 .submit:hover {
-  background: #ae390e;
+  background: #0e57ae;
   transform: translateY(-1px);
 }
 .submit:disabled {
@@ -208,7 +208,7 @@
 }
 .switch a {
   margin-left: 5px;
-  color: #cc4412;
+  color: #1268cc;
   font-weight: 800;
   text-decoration: none;
 }
@@ -217,7 +217,7 @@
 }
 .note {
   margin: 28px 0 0;
-  border-top: 1px solid #f5eae6;
+  border-top: 1px solid #e6edf5;
   padding-top: 20px;
   color: #8190a6;
   font-size: 12px;

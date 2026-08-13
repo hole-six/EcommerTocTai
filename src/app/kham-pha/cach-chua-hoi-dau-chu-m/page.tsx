@@ -37,7 +37,7 @@ export default function CachChuaHoiChuMPage() {
       
       <h2>Cần thời gian và sự kiên nhẫn</h2>
       <p>Nang tóc cần trung bình 3-4 tháng để hoàn thành một chu kỳ mọc mới. Do đó, đừng mong đợi phép màu chỉ sau 1-2 tuần sử dụng. Kiên trì áp dụng đúng phác đồ là chìa khóa duy nhất để lấp đầy vùng hói chữ M.</p>
-      <p>Khám phá <a href="/shop/all" style={{ color: "#7a1c0d", fontWeight: 600 }}>Bộ sản phẩm đặc trị hói đầu chữ M</a> của CareWise ngay hôm nay.</p>
+      <p>Khám phá <a href="/shop/all" style={{ color: "#143461", fontWeight: 600 }}>Bộ sản phẩm đặc trị hói đầu chữ M</a> của CareWise ngay hôm nay.</p>
     </article>
   );
 }

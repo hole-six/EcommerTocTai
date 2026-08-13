@@ -57,14 +57,14 @@
 }
 
 :root {
-  --brand-navy: #7a1c0d;
-  --brand-blue: #d2451a;
+  --brand-navy: #143461;
+  --brand-blue: #22548a;
   --brand-gold: #f6ca4c;
-  --brand-link: #ea580c;
+  --brand-link: #0876e3;
   --brand-ink: #333437;
   --brand-muted: #757575;
-  --brand-bg: #fdf4f1;
-  --brand-bg-mid: #f7e9e3;
+  --brand-bg: #f2f7fc;
+  --brand-bg-mid: #ebf0f5;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);

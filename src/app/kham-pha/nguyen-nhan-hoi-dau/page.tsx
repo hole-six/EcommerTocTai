@@ -30,7 +30,7 @@ export default function NguyenNhanHoiDauPage() {
       </ul>
       
       <h2>Giải pháp từ CareWise</h2>
-      <p>Tại CareWise, chúng tôi cung cấp phác đồ điều trị hói đầu toàn diện, tập trung vào việc ức chế DHT tại chỗ (bằng Saw Palmetto, Finasteride topical) kết hợp với các hoạt chất kích thích mọc tóc mạnh mẽ (Minoxidil, Redensyl). <a href="/pages/hair-form-assessment" style={{ color: "#7a1c0d", fontWeight: 600 }}>Thực hiện bài kiểm tra tóc ngay</a> để nhận phác đồ dành riêng cho bạn.</p>
+      <p>Tại CareWise, chúng tôi cung cấp phác đồ điều trị hói đầu toàn diện, tập trung vào việc ức chế DHT tại chỗ (bằng Saw Palmetto, Finasteride topical) kết hợp với các hoạt chất kích thích mọc tóc mạnh mẽ (Minoxidil, Redensyl). <a href="/pages/hair-form-assessment" style={{ color: "#143461", fontWeight: 600 }}>Thực hiện bài kiểm tra tóc ngay</a> để nhận phác đồ dành riêng cho bạn.</p>
     </article>
   );
 }

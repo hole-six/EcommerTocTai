@@ -104,7 +104,7 @@ const websiteJsonLd = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#7a1c0d",
+  themeColor: "#143461",
 };
 
 export default function RootLayout({

@@ -31,7 +31,7 @@
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  background: #d2451a;
+  background: #22548a;
   color: #fff;
   border-radius: 999px;
   padding: 17px 30px;
@@ -132,14 +132,14 @@
 }
 .steps article {
   padding: 22px;
-  border-top: 2px solid #d2451a;
+  border-top: 2px solid #22548a;
 }
 .steps article > b {
   display: grid;
   place-items: center;
   width: 34px;
   height: 34px;
-  background: #d2451a;
+  background: #22548a;
   border-radius: 50%;
   color: #fff;
   margin: auto;
@@ -166,7 +166,7 @@
 }
 .trust b {
   font-size: 25px;
-  color: #d2451a;
+  color: #22548a;
 }
 .page footer {
   padding: 28px;

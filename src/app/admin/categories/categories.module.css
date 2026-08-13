@@ -5,61 +5,61 @@
 .drawerOpen{transform:translateX(0)}
 .drawer>div:first-child{flex:1;min-height:0;padding:0!important;overflow-y:auto}
 .drawerHeader{position:absolute;z-index:2;top:0;right:0;display:flex;align-items:flex-start;justify-content:flex-end;padding:18px;border:0;margin:0}
-.drawerEyebrow{display:block;margin-bottom:7px;color:#e2521c;font-size:9px;font-weight:900;letter-spacing:.14em}
+.drawerEyebrow{display:block;margin-bottom:7px;color:#1677c2;font-size:9px;font-weight:900;letter-spacing:.14em}
 .drawerHeader .drawerEyebrow{display:none}
 .drawerHeader .closeDrawer{display:grid;width:38px;height:38px;border:0;border-radius:50%;background:rgba(255,255,255,.18);color:#fff}
 .drawerHeader .closeDrawer:hover{background:rgba(255,255,255,.3);color:#fff;border:0}
-.drawerTitle{padding:32px 70px 26px 32px;border-bottom:2px solid #fee4db;background:linear-gradient(135deg,#7a1c0d,#c04012)}
-.drawerTitle .drawerEyebrow{margin-bottom:10px;color:#ffe3d9;font-size:10px}
+.drawerTitle{padding:32px 70px 26px 32px;border-bottom:2px solid #dbeafe;background:linear-gradient(135deg,#07579e,#126dc0)}
+.drawerTitle .drawerEyebrow{margin-bottom:10px;color:#d9ecff;font-size:10px}
 .drawerTitle h3{margin:0;color:#fff;font-size:24px;letter-spacing:-.035em;line-height:1.2}
-.drawerTitle p{margin:9px 0 0;color:#ffebe4;font-size:12px;line-height:1.5}
+.drawerTitle p{margin:9px 0 0;color:#e4f2ff;font-size:12px;line-height:1.5}
 .drawer>div>h2{display:none}
 .drawer .parentBadge,.drawer .formGrid{margin-left:24px;margin-right:24px}
 .drawer .parentBadge{margin-top:18px;margin-bottom:0}
 .formGrid{gap:12px}
 .formGrid label{font-size:11.5px}
 .drawer .formGrid{padding-top:20px}
-.drawerSectionLabel{grid-column:1 / -1;margin-top:2px;padding-top:5px;color:#e2521c;font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;border-top:1px solid #f5ebe8}
+.drawerSectionLabel{grid-column:1 / -1;margin-top:2px;padding-top:5px;color:#1677c2;font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;border-top:1px solid #e8eef5}
 .drawer .formGrid{row-gap:13px}
 .drawer .formGrid input,.drawer .formGrid select,.drawer .formGrid textarea{min-height:40px}
-.drawer .formGrid input:not([type="checkbox"]),.drawer .formGrid select,.drawer .formGrid textarea{display:block;width:100%;box-sizing:border-box;border:1px solid #ead3cb;border-radius:9px;background:#fff;color:#4f2516;padding:10px 12px;font:500 12px var(--font-lexend),sans-serif;line-height:1.35}
+.drawer .formGrid input:not([type="checkbox"]),.drawer .formGrid select,.drawer .formGrid textarea{display:block;width:100%;box-sizing:border-box;border:1px solid #cbdbea;border-radius:9px;background:#fff;color:#16324f;padding:10px 12px;font:500 12px var(--font-lexend),sans-serif;line-height:1.35}
 .drawer .formGrid textarea{min-height:78px;resize:vertical}
-.drawer .formGrid input:not([type="checkbox"]):focus,.drawer .formGrid select:focus,.drawer .formGrid textarea:focus{outline:3px solid #e2521c1c;border-color:#e2521c}
-.drawer .formGrid input[type="checkbox"]{width:16px;height:16px;min-height:16px;accent-color:#e2521c}
-.drawerFooter{flex:none;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;padding:20px 24px 22px;border-top:1px solid #ecded9;background:#fff;box-shadow:0 -5px 18px rgba(16,49,82,.06)}
+.drawer .formGrid input:not([type="checkbox"]):focus,.drawer .formGrid select:focus,.drawer .formGrid textarea:focus{outline:3px solid #1677c21c;border-color:#1677c2}
+.drawer .formGrid input[type="checkbox"]{width:16px;height:16px;min-height:16px;accent-color:#1677c2}
+.drawerFooter{flex:none;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;padding:20px 24px 22px;border-top:1px solid #d9e2ec;background:#fff;box-shadow:0 -5px 18px rgba(16,49,82,.06)}
 .drawerFooter button{width:100%!important;min-width:0!important;min-height:44px;box-sizing:border-box}
 .drawerCancel{border:1px solid #d0d5dd;border-radius:8px;background:#fff;color:#475467;font:600 12px var(--font-lexend),sans-serif;cursor:pointer}
-.drawerCancel:hover{background:#fcf6f4;border-color:#dda18b}
+.drawerCancel:hover{background:#f4f8fc;border-color:#8bb9dd}
 .drawer>div>.message{margin:16px 24px 0}
-.closeDrawer{width:34px;height:34px;display:grid;place-items:center;border:1px solid #e8d1c9;border-radius:9px;background:#fff9f7;color:#8a523d;cursor:pointer}
-.closeDrawer:hover{background:#fff0ea;color:#b23d12;border-color:#df9b82}
+.closeDrawer{width:34px;height:34px;display:grid;place-items:center;border:1px solid #c9d9e8;border-radius:9px;background:#f7fbff;color:#3d668a;cursor:pointer}
+.closeDrawer:hover{background:#eaf5ff;color:#126cb2;border-color:#82b5df}
 .drawerBackdrop{position:fixed;z-index:60;inset:0;border:0;background:rgba(11,34,57,.38);cursor:pointer}
-.treeIntro{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:27px 30px;border-bottom:1px solid #f4e2db;background:linear-gradient(110deg,#fff7f4,#fff)}
-.treeEyebrow{display:block;color:#e2521c;font-size:10px;font-weight:900;letter-spacing:.16em;margin-bottom:9px}
-.treeIntro h2{margin:0;color:#5d2612;font-size:23px;letter-spacing:-.025em}
+.treeIntro{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:27px 30px;border-bottom:1px solid #dbe8f4;background:linear-gradient(110deg,#f4f9ff,#fff)}
+.treeEyebrow{display:block;color:#1677c2;font-size:10px;font-weight:900;letter-spacing:.16em;margin-bottom:9px}
+.treeIntro h2{margin:0;color:#12365d;font-size:23px;letter-spacing:-.025em}
 .treeIntro p{margin:7px 0 0;color:#71849a;font-size:13px}
-.treeLegend{display:flex;align-items:center;gap:8px;color:#8a523d;font-size:12px;font-weight:750;white-space:nowrap}
+.treeLegend{display:flex;align-items:center;gap:8px;color:#3d668a;font-size:12px;font-weight:750;white-space:nowrap}
 .treeLegend i{display:block;width:9px;height:9px;border-radius:50%;background:#12b76a;box-shadow:0 0 0 5px #dcfae6}
-.tree{padding:26px 28px 34px;background:#fffcfb}
+.tree{padding:26px 28px 34px;background:#fbfdff}
 .node{position:relative;padding:0 0 23px}
-.node+.node{border-top:1px dashed #e8d1c9;margin-top:5px;padding-top:25px}
-.nodeRow{position:relative;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 22px;border:2px solid #b7532f;border-radius:14px;background:linear-gradient(120deg,#fff2ed 0%,#fff 75%);box-shadow:0 6px 16px rgba(25,86,135,.1);transition:transform .15s ease,box-shadow .15s ease}
+.node+.node{border-top:1px dashed #c9d9e8;margin-top:5px;padding-top:25px}
+.nodeRow{position:relative;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 22px;border:2px solid #2f78b7;border-radius:14px;background:linear-gradient(120deg,#edf7ff 0%,#fff 75%);box-shadow:0 6px 16px rgba(25,86,135,.1);transition:transform .15s ease,box-shadow .15s ease}
 .nodeRow:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(25,86,135,.14)}
 .nodeRow button,.childRow button{font-size:13px!important;font-weight:750!important}
 .nodeRow>div[class*="actions"],.childRow>div[class*="actions"]{gap:18px}
 .nodeInfo span[class*="status"]{font-size:11px;padding:5px 10px}
-.nodeRow:before{content:"";width:11px;height:11px;flex:none;border-radius:4px;background:#e2521c;box-shadow:0 0 0 6px #ffe5dc}
+.nodeRow:before{content:"";width:11px;height:11px;flex:none;border-radius:4px;background:#1677c2;box-shadow:0 0 0 6px #dceeff}
 .nodeInfo{display:flex;align-items:center;gap:12px;min-width:0;flex-wrap:wrap;flex:1}
 .nodeInfo b{font-size:17px;color:var(--admin-ink);font-weight:800}
 .slug{font-size:12px;color:var(--admin-faint);font-family:ui-monospace,monospace}
-.children{position:relative;margin:0 0 0 34px;padding:16px 0 0 30px;border-left:3px solid #dda18b}
-.children:before{content:"";position:absolute;top:-21px;left:-3px;width:3px;height:37px;background:#dda18b}
-.childRow{position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 18px;margin-bottom:11px;border:1.5px solid #e8cabf;border-radius:11px;background:#fff;box-shadow:0 3px 9px rgba(25,86,135,.055);transition:border-color .12s ease,background .12s ease,transform .12s ease}
-.childRow:before{content:"";position:absolute;left:-33px;top:50%;width:30px;border-top:3px solid #dda18b}
-.childRow:hover{border-color:#e2521c;background:#fff8f5;transform:translateX(2px)}
-.childName{font-size:15px;color:#6e2e17;font-weight:750}
+.children{position:relative;margin:0 0 0 34px;padding:16px 0 0 30px;border-left:3px solid #8bb9dd}
+.children:before{content:"";position:absolute;top:-21px;left:-3px;width:3px;height:37px;background:#8bb9dd}
+.childRow{position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 18px;margin-bottom:11px;border:1.5px solid #bfd5e8;border-radius:11px;background:#fff;box-shadow:0 3px 9px rgba(25,86,135,.055);transition:border-color .12s ease,background .12s ease,transform .12s ease}
+.childRow:before{content:"";position:absolute;left:-33px;top:50%;width:30px;border-top:3px solid #8bb9dd}
+.childRow:hover{border-color:#1677c2;background:#f5faff;transform:translateX(2px)}
+.childName{font-size:15px;color:#17456e;font-weight:750}
 .formGrid{display:grid;gap:14px}
-.parentBadge{display:inline-flex;align-items:center;gap:8px;background:#fff3ef;color:var(--admin-blue-dark);border:1px solid #ffddd1;border-radius:8px;padding:7px 10px;font-size:11.5px;font-weight:600;margin-bottom:16px}
+.parentBadge{display:inline-flex;align-items:center;gap:8px;background:#eff8ff;color:var(--admin-blue-dark);border:1px solid #d1e9ff;border-radius:8px;padding:7px 10px;font-size:11.5px;font-weight:600;margin-bottom:16px}
 .parentBadge button{border:0;background:rgba(21,112,239,.12);color:var(--admin-blue-dark);width:18px;height:18px;border-radius:50%;display:grid;place-items:center;cursor:pointer}
 @media(max-width:1000px){.layout{grid-template-columns:1fr}.formPanel{position:static}}
 @media(max-width:600px){.treeIntro{align-items:flex-start;flex-direction:column}.tree{padding:14px 12px}.nodeRow{align-items:flex-start;flex-wrap:wrap;padding:13px}.nodeRow:before{margin-top:4px}.nodeInfo{flex-basis:calc(100% - 24px)}.nodeRow>.actions{width:100%;padding-left:24px}.children{margin-left:17px;padding-left:18px}.childRow:before{left:-20px;width:17px}.childRow>.actions{gap:9px}}

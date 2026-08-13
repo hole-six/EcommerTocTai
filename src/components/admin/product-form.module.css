@@ -223,9 +223,9 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 2px dashed #f0af98;
+  border: 2px dashed #98c1f0;
   border-radius: 12px;
-  background: #fff3ef;
+  background: #eff8ff;
   color: var(--admin-blue-dark);
   font-size: 12px;
   font-weight: 700;
@@ -234,8 +234,8 @@
   padding: 10px;
 }
 .stageImageEmpty:hover {
-  background: #ffeae3;
-  border-color: #e88f6e;
+  background: #e3f1ff;
+  border-color: #6ea8e8;
 }
 .stageFields {
   display: grid;
@@ -354,7 +354,7 @@
   gap: 8px;
 }
 .tagChip {
-  border: 1px solid #ebdbd5;
+  border: 1px solid #d5e0eb;
   border-radius: 999px;
   padding: 7px 14px;
   background: #fff;

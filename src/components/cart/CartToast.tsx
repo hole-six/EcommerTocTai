@@ -53,7 +53,7 @@ export function CartToastHost() {
             display: "flex",
             alignItems: "center",
             gap: 8,
-            background: "#6b1c0c",
+            background: "#123e71",
             color: "#fff",
             borderRadius: 999,
             padding: "10px 18px",

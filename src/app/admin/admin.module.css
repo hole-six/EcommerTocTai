@@ -6,8 +6,8 @@
 .metricIcon{height:34px;width:34px;border-radius:9px;display:grid;place-items:center}
 .metricgreen{background:#ecfdf3;color:#027a48}
 .metricorange{background:#fffaeb;color:#b54708}
-.metricviolet{background:#fff6f3;color:#5925dc}
-.metricblue{background:#fff3ef;color:#b8390f}
+.metricviolet{background:#f4f3ff;color:#5925dc}
+.metricblue{background:#eff8ff;color:#175cd3}
 .metricTop{display:flex;align-items:center;justify-content:space-between}
 .metricTrend{font-size:11px;font-weight:700;display:flex;align-items:center;gap:3px;margin-top:8px}
 .trendUp{color:#027a48}
@@ -34,7 +34,7 @@
 .statusTrack i{display:block;height:100%;border-radius:99px;font-style:normal}
 .bottomGrid{display:grid;grid-template-columns:1.7fr 1fr;gap:16px;margin-top:16px}
 .orders,.taskPanel{padding:22px}
-.taskCount{background:#fff3ef;color:var(--admin-blue-dark);border-radius:99px;font-size:11px;font-weight:700;padding:3px 9px}
+.taskCount{background:#eff8ff;color:var(--admin-blue-dark);border-radius:99px;font-size:11px;font-weight:700;padding:3px 9px}
 .task{display:flex;align-items:center;gap:11px;padding:13px 0;border-top:1px solid var(--admin-border);text-decoration:none;color:inherit}
 .task:first-of-type{border-top:none;padding-top:16px}
 .task>i{height:32px;width:32px;border-radius:9px;font-style:normal;font-size:14px;font-weight:800;display:grid;place-items:center;flex-shrink:0}
@@ -43,7 +43,7 @@
 .task span{font-size:11px;color:var(--admin-faint)}
 .task>svg{color:var(--admin-faint);flex-shrink:0}
 .alert{background:#fffaeb;color:#b54708}
-.info{background:#fff3ef;color:#b8390f}
+.info{background:#eff8ff;color:#175cd3}
 .topProducts{display:grid;gap:2px}
 .topProduct{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--admin-border)}
 .topProduct:first-child{border-top:none;padding-top:14px}

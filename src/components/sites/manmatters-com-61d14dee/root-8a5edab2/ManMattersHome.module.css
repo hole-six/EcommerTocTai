@@ -1,11 +1,11 @@
 .page {
-  --navy: #7a1c0d;
-  --blue: #d2451a;
-  --linkblue: #c43c0a;
-  --bg-light: #fdf4f1;
-  --bg-mid: #f7e9e3;
-  --bg-tint: #f1d9d0;
-  --ink: #271711;
+  --navy: #143461;
+  --blue: #22548a;
+  --linkblue: #0a5bc4;
+  --bg-light: #f2f7fc;
+  --bg-mid: #ebf0f5;
+  --bg-tint: #d0def1;
+  --ink: #111827;
   --muted: #667085;
   --radius: 14px;
   --container: min(1210px, calc(100vw - 32px));
@@ -22,7 +22,7 @@
   margin: clamp(12px, 2.4vw, 24px) auto 0;
   overflow: hidden;
   border-radius: clamp(12px, 1.5vw, 18px);
-  background: #f6ece8;
+  background: #e8eef6;
 }
 
 .heroImage {
@@ -138,7 +138,7 @@
 
 .statBarInner b {
   display: block;
-  color: #281610;
+  color: #101828;
   font-size: clamp(22px, 3vw, 28px);
   font-weight: 850;
   line-height: 1;
@@ -171,7 +171,7 @@
 .sectionHeading,
 .shop h2 {
   margin: 0 0 clamp(18px, 3vw, 28px);
-  color: #281610;
+  color: #101828;
   font-size: clamp(24px, 3.2vw, 34px);
   font-weight: 850;
   letter-spacing: 0;
@@ -363,7 +363,7 @@
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  color: #281610;
+  color: #101828;
   font-size: clamp(13px, 1.3vw, 15px);
   font-weight: 800;
   line-height: 1.32;
@@ -377,7 +377,7 @@
 }
 
 .priceRow strong {
-  color: #281610;
+  color: #101828;
   font-size: clamp(15px, 1.6vw, 17px);
 }
 
@@ -428,7 +428,7 @@
 }
 
 .addBtn:hover {
-  background: #faf1ee;
+  background: #eef3fa;
 }
 
 .guessworkCard {
@@ -441,7 +441,7 @@
 .guessworkCard h2 {
   max-width: 760px;
   margin: 0 auto clamp(20px, 3vw, 30px);
-  color: #281610;
+  color: #101828;
   font-size: clamp(24px, 3vw, 32px);
   font-weight: 850;
   line-height: 1.2;
@@ -474,7 +474,7 @@
 }
 
 .step span {
-  color: #281610;
+  color: #101828;
   font-size: 14px;
   font-weight: 750;
   line-height: 1.35;
@@ -564,7 +564,7 @@ a.menVideoLink {
 
 .experts {
   border-radius: clamp(16px, 2vw, 22px);
-  background: linear-gradient(120deg, var(--navy), #95482c);
+  background: linear-gradient(120deg, var(--navy), #2c5f95);
   color: #fff;
   padding: clamp(28px, 5vw, 54px);
 }
@@ -580,7 +580,7 @@ a.menVideoLink {
 .experts p {
   max-width: 520px;
   margin: 0;
-  color: #eeded8;
+  color: #d8e2ee;
   font-size: clamp(13px, 1.4vw, 15px);
   line-height: 1.65;
 }
@@ -591,7 +591,7 @@ a.menVideoLink {
 }
 
 .faqItem {
-  border-bottom: 1px solid #f3ebe8;
+  border-bottom: 1px solid #e8edf3;
 }
 
 .faqItem button {
@@ -602,7 +602,7 @@ a.menVideoLink {
   gap: 18px;
   border: 0;
   background: none;
-  color: #281610;
+  color: #101828;
   cursor: pointer;
   padding: clamp(17px, 2.2vw, 22px) 0;
   font-size: clamp(14px, 1.5vw, 16px);

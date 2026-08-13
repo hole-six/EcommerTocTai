@@ -486,11 +486,11 @@ export default function CheckoutPage() {
   }
   if (orderNumber && transferPayment && !transferPaid)
     return (
-      <div className="min-h-screen bg-gradient-to-b from-orange-50/60 to-slate-50">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50/60 to-slate-50">
         <SiteHeader compact />
         <main className="mx-auto max-w-md px-5 py-10">
-          <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-orange-900/10">
-            <div className="relative overflow-hidden bg-gradient-to-br from-[#5c1509] via-[#8f280f] to-[#e2521c] px-6 pb-7 pt-6 text-white">
+          <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-blue-900/10">
+            <div className="relative overflow-hidden bg-gradient-to-br from-[#053b73] via-[#0a5a9e] to-[#1677c2] px-6 pb-7 pt-6 text-white">
               <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
               <div className="absolute -bottom-10 -left-6 h-28 w-28 rounded-full bg-white/5" />
               <div className="relative flex items-start justify-between">
@@ -504,7 +504,7 @@ export default function CheckoutPage() {
               <h1 className="relative mt-4 text-xl font-black leading-tight">
                 Chờ thanh toán chuyển khoản
               </h1>
-              <p className="relative mt-1.5 text-sm text-orange-100">
+              <p className="relative mt-1.5 text-sm text-blue-100">
                 Quét mã QR bằng app ngân hàng hoặc ví điện tử. Đơn tự xác nhận
                 ngay khi SePay nhận được tiền.
               </p>
@@ -562,10 +562,10 @@ export default function CheckoutPage() {
                 <button
                   type="button"
                   onClick={() => copyValue("code", transferPayment.paymentCode)}
-                  className="flex w-full items-center justify-between rounded-lg border border-orange-100 bg-orange-50 px-3 py-2.5 font-bold text-orange-700"
+                  className="flex w-full items-center justify-between rounded-lg border border-blue-100 bg-blue-50 px-3 py-2.5 font-bold text-blue-700"
                 >
                   <span className="text-left">
-                    <span className="block text-[11px] font-semibold text-orange-500">
+                    <span className="block text-[11px] font-semibold text-blue-500">
                       Nội dung chuyển khoản (bắt buộc)
                     </span>
                     {transferPayment.paymentCode}
@@ -583,8 +583,8 @@ export default function CheckoutPage() {
               </div>
               <div className="mt-5 flex items-center justify-center gap-2 text-xs font-semibold text-slate-500">
                 <span className="relative flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-orange-600" />
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-blue-600" />
                 </span>
                 Đang tự động kiểm tra thanh toán mỗi 3 giây...
               </div>
@@ -628,12 +628,12 @@ export default function CheckoutPage() {
             Đặt hàng thành công
           </h1>
           <p className="mt-3 text-slate-600">
-            Mã đơn của bạn: <b className="text-orange-700">{orderNumber}</b>. Tồn
+            Mã đơn của bạn: <b className="text-blue-700">{orderNumber}</b>. Tồn
             kho đã được giữ chỗ cho đơn này.
           </p>
           <Link
             href="/cua-hang"
-            className="mt-8 inline-flex rounded-xl bg-orange-700 px-5 py-3 text-sm font-bold text-white"
+            className="mt-8 inline-flex rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white"
           >
             Tiếp tục mua sắm
           </Link>
@@ -701,7 +701,7 @@ export default function CheckoutPage() {
       <main className="mx-auto max-w-6xl px-4 py-8 lg:px-6">
         <div className="mb-7 flex items-end justify-between">
           <div>
-            <p className="text-xs font-extrabold tracking-[.16em] text-orange-600">
+            <p className="text-xs font-extrabold tracking-[.16em] text-blue-600">
               CHECKOUT BẢO MẬT
             </p>
             <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-900">
@@ -761,7 +761,7 @@ export default function CheckoutPage() {
             </section>
             <section className="rounded-2xl border border-slate-200 bg-white p-5">
               <div className="flex items-center gap-2">
-                <MapPin className="text-orange-600" size={19} />
+                <MapPin className="text-blue-600" size={19} />
                 <h2 className="font-extrabold text-slate-900">
                   2. Địa chỉ giao hàng
                 </h2>
@@ -775,7 +775,7 @@ export default function CheckoutPage() {
                         setAddressMode("saved");
                         setSelectedAddressId(address._id);
                       }}
-                      className={`rounded-xl border p-4 text-left transition ${selectedAddressId === address._id && addressMode === "saved" ? "border-orange-600 bg-orange-50 ring-2 ring-orange-100" : "border-slate-200 hover:border-orange-300"}`}
+                      className={`rounded-xl border p-4 text-left transition ${selectedAddressId === address._id && addressMode === "saved" ? "border-blue-600 bg-blue-50 ring-2 ring-blue-100" : "border-slate-200 hover:border-blue-300"}`}
                     >
                       <b className="text-sm text-slate-900">
                         {address.recipientName} · {address.phone}
@@ -797,7 +797,7 @@ export default function CheckoutPage() {
                       setAddressMode("new");
                       setRecipientDifferent(false);
                     }}
-                    className={`rounded-xl border border-dashed p-3 text-sm font-bold ${addressMode === "new" ? "border-orange-600 bg-orange-50 text-orange-700" : "border-slate-300 text-slate-600"}`}
+                    className={`rounded-xl border border-dashed p-3 text-sm font-bold ${addressMode === "new" ? "border-blue-600 bg-blue-50 text-blue-700" : "border-slate-300 text-slate-600"}`}
                   >
                     + Dùng địa chỉ mới
                   </button>
@@ -822,7 +822,7 @@ export default function CheckoutPage() {
                           : `${contact.fullName || "Tên liên hệ"} · ${contact.phone || verifiedPhone || "Số điện thoại liên hệ"}`}
                       </small>
                     </span>
-                    <span className="font-bold text-orange-700">
+                    <span className="font-bold text-blue-700">
                       {recipientDifferent
                         ? "Dùng thông tin liên hệ"
                         : "Giao cho người khác"}
@@ -889,8 +889,8 @@ export default function CheckoutPage() {
                     Danh mục địa giới hành chính Việt Nam mới (sau sáp nhập
                     2025).
                   </p>
-                  <div className="sm:col-span-2 rounded-xl border border-orange-100 bg-gradient-to-r from-orange-50 to-sky-50 p-4 text-sm text-orange-900">
-                    <p className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wide text-orange-700">
+                  <div className="sm:col-span-2 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-sky-50 p-4 text-sm text-blue-900">
+                    <p className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wide text-blue-700">
                       <MapPin size={15} /> Xem trước địa chỉ giao hàng
                     </p>
                     <p className="mt-2 font-bold">
@@ -899,7 +899,7 @@ export default function CheckoutPage() {
                         ? ` · ${currentNewAddress.phone}`
                         : ""}
                     </p>
-                    <p className="mt-1 leading-6 text-orange-800">
+                    <p className="mt-1 leading-6 text-blue-800">
                       {[
                         addressForm.addressLine || "Số nhà, tên đường",
                         addressForm.ward || "Phường / xã",
@@ -907,7 +907,7 @@ export default function CheckoutPage() {
                       ].join(", ")}
                     </p>
                     {!canUseNewAddress(currentNewAddress) && (
-                      <p className="mt-2 text-xs text-orange-600">
+                      <p className="mt-2 text-xs text-blue-600">
                         Điền đủ thông tin để có thể đặt hàng. Khung này tự cập
                         nhật khi bạn nhập.
                       </p>
@@ -925,13 +925,13 @@ export default function CheckoutPage() {
                   <button
                     key={value}
                     onClick={() => setPaymentMethod(value)}
-                    className={`flex items-center gap-3 rounded-xl border p-4 text-left ${paymentMethod === value ? "border-orange-600 bg-orange-50 ring-2 ring-orange-100" : "border-slate-200"}`}
+                    className={`flex items-center gap-3 rounded-xl border p-4 text-left ${paymentMethod === value ? "border-blue-600 bg-blue-50 ring-2 ring-blue-100" : "border-slate-200"}`}
                   >
                     <i
-                      className={`grid h-5 w-5 place-items-center rounded-full border-2 ${paymentMethod === value ? "border-orange-600" : "border-slate-300"}`}
+                      className={`grid h-5 w-5 place-items-center rounded-full border-2 ${paymentMethod === value ? "border-blue-600" : "border-slate-300"}`}
                     >
                       {paymentMethod === value && (
-                        <i className="h-2.5 w-2.5 rounded-full bg-orange-600" />
+                        <i className="h-2.5 w-2.5 rounded-full bg-blue-600" />
                       )}
                     </i>
                     <span>
@@ -982,7 +982,7 @@ export default function CheckoutPage() {
                         {money.format(item.price)}
                       </small>
                       {item.variantTitle && (
-                        <small className="mt-1 block text-orange-700">
+                        <small className="mt-1 block text-blue-700">
                           {item.variantTitle}
                         </small>
                       )}
@@ -1030,7 +1030,7 @@ export default function CheckoutPage() {
                         type="button"
                         key={coupon.code}
                         onClick={() => void applyCoupon(coupon.code)}
-                        className="flex items-center gap-1 rounded-full border border-dashed border-orange-300 bg-orange-50 px-2.5 py-1 text-[11px] font-bold text-orange-700 hover:border-orange-500 hover:bg-orange-100"
+                        className="flex items-center gap-1 rounded-full border border-dashed border-blue-300 bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700 hover:border-blue-500 hover:bg-blue-100"
                         title={
                           coupon.minOrderValue
                             ? `Đơn tối thiểu ${money.format(coupon.minOrderValue)}`
@@ -1115,11 +1115,11 @@ export default function CheckoutPage() {
                   </div>
                 </div>
                 {addressPreview && (
-                  <div className="mt-5 rounded-xl border border-orange-100 bg-orange-50 p-3">
-                    <p className="flex items-center gap-1.5 text-xs font-extrabold text-orange-800">
+                  <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50 p-3">
+                    <p className="flex items-center gap-1.5 text-xs font-extrabold text-blue-800">
                       <MapPin size={14} /> Giao đến
                     </p>
-                    <p className="mt-1 text-xs leading-5 text-orange-700">
+                    <p className="mt-1 text-xs leading-5 text-blue-700">
                       {[
                         addressPreview.addressLine || "Số nhà, tên đường",
                         addressPreview.ward || "Phường / xã",
@@ -1134,7 +1134,7 @@ export default function CheckoutPage() {
                 <button
                   onClick={openConfirm}
                   disabled={submitting || !items.length}
-                  className="mt-5 w-full rounded-xl bg-gradient-to-r from-[#7a1c0d] to-[#e2521c] py-3.5 text-sm font-extrabold text-white shadow-lg shadow-orange-600/20 disabled:opacity-50"
+                  className="mt-5 w-full rounded-xl bg-gradient-to-r from-[#07579e] to-[#1677c2] py-3.5 text-sm font-extrabold text-white shadow-lg shadow-blue-600/20 disabled:opacity-50"
                 >
                   {submitting
                     ? "Đang tạo đơn..."
@@ -1195,7 +1195,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between border-t border-slate-200 pt-2.5">
                   <span className="font-bold text-slate-700">Tổng cộng</span>
-                  <b className="text-lg text-orange-700">
+                  <b className="text-lg text-blue-700">
                     {money.format(total)}
                   </b>
                 </div>
@@ -1212,7 +1212,7 @@ export default function CheckoutPage() {
                   type="button"
                   onClick={submit}
                   disabled={submitting}
-                  className="flex-1 rounded-xl bg-gradient-to-r from-[#7a1c0d] to-[#e2521c] py-3 text-sm font-bold text-white disabled:opacity-60"
+                  className="flex-1 rounded-xl bg-gradient-to-r from-[#07579e] to-[#1677c2] py-3 text-sm font-bold text-white disabled:opacity-60"
                 >
                   {submitting ? "Đang xử lý..." : "Xác nhận đặt hàng"}
                 </button>
