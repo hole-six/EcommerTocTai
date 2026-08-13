@@ -14,6 +14,7 @@ import { InventoryError, reserveOrder } from "@/lib/server/inventory";
 import { notify, notifyAdmins } from "@/lib/server/notifications";
 import { escapeRegex, paginationMeta, parsePagination } from "@/lib/server/pagination";
 import { createPaymentCode, createSePayPayment } from "@/lib/server/sepay";
+import { createSePayPgCheckout, isSePayPgConfigured } from "@/lib/server/sepayPg";
 import { getShippingSettings } from "@/lib/server/settings";
 import { orderSchema } from "@/lib/server/validators";
 
@@ -211,6 +212,7 @@ export async function POST(request: Request) {
     const total = Math.max(0, subtotal + shippingFee - discount);
     if (
       data.paymentMethod === "bank_transfer" &&
+      !isSePayPgConfigured() &&
       !createSePayPayment("CHECK", total)
     )
       return NextResponse.json(
@@ -284,10 +286,27 @@ export async function POST(request: Request) {
         },
       );
     }
+    let payment: unknown = null;
+    if (data.paymentMethod === "bank_transfer") {
+      const origin = new URL(request.url).origin;
+      const pg = createSePayPgCheckout({
+        orderInvoiceNumber: order.orderNumber,
+        amount: total,
+        description: `Thanh toan don hang ${order.orderNumber}`,
+        successUrl: `${origin}/checkout?order=${order.orderNumber}&payment=success`,
+        errorUrl: `${origin}/checkout?order=${order.orderNumber}&payment=error`,
+        cancelUrl: `${origin}/checkout?order=${order.orderNumber}&payment=cancel`,
+      });
+      payment = pg
+        ? { gateway: "sepay_pg", ...pg }
+        : paymentCode
+          ? createSePayPayment(paymentCode, total)
+          : null;
+    }
     return NextResponse.json(
       {
         data: await Order.findById(order._id).lean(),
-        payment: paymentCode ? createSePayPayment(paymentCode, total) : null,
+        payment,
       },
       { status: 201 },
     );

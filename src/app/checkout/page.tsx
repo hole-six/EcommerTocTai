@@ -20,7 +20,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SiteHeader } from "@/components/sites/manmatters-com-61d14dee/shared/SiteHeader";
 import { useCart } from "@/contexts/CartContext";
 
@@ -49,7 +49,7 @@ type AddressForm = {
   addressLine: string;
 };
 type Division = { code: number; name: string; division_type: string };
-type TransferPayment = {
+type LegacyTransferPayment = {
   paymentCode: string;
   bank: string;
   account: string;
@@ -57,6 +57,12 @@ type TransferPayment = {
   amount: number;
   qrUrl: string;
 };
+type SePayPgPayment = {
+  gateway: "sepay_pg";
+  url: string;
+  fields: Record<string, string | number | undefined>;
+};
+type TransferPayment = LegacyTransferPayment | SePayPgPayment;
 const money = new Intl.NumberFormat("vi-VN", {
   style: "currency",
   currency: "VND",
@@ -149,7 +155,29 @@ export default function CheckoutPage() {
   );
   const [manualChecking, setManualChecking] = useState(false);
   const [manualCheckMissed, setManualCheckMissed] = useState(false);
+  const sepayFormRef = useRef<HTMLFormElement>(null);
   const appliedCouponCode = appliedCoupon?.code;
+  useEffect(() => {
+    if (transferPayment && "gateway" in transferPayment && transferPayment.gateway === "sepay_pg") {
+      sepayFormRef.current?.submit();
+    }
+  }, [transferPayment]);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const returnedOrder = params.get("order");
+    const status = params.get("payment");
+    if (!returnedOrder || !status) return;
+    window.history.replaceState(null, "", "/checkout");
+    if (status === "success") {
+      setOrderNumber(returnedOrder);
+    } else {
+      setError(
+        status === "cancel"
+          ? "Bạn đã huỷ thanh toán. Vui lòng thử lại."
+          : "Thanh toán không thành công. Vui lòng thử lại hoặc chọn phương thức khác.",
+      );
+    }
+  }, []);
   useEffect(() => {
     fetch("/api/coupons")
       .then((response) => response.json())
@@ -341,6 +369,7 @@ export default function CheckoutPage() {
   }, [subtotal, appliedCouponCode]);
   useEffect(() => {
     if (!orderNumber || !transferPayment || transferPaid) return;
+    if ("gateway" in transferPayment && transferPayment.gateway === "sepay_pg") return;
     const check = () =>
       fetch(`/api/orders/${orderNumber}/payment`)
         .then((response) => response.json())
@@ -557,7 +586,32 @@ export default function CheckoutPage() {
       setManualChecking(false);
     }
   }
-  if (orderNumber && transferPayment && !transferPaid)
+  if (
+    orderNumber &&
+    transferPayment &&
+    "gateway" in transferPayment &&
+    transferPayment.gateway === "sepay_pg"
+  )
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-50/60 to-slate-50">
+        <SiteHeader compact />
+        <main className="mx-auto max-w-md px-5 py-24 text-center">
+          <Loader2 size={40} className="mx-auto animate-spin text-blue-600" />
+          <h1 className="mt-5 text-lg font-black text-slate-900">
+            Đang chuyển đến trang thanh toán…
+          </h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Vui lòng đợi trong giây lát cho đơn #{orderNumber}.
+          </p>
+          <form ref={sepayFormRef} action={transferPayment.url} method="POST" className="hidden">
+            {Object.entries(transferPayment.fields).map(([key, value]) => (
+              <input key={key} type="hidden" name={key} value={value ?? ""} />
+            ))}
+          </form>
+        </main>
+      </div>
+    );
+  if (orderNumber && transferPayment && !("gateway" in transferPayment) && !transferPaid)
     return (
       <div className="min-h-screen bg-gradient-to-b from-blue-50/60 to-slate-50">
         <SiteHeader compact />
