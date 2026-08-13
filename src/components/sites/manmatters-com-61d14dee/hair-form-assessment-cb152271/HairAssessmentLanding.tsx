@@ -1,8 +1,11 @@
+"use client";
+
 import Image from "next/image";
 import { HairLossQuiz } from "@/components/store/HairLossQuiz";
 import { SiteFooter } from "../shared/SiteFooter";
 import { SiteHeader } from "../shared/SiteHeader";
 import styles from "./HairAssessmentLanding.module.css";
+import { useState } from "react";
 
 const stageResults = [1, 2, 3, 4, 5].map((n) => `/images/anhstage${n}.png`);
 
@@ -14,6 +17,15 @@ const videos = [
 ];
 
 export function HairAssessmentLanding() {
+  const [quizStarted, setQuizStarted] = useState(false);
+
+  function startQuiz() {
+    setQuizStarted(true);
+    window.setTimeout(() => {
+      document.getElementById("quiz")?.scrollIntoView({ behavior: "smooth" });
+    }, 0);
+  }
+
   return (
     <main className={styles.page}>
       <SiteHeader />
@@ -29,13 +41,16 @@ export function HairAssessmentLanding() {
             priority
             sizes="(max-width: 1100px) 100vw, 1100px"
           />
-          <a href="#quiz" className={styles.heroCta}>
+          <a href="#quiz" className={styles.heroCta} onClick={startQuiz}>
             Làm bài kiểm tra tóc ngay <span>→</span>
           </a>
         </div>
       </section>
 
-      <div id="quiz">
+      <div
+        id="quiz"
+        className={`${styles.quizSection} ${quizStarted ? styles.quizStarted : ""}`}
+      >
         <HairLossQuiz />
       </div>
 
