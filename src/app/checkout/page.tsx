@@ -170,6 +170,8 @@ export default function CheckoutPage() {
     window.history.replaceState(null, "", "/checkout");
     if (status === "success") {
       setOrderNumber(returnedOrder);
+      clear();
+      localStorage.removeItem(DRAFT_KEY);
     } else {
       setError(
         status === "cancel"
@@ -374,7 +376,10 @@ export default function CheckoutPage() {
       fetch(`/api/orders/${orderNumber}/payment`)
         .then((response) => response.json())
         .then((body) => {
-          if (body.data?.paymentStatus === "paid") setTransferPaid(true);
+          if (body.data?.paymentStatus === "paid") {
+            setTransferPaid(true);
+            clear();
+          }
         })
         .catch(() => undefined);
     void check();
@@ -552,7 +557,12 @@ export default function CheckoutPage() {
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Đặt hàng thất bại");
-      clear();
+      // Only clear the cart once the order is actually finalized. COD orders
+      // are done at this point; bank-transfer orders aren't paid yet — if the
+      // customer backs out of SePay's page before paying, we want their cart
+      // still here instead of looking like everything vanished. It's cleared
+      // once payment is confirmed (see the paid-status handlers below).
+      if (paymentMethod === "cod") clear();
       localStorage.removeItem(DRAFT_KEY);
       setOrderNumber(body.data.orderNumber);
       setTransferPayment(body.payment ?? null);
@@ -578,8 +588,10 @@ export default function CheckoutPage() {
     try {
       const response = await fetch(`/api/orders/${orderNumber}/payment`);
       const body = await response.json();
-      if (body.data?.paymentStatus === "paid") setTransferPaid(true);
-      else setManualCheckMissed(true);
+      if (body.data?.paymentStatus === "paid") {
+        setTransferPaid(true);
+        clear();
+      } else setManualCheckMissed(true);
     } catch {
       setManualCheckMissed(true);
     } finally {
