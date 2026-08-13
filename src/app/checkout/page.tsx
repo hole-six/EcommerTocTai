@@ -81,7 +81,7 @@ const paymentMethods = [
   ],
 ] as const;
 const field =
-  "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 disabled:bg-slate-50";
+  "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/10 disabled:bg-slate-50";
 
 export default function CheckoutPage() {
   const { items, subtotal, setQuantity, removeItem, clear } = useCart();
@@ -365,7 +365,7 @@ export default function CheckoutPage() {
     if (
       Object.entries(requestedByProduct).some(
         ([productId, quantity]) =>
-          stock[productId] === undefined || quantity > stock[productId],
+          stock[productId] !== undefined && quantity > stock[productId],
       )
     )
       return setError(
@@ -504,10 +504,10 @@ export default function CheckoutPage() {
         <SiteHeader compact />
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
           <section className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
-            <div className="bg-gradient-to-br from-[#064f96] to-[#1677c2] p-7 text-white">
+            <div className="bg-gradient-to-br from-brand-navy to-brand-blue p-7 text-white">
               <UserRound size={30} />
               <h1 className="mt-4 text-2xl font-black">Trước khi thanh toán</h1>
-              <p className="mt-2 text-sm text-blue-100">
+              <p className="mt-2 text-sm text-white/80">
                 Xác thực số điện thoại để nhận thông tin đơn hàng và giao hàng
                 chính xác.
               </p>
@@ -526,7 +526,7 @@ export default function CheckoutPage() {
               />
               <button
                 onClick={verifyPhone}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-700 py-3.5 text-sm font-bold text-white hover:bg-blue-800"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-navy py-3.5 text-sm font-bold text-white hover:bg-brand-blue"
               >
                 Tiếp tục <ChevronRight size={17} />
               </button>
@@ -542,7 +542,7 @@ export default function CheckoutPage() {
                 </Link>
                 <Link
                   href="/register"
-                  className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-3 text-center text-sm font-bold text-blue-700"
+                  className="rounded-xl border border-brand-blue/25 bg-brand-bg px-3 py-3 text-center text-sm font-bold text-brand-navy"
                 >
                   Đăng ký
                 </Link>

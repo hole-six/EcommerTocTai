@@ -9,7 +9,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${siteUrl}/`, changeFrequency: "daily", priority: 1 },
     { url: `${siteUrl}/shop/all`, changeFrequency: "daily", priority: 0.9 },
-    { url: `${siteUrl}/pages/hair-form-assessment`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${siteUrl}/pages/hair-form-assessment`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${siteUrl}/chinh-sach-bao-mat`, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${siteUrl}/dieu-khoan-dich-vu`, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${siteUrl}/chinh-sach-doi-tra`, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${siteUrl}/chinh-sach-giao-hang`, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${siteUrl}/kham-pha/nguyen-nhan-hoi-dau`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${siteUrl}/kham-pha/cach-chua-hoi-dau-chu-m`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${siteUrl}/kham-pha/giai-phap-moc-toc-nhanh`, changeFrequency: "monthly", priority: 0.8 },
   ];
 
   try {

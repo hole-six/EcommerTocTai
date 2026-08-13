@@ -10,6 +10,7 @@ import {
   ImagePlus,
   Info,
   LayoutGrid,
+  Languages,
   Layers,
   ListChecks,
   Package,
@@ -17,6 +18,7 @@ import {
   RefreshCw,
   Route,
   SlidersHorizontal,
+  Sparkles,
   Tag,
   Target,
   Trash2,
@@ -80,6 +82,7 @@ export type ProductInitial = {
   stageImages?: Item[];
   howToUse?: Item;
   rootCauses?: Item[];
+  detailHighlights?: Item[];
   treatmentKit?: Item[];
   treatmentJourney?: Item[];
   status: "draft" | "active" | "archived";
@@ -87,6 +90,7 @@ export type ProductInitial = {
   variantLabel?: string;
   variantOrder?: number;
   quizTags?: QuizTags;
+  translations?: { en?: { name?: string; shortDescription?: string; description?: string; howToUseDescription?: string } };
 };
 
 const emptyItem = (): Item => ({
@@ -498,6 +502,13 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
   const [rootCauses, setRootCauses] = useState<Item[]>(
     initial?.rootCauses ?? [],
   );
+  const [detailHighlights, setDetailHighlights] = useState<Item[]>(
+    initial?.detailHighlights ?? [],
+  );
+  const [enName, setEnName] = useState(initial?.translations?.en?.name ?? "");
+  const [enShortDescription, setEnShortDescription] = useState(initial?.translations?.en?.shortDescription ?? "");
+  const [enDescription, setEnDescription] = useState(initial?.translations?.en?.description ?? "");
+  const [enHowToUse, setEnHowToUse] = useState(initial?.translations?.en?.howToUseDescription ?? "");
   const [treatmentKit, setTreatmentKit] = useState<Item[]>(
     initial?.treatmentKit ?? [],
   );
@@ -627,6 +638,15 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
         stageImages,
         howToUse,
         rootCauses,
+        detailHighlights,
+        translations: {
+          en: {
+            name: enName.trim(),
+            shortDescription: enShortDescription.trim(),
+            description: enDescription.trim(),
+            howToUseDescription: enHowToUse.trim(),
+          },
+        },
         treatmentKit,
         treatmentJourney: journey,
         contentBlocks: blocks,
@@ -864,6 +884,34 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
         </Section>
 
         <Section
+          id="translation"
+          icon={Languages}
+          title="Bản tiếng Anh (English)"
+          description="Tuỳ chọn — khách sẽ chuyển được VI / EN ở trang chi tiết sản phẩm. Để trống thì tự dùng bản tiếng Việt."
+          badge={enName || enShortDescription || enDescription ? "Đã có" : undefined}
+          defaultOpen={Boolean(enName || enShortDescription || enDescription || enHowToUse)}
+        >
+          <div className={panel.grid2}>
+            <label style={{ gridColumn: "1 / -1" }}>
+              Tên sản phẩm (EN)
+              <input value={enName} onChange={(event) => setEnName(event.target.value)} placeholder={name || "Product name in English"} />
+            </label>
+            <label style={{ gridColumn: "1 / -1" }}>
+              Mô tả ngắn (EN)
+              <input value={enShortDescription} onChange={(event) => setEnShortDescription(event.target.value)} placeholder={shortDescription || "Short description in English"} />
+            </label>
+            <label style={{ gridColumn: "1 / -1" }}>
+              Mô tả chi tiết (EN)
+              <textarea rows={6} value={enDescription} onChange={(event) => setEnDescription(event.target.value)} placeholder="Detailed description in English" />
+            </label>
+            <label style={{ gridColumn: "1 / -1" }}>
+              Hướng dẫn sử dụng (EN)
+              <textarea rows={3} value={enHowToUse} onChange={(event) => setEnHowToUse(event.target.value)} placeholder="How to use, in English" />
+            </label>
+          </div>
+        </Section>
+
+        <Section
           id="images"
           icon={Images}
           title="Ảnh sản phẩm"
@@ -1020,6 +1068,15 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           rootCauses,
           setRootCauses,
           "Nguyên nhân",
+        )}
+        {repeat(
+          "detailHighlights",
+          Sparkles,
+          "Điểm nổi bật (icon)",
+          "Dãy icon + chú thích ngắn hiện ở cuối tab Chi tiết (VD: Không tác dụng phụ, Công thức khoa học...)",
+          detailHighlights,
+          setDetailHighlights,
+          "Điểm nổi bật",
         )}
 
         <Section

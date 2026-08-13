@@ -18,6 +18,13 @@ import { useCart } from "@/contexts/CartContext";
 import styles from "./ManMattersHome.module.css";
 
 const asset = "/sites/manmatters-com-61d14dee/root-8a5edab2/";
+
+const defaultMenVideos = [
+  "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a5f1dd8e4e7b5ab468e85ba/main.mp4",
+  "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a5f1dd8a151fd521855d7fa/main.mp4",
+  "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a5f1dd8a151fd521855d7f5/main.mp4",
+  "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a5f1dd8eda64ba028b64bc9/main.mp4",
+];
 const concerns = [
   {
     name: "Tóc",
@@ -128,7 +135,22 @@ export function ManMattersHome({
   );
   const [activeCategory, setActiveCategory] = useState("");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [menVideos, setMenVideos] = useState<string[]>(defaultMenVideos);
   const { addItem } = useCart();
+  useEffect(() => {
+    fetch("/api/banners?placement=home_men_videos")
+      .then((response) => (response.ok ? response.json() : { data: [] }))
+      .then((body) => {
+        const list = (body.data ?? []) as Array<{ slotKey: string; videoUrl: string }>;
+        setMenVideos(
+          defaultMenVideos.map((fallback, index) => {
+            const match = list.find((item) => item.slotKey === `men-video-${index + 1}`);
+            return match?.videoUrl || fallback;
+          }),
+        );
+      })
+      .catch(() => undefined);
+  }, []);
   useEffect(() => {
     Promise.all([
       fetch("/api/banners?placement=home_hero").then((response) =>
@@ -386,6 +408,17 @@ export function ManMattersHome({
           <a className={styles.guessworkCta} href="/pages/hair-form-assessment">
             Bắt đầu kiểm tra tóc <ChevronRight size={16} />
           </a>
+        </div>
+      </section>
+
+      <section id="men-videos" className={styles.section}>
+        <h2 className={styles.sectionHeading}>Đàn ông đích thực</h2>
+        <div className={styles.menVideoGrid}>
+          {menVideos.map((src, index) => (
+            <video key={src + index} className={styles.menVideo} controls muted playsInline preload="metadata">
+              <source src={src} type="video/mp4" />
+            </video>
+          ))}
         </div>
       </section>
 

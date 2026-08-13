@@ -4,11 +4,11 @@ import { useEffect, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/sites/manmatters-com-61d14dee/shared/SiteHeader";
 import { SiteFooter } from "@/components/sites/manmatters-com-61d14dee/shared/SiteFooter";
-import { statusLabel, type OrderStatus } from "@/lib/orderLabels";
+import { providerLabel, statusLabel, trackingUrl, type OrderStatus, type ShippingProvider } from "@/lib/orderLabels";
 
 type Address = { _id: string; recipientName: string; phone: string; province: string; district: string; ward: string; addressLine: string; isDefault?: boolean };
 type Profile = { fullName: string; email?: string; phone: string; addresses: Address[] };
-type Order = { _id: string; orderNumber: string; total: number; status: OrderStatus; trackingNumber?: string; createdAt: string; items: { name: string; quantity: number }[] };
+type Order = { _id: string; orderNumber: string; total: number; status: OrderStatus; trackingNumber?: string; shippingProvider?: ShippingProvider; createdAt: string; items: { name: string; quantity: number }[] };
 type AddressForm = { recipientName: string; phone: string; province: string; district: string; ward: string; addressLine: string };
 type Tab = "orders" | "addresses" | "profile";
 
@@ -102,7 +102,24 @@ export default function AccountPage() {
                   <span className="rounded-md bg-brand-bg px-2.5 py-1 text-xs font-bold text-brand-navy">{statusLabel[order.status]}</span>
                   <b className="text-brand-navy">{money.format(order.total)}</b>
                 </div>
-                {order.trackingNumber && <p className="mt-2 text-xs text-brand-muted">Mã vận đơn: <b className="text-brand-blue">{order.trackingNumber}</b></p>}
+                {order.trackingNumber && (
+                  <p className="mt-2 text-xs text-brand-muted">
+                    {order.shippingProvider && order.shippingProvider !== "manual" ? providerLabel[order.shippingProvider] : "Mã vận đơn"}
+                    {": "}
+                    {trackingUrl(order.shippingProvider, order.trackingNumber) ? (
+                      <a
+                        href={trackingUrl(order.shippingProvider, order.trackingNumber)!}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-bold text-brand-blue underline underline-offset-2"
+                      >
+                        {order.trackingNumber}
+                      </a>
+                    ) : (
+                      <b className="text-brand-blue">{order.trackingNumber}</b>
+                    )}
+                  </p>
+                )}
               </div>
             ))}
           </div>

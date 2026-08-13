@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { CheckCircle2, X } from "lucide-react";
+import { CheckCircle2, Loader2, MapPin, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { notFound, useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/sites/manmatters-com-61d14dee/shared/SiteHeader";
@@ -16,7 +16,7 @@ const MAX_VISIBLE_REVIEWS = 5;
 type Item = { targetProductId?: string; targetProductSlug?: string; title?: string; label?: string; period?: string; name?: string; value?: string; description?: string; image?: string };
 type Option = { id: string; targetProductSlug?: string; targetProductId?: string; label?: string; value?: string; image?: string; priceAdjustment?: number };
 type OptionGroup = { id: string; title: string; code: string; displayType?: string; required?: boolean; options: Option[] };
-type Product = { _id: string; name: string; slug: string; price: number; salePrice?: number; images: string[]; shortDescription: string; description: string; specifications?: Record<string, string | number | boolean>; specificationRows?: Item[]; category?: { name: string; slug: string }; variantGroup?: string; variantLabel?: string; optionGroups?: OptionGroup[]; stageImages?: Item[]; howToUse?: Item; rootCauses?: Item[]; treatmentKit?: Item[]; treatmentJourney?: Item[]; contentBlocks?: Item[] };
+type Product = { _id: string; name: string; slug: string; price: number; salePrice?: number; images: string[]; shortDescription: string; description: string; specifications?: Record<string, string | number | boolean>; specificationRows?: Item[]; category?: { name: string; slug: string }; variantGroup?: string; variantLabel?: string; optionGroups?: OptionGroup[]; stageImages?: Item[]; howToUse?: Item; rootCauses?: Item[]; detailHighlights?: Item[]; treatmentKit?: Item[]; treatmentJourney?: Item[]; contentBlocks?: Item[]; translations?: { en?: { name?: string; shortDescription?: string; description?: string; howToUseDescription?: string } } };
 type Review = { _id: string; rating: number; title: string; body: string; createdAt: string; user?: { fullName: string }; guestName?: string };
 const money = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 });
 function splitOptionLabel(label: string) { const match = label.match(/^(.*?)\s*(\(.*\))\s*$/); return match ? { main: match[1].trim(), sub: match[2].trim() } : { main: label, sub: "" }; }
@@ -27,6 +27,8 @@ export function ProductDetailClient({ slug }: { slug: string }) {
   const [product, setProduct] = useState<Product | null>(null); const [loading, setLoading] = useState(true); const [failed, setFailed] = useState(false); const [activeImage, setActiveImage] = useState(0); const [selected, setSelected] = useState<Record<string, string>>({}); const [reviews, setReviews] = useState<Review[]>([]); const [loggedIn, setLoggedIn] = useState(false); const [showReviewModal, setShowReviewModal] = useState(false); const [showAllReviews, setShowAllReviews] = useState(false); const [tab, setTab] = useState<"details" | "howToUse">("details"); const [added, setAdded] = useState(false);
   const [variantModalOpen, setVariantModalOpen] = useState(false); const [variantModalBuyNow, setVariantModalBuyNow] = useState(false);
   const [stickyVisible, setStickyVisible] = useState(false); const actionsRef = useRef<HTMLDivElement>(null);
+  const [locationChecking, setLocationChecking] = useState(false); const [deliveryEstimate, setDeliveryEstimate] = useState(""); const [locationError, setLocationError] = useState("");
+  const [lang, setLang] = useState<"vi" | "en">("vi");
   useEffect(() => { fetch(`/api/commerce/products/${slug}`).then((response) => response.json()).then((body) => body.data ? setProduct(body.data) : setFailed(true)).finally(() => setLoading(false)); }, [slug]);
   useEffect(() => { if (!product) return; fetch(`/api/reviews?productId=${product._id}`).then((response) => response.json()).then((body) => setReviews(body.data ?? [])); fetch("/api/auth/me").then((response) => response.json()).then((body) => setLoggedIn(Boolean(body.data))); }, [product]);
   useEffect(() => {
@@ -41,6 +43,12 @@ export function ProductDetailClient({ slug }: { slug: string }) {
   const price = (product.salePrice ?? product.price) + selectedOptions.reduce((total, option) => total + option.priceAdjustment, 0);
   const currentProduct = product;
   const avgRating = reviews.length ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0;
+  const en = product.translations?.en;
+  const hasEnglish = Boolean(en?.name || en?.shortDescription || en?.description);
+  const displayName = (lang === "en" && en?.name) || product.name;
+  const displayShortDescription = (lang === "en" && en?.shortDescription) || product.shortDescription;
+  const displayDescription = (lang === "en" && en?.description) || product.description;
+  const displayHowToUseDescription = (lang === "en" && en?.howToUseDescription) || product.howToUse?.description;
   function choose(group: OptionGroup, option: Option) { if (option.targetProductSlug) { router.push(`/san-pham/${option.targetProductSlug}`); return; } setSelected((current) => ({ ...current, [group.code]: option.value ?? option.label ?? "" })); }
   function addToCart(buyNow: boolean) {
     const missing = groups.find((group) => group.required && !selected[group.code]);
@@ -48,6 +56,35 @@ export function ProductDetailClient({ slug }: { slug: string }) {
     addItem({ productId: currentProduct._id, name: currentProduct.name, price, image: currentProduct.images[0] ?? "", variantTitle: selectedOptions.map((option) => option.optionLabel).join(" / "), options: selectedOptions });
     setVariantModalOpen(false);
     if (buyNow) router.push("/checkout"); else { setAdded(true); setTimeout(() => setAdded(false), 1600); }
+  }
+  function formatEstimate(date: Date) {
+    return date.toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
+  }
+  function checkLocation() {
+    if (!("geolocation" in navigator)) { setLocationError("Trình duyệt không hỗ trợ định vị."); return; }
+    setLocationChecking(true); setLocationError("");
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`, { headers: { Accept: "application/json" } });
+          const body = await response.json();
+          const address = body?.address ?? {};
+          const countryCode: string = address.country_code ?? "";
+          const city: string = address.city || address.state || address.town || "";
+          const majorCities = ["hà nội", "ha noi", "hồ chí minh", "ho chi minh", "hcmc", "đà nẵng", "da nang"];
+          const isMajorCity = majorCities.some((name) => city.toLowerCase().includes(name));
+          const days = countryCode !== "vn" ? 6 : isMajorCity ? 2 : 4;
+          const eta = new Date(); eta.setDate(eta.getDate() + days);
+          setDeliveryEstimate(`Nhận trước ${formatEstimate(eta)}${city ? ` · giao đến ${city}` : ""}`);
+        } catch {
+          const eta = new Date(); eta.setDate(eta.getDate() + 4);
+          setDeliveryEstimate(`Nhận trước ${formatEstimate(eta)} (ước tính)`);
+        } finally { setLocationChecking(false); }
+      },
+      () => { setLocationChecking(false); setLocationError("Không thể truy cập vị trí. Giao hàng dự kiến trong 2-5 ngày."); },
+      { timeout: 8000 },
+    );
   }
   function renderSteps() {
     return groups.map((group, index) => (
@@ -90,7 +127,13 @@ export function ProductDetailClient({ slug }: { slug: string }) {
       <SiteHeader compact />
       <main className={styles.main}>
         <div className={styles.crumbs}>
-          <Link href="/cua-hang">Cửa hàng</Link> <span>/</span> {product.category?.name} <span>/</span> {product.name}
+          <Link href="/cua-hang">Cửa hàng</Link> <span>/</span> {product.category?.name} <span>/</span> {displayName}
+          {hasEnglish && (
+            <div className={styles.langSwitch}>
+              <button type="button" className={lang === "vi" ? styles.langActive : ""} onClick={() => setLang("vi")}>VI</button>
+              <button type="button" className={lang === "en" ? styles.langActive : ""} onClick={() => setLang("en")}>EN</button>
+            </div>
+          )}
         </div>
         <div className={styles.purchase}>
           <section className={styles.gallery}>
@@ -104,15 +147,15 @@ export function ProductDetailClient({ slug }: { slug: string }) {
             </div>
             <div className={styles.hero}>
               {product.images[activeImage] ? (
-                <Image src={product.images[activeImage]} alt={product.name} fill priority sizes="(max-width: 900px) 100vw, 50vw" />
+                <Image src={product.images[activeImage]} alt={displayName} fill priority sizes="(max-width: 900px) 100vw, 50vw" />
               ) : (
                 <div className={styles.heroFallback}>{product.category?.name}</div>
               )}
             </div>
           </section>
           <section className={styles.summary}>
-            {product.shortDescription && <p className={styles.eyebrow}>{product.shortDescription}</p>}
-            <h1>{product.name}</h1>
+            {displayShortDescription && <p className={styles.eyebrow}>{displayShortDescription}</p>}
+            <h1>{displayName}</h1>
             <div className={styles.priceRow}>
               <span className={styles.price}>{money.format(price)}</span>
               {product.salePrice && <span className={styles.compare}>{money.format(product.price)}</span>}
@@ -142,7 +185,7 @@ export function ProductDetailClient({ slug }: { slug: string }) {
               <div className={styles.tabPanel}>
                 {tab === "details" || !hasHowToUse ? (
                   <>
-                    <p>{product.description || "Thông tin chi tiết sản phẩm đang được cập nhật."}</p>
+                    <p>{displayDescription || (lang === "en" ? "Product details coming soon." : "Thông tin chi tiết sản phẩm đang được cập nhật.")}</p>
                     {(() => {
                       const kit = (product.treatmentKit ?? []).filter((item) => !isBlank(item));
                       return kit.length ? (
@@ -152,10 +195,23 @@ export function ProductDetailClient({ slug }: { slug: string }) {
                         </>
                       ) : null;
                     })()}
+                    {(() => {
+                      const highlights = (product.detailHighlights ?? []).filter((item) => !isBlank(item));
+                      return highlights.length ? (
+                        <div className={styles.highlightRow}>
+                          {highlights.map((item, index) => (
+                            <div className={styles.highlightItem} key={index}>
+                              {item.image && <span className={styles.highlightIcon}><Image src={item.image} alt="" fill sizes="40px" style={{ objectFit: "contain" }} /></span>}
+                              <span>{item.name || item.title}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null;
+                    })()}
                   </>
                 ) : (
                   <>
-                    {product.howToUse?.description && <p>{product.howToUse.description}</p>}
+                    {displayHowToUseDescription && <p>{displayHowToUseDescription}</p>}
                     {product.howToUse?.image && (
                       <div className={styles.howToImage}>
                         <Image src={product.howToUse.image} alt="Cách sử dụng" fill sizes="(max-width: 640px) 100vw, 560px" style={{ objectFit: "contain" }} quality={92} />
@@ -211,20 +267,32 @@ export function ProductDetailClient({ slug }: { slug: string }) {
       <SiteFooter />
 
       <div className={`${styles.stickyBar} ${stickyVisible && !variantModalOpen ? styles.stickyVisible : ""}`}>
-        <div className={styles.stickyProduct}>
-          {product.images[0] && (
-            <div className={styles.stickyThumb}>
-              <Image src={product.images[0]} alt="" fill sizes="48px" style={{ objectFit: "cover" }} />
-            </div>
-          )}
-          <div className={styles.stickyInfo}>
-            <b>{product.name}</b>
-            <span>{money.format(price)}</span>
-          </div>
+        <div className={styles.stickyLocationRow}>
+          <span className={styles.stickyLocationText}>
+            <MapPin size={13} />
+            {deliveryEstimate || locationError || "Kiểm tra vị trí để xem thời gian nhận hàng dự kiến"}
+          </span>
+          <button type="button" className={styles.stickyLocationButton} onClick={checkLocation} disabled={locationChecking}>
+            {locationChecking ? <Loader2 size={12} className="animate-spin" /> : null}
+            {locationChecking ? "Đang kiểm tra..." : deliveryEstimate ? "Kiểm tra lại" : "Kiểm tra vị trí"}
+          </button>
         </div>
-        <div className={styles.stickyActions}>
-          <button className={styles.add} onClick={() => addToCart(false)}>{added ? "Đã thêm ✓" : "Thêm vào giỏ"}</button>
-          <button className={styles.buy} onClick={() => addToCart(true)}>Mua ngay</button>
+        <div className={styles.stickyMainRow}>
+          <div className={styles.stickyProduct}>
+            {product.images[0] && (
+              <div className={styles.stickyThumb}>
+                <Image src={product.images[0]} alt="" fill sizes="48px" style={{ objectFit: "cover" }} />
+              </div>
+            )}
+            <div className={styles.stickyInfo}>
+              <b>{displayName}</b>
+              <span>{money.format(price)}</span>
+            </div>
+          </div>
+          <div className={styles.stickyActions}>
+            <button className={styles.add} onClick={() => addToCart(false)}>{added ? "Đã thêm ✓" : "Thêm vào giỏ"}</button>
+            <button className={styles.buy} onClick={() => addToCart(true)}>Mua ngay</button>
+          </div>
         </div>
       </div>
 
@@ -239,7 +307,7 @@ export function ProductDetailClient({ slug }: { slug: string }) {
                   </div>
                 )}
                 <div className={styles.stickyInfo}>
-                  <b>{product.name}</b>
+                  <b>{displayName}</b>
                   <span>{money.format(price)}</span>
                 </div>
               </div>
@@ -255,7 +323,7 @@ export function ProductDetailClient({ slug }: { slug: string }) {
       {showReviewModal && (
         <ReviewModal
           productId={product._id}
-          productName={product.name}
+          productName={displayName}
           productImage={product.images[0]}
           loggedIn={loggedIn}
           onClose={() => setShowReviewModal(false)}

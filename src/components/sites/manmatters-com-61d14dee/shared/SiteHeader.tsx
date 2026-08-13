@@ -99,6 +99,7 @@ export function SiteHeader({ compact = false }: { compact?: boolean }) {
   const [unread, setUnread] = useState(0);
   const [user, setUser] = useState<SessionUser>(null);
   const [categories, setCategories] = useState<CategoryNode[]>([]);
+  const [siteBar, setSiteBar] = useState<{ title: string; ctaLabel: string; ctaHref: string } | null>(null);
   const catRef = useRef<HTMLDivElement>(null);
   const noticeRef = useRef<HTMLDivElement>(null);
 
@@ -114,6 +115,10 @@ export function SiteHeader({ compact = false }: { compact?: boolean }) {
     fetch("/api/categories?tree=true")
       .then((response) => response.json())
       .then((body) => setCategories(body.data ?? []));
+    fetch("/api/banners?placement=site_bar")
+      .then((response) => response.json())
+      .then((body) => setSiteBar(body.data?.[0] ?? null))
+      .catch(() => {});
   }, []);
 
   const loadNotifications = useCallback(async () => {
@@ -171,9 +176,9 @@ export function SiteHeader({ compact = false }: { compact?: boolean }) {
     <div className={styles.root}>
       {!compact && (
         <div className={styles.promo}>
-          MIỄN PHÍ VẬN CHUYỂN CHO ĐƠN HÀNG TỪ 499.000đ
-          <button onClick={() => router.push("/shop/all")}>
-            Khám phá sản phẩm
+          {siteBar?.title || "MIỄN PHÍ VẬN CHUYỂN CHO ĐƠN HÀNG TỪ 499.000đ"}
+          <button onClick={() => router.push(siteBar?.ctaHref || "/shop/all")}>
+            {siteBar?.ctaLabel || "Khám phá sản phẩm"}
           </button>
         </div>
       )}

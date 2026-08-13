@@ -1,7 +1,8 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { Plus, ShoppingBag, Star } from "lucide-react";
+import { ShoppingBag, Star, Zap } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { SiteHeader } from "@/components/sites/manmatters-com-61d14dee/shared/SiteHeader";
 import { SiteFooter } from "@/components/sites/manmatters-com-61d14dee/shared/SiteFooter";
@@ -63,6 +64,7 @@ export function CatalogPage({
   );
   const [loading, setLoading] = useState(true);
   const { addItem } = useCart();
+  const router = useRouter();
   useEffect(() => {
     Promise.all([
       fetch("/api/categories?tree=true").then((response) => response.json()),
@@ -247,16 +249,17 @@ export function CatalogPage({
                     )}
                   </div>
                   <button
-                    onClick={() =>
+                    onClick={() => {
                       addItem({
                         productId: product.id,
                         name: product.name,
                         price: product.salePrice ?? product.price,
                         image: product.images[0] ?? "",
-                      })
-                    }
+                      });
+                      router.push("/checkout");
+                    }}
                   >
-                    <Plus size={14} /> THÊM
+                    <Zap size={14} /> MUA NGAY
                   </button>
                 </div>
               </article>

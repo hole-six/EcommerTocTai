@@ -490,6 +490,32 @@
   text-decoration: none;
 }
 
+.menVideoGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.menVideo {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  border-radius: 14px;
+  background: #000;
+  object-fit: cover;
+}
+@media (max-width: 900px) {
+  .menVideoGrid {
+    grid-auto-columns: minmax(160px, 220px);
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    overflow-x: auto;
+    scroll-snap-type: inline mandatory;
+    padding-bottom: 8px;
+  }
+  .menVideo {
+    scroll-snap-align: start;
+  }
+}
+
 .reviews {
   display: grid;
   grid-auto-columns: minmax(210px, 250px);

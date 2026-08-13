@@ -132,9 +132,24 @@ const productBaseSchema = z.object({
     stageImages: z.array(imageItem).default([]),
     howToUse: z.record(z.string(), z.unknown()).default({}),
     rootCauses: z.array(imageItem).default([]),
+    detailHighlights: z.array(imageItem).default([]),
     treatmentKit: z.array(imageItem).default([]),
     treatmentJourney: z.array(imageItem).default([]),
     status: z.enum(["draft", "active", "archived"]).default("draft"),
+    translations: z
+      .object({
+        en: z
+          .object({
+            name: z.string().max(180).default(""),
+            shortDescription: z.string().max(300).default(""),
+            description: z.string().max(10000).default(""),
+            howToUseDescription: z.string().max(2000).default(""),
+          })
+          .partial()
+          .default({}),
+      })
+      .partial()
+      .default({}),
     variantGroup: z.string().max(80).default(""),
     variantLabel: z.string().max(40).default(""),
     variantOrder: z.number().int().default(0),
