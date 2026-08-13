@@ -16,6 +16,7 @@ import { escapeRegex, paginationMeta, parsePagination } from "@/lib/server/pagin
 import { createPaymentCode, createSePayPayment } from "@/lib/server/sepay";
 import { createSePayPgCheckout, isSePayPgConfigured } from "@/lib/server/sepayPg";
 import { getShippingSettings } from "@/lib/server/settings";
+import { SITE_URL } from "@/lib/server/site";
 import { orderSchema } from "@/lib/server/validators";
 
 const orderNumber = () =>
@@ -288,7 +289,7 @@ export async function POST(request: Request) {
     }
     let payment: unknown = null;
     if (data.paymentMethod === "bank_transfer") {
-      const origin = new URL(request.url).origin;
+      const origin = SITE_URL;
       const pg = createSePayPgCheckout({
         orderInvoiceNumber: order.orderNumber,
         amount: total,
