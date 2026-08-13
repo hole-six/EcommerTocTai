@@ -13,6 +13,7 @@ import { InventoryError, reserveOrder } from "@/lib/server/inventory";
 import { notify, notifyAdmins } from "@/lib/server/notifications";
 import { escapeRegex, paginationMeta, parsePagination } from "@/lib/server/pagination";
 import { createPaymentCode, createSePayPayment } from "@/lib/server/sepay";
+import { getShippingSettings } from "@/lib/server/settings";
 import { orderSchema } from "@/lib/server/validators";
 
 const orderNumber = () =>
@@ -198,7 +199,9 @@ export async function POST(request: Request) {
       (sum, item) => sum + item.unitPrice * item.quantity,
       0,
     );
-    const shippingFee = subtotal >= 499000 ? 0 : 30000;
+    const { shippingFee: baseShippingFee, freeShippingThreshold } =
+      await getShippingSettings();
+    const shippingFee = subtotal >= freeShippingThreshold ? 0 : baseShippingFee;
     let discount = 0;
     if (data.couponCode) {
       const result = await resolveCoupon(data.couponCode, subtotal);

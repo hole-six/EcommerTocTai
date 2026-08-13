@@ -260,10 +260,10 @@ export function AdminShell({
           })}
         </nav>
         <div className={styles.sidebarBottom}>
-          <button>
+          <Link href="/admin/settings">
             <Settings size={19} />
             <span>Cài đặt</span>
-          </button>
+          </Link>
           <button>
             <CircleHelp size={19} />
             <span>Trung tâm hỗ trợ</span>

@@ -106,6 +106,10 @@ export default function CheckoutPage() {
     null,
   );
   const [addressForm, setAddressForm] = useState<AddressForm>(emptyAddress);
+  const [shippingSettings, setShippingSettings] = useState({
+    shippingFee: 30000,
+    freeShippingThreshold: 499000,
+  });
   const [stock, setStock] = useState<Record<string, number>>({});
   const [stockError, setStockError] = useState("");
   const [provinces, setProvinces] = useState<Division[]>([]);
@@ -150,6 +154,14 @@ export default function CheckoutPage() {
     fetch("/api/coupons")
       .then((response) => response.json())
       .then((body) => setAvailableCoupons(body.data ?? []))
+      .catch(() => {});
+  }, []);
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((response) => response.json())
+      .then((body) => {
+        if (body.data) setShippingSettings(body.data);
+      })
       .catch(() => {});
   }, []);
   useEffect(() => {
@@ -269,7 +281,10 @@ export default function CheckoutPage() {
     const timer = window.setInterval(check, 3000);
     return () => window.clearInterval(timer);
   }, [orderNumber, transferPaid, transferPayment]);
-  const shippingFee = subtotal >= 499000 || subtotal === 0 ? 0 : 30000;
+  const shippingFee =
+    subtotal >= shippingSettings.freeShippingThreshold || subtotal === 0
+      ? 0
+      : shippingSettings.shippingFee;
   const discount = appliedCoupon?.discount ?? 0;
   const total = Math.max(0, subtotal + shippingFee - discount);
   const selectedAddress =

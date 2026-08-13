@@ -94,7 +94,8 @@
   padding-top: 2px;
 }
 .sidebar nav a,
-.sidebarBottom > button {
+.sidebarBottom > button,
+.sidebarBottom > a {
   border: 0;
   background: transparent;
   color: var(--admin-muted);
@@ -444,7 +445,8 @@
     gap: 4px;
   }
   .sidebar nav a,
-  .sidebarBottom > button {
+  .sidebarBottom > button,
+  .sidebarBottom > a {
     height: 44px;
     border-radius: 10px;
     font-size: 13px;
