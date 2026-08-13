@@ -379,7 +379,7 @@ export function ManMattersHome({
               <div className={styles.step} key={s.label}>
                 <s.icon size={28} />
                 <span>{s.label}</span>
-                <em>{s.n}</em>
+                <em aria-hidden="true">{s.n}</em>
               </div>
             ))}
           </div>
