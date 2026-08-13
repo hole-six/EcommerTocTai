@@ -77,7 +77,13 @@ const emptyAddress: AddressForm = {
   addressLine: "",
 };
 const canUseNewAddress = (address: AddressForm) =>
-  Boolean(address.recipientName && address.phone && address.addressLine);
+  Boolean(
+    address.recipientName &&
+    address.phone &&
+    address.province &&
+    address.ward &&
+    address.addressLine,
+  );
 const paymentMethods = [
   ["cod", "Thanh toán khi nhận hàng", "Kiểm tra hàng trước khi thanh toán"],
   [
@@ -113,6 +119,10 @@ export default function CheckoutPage() {
   const [stock, setStock] = useState<Record<string, number>>({});
   const [stockError, setStockError] = useState("");
   const [provinces, setProvinces] = useState<Division[]>([]);
+  const [wards, setWards] = useState<Division[]>([]);
+  const [provinceCode, setProvinceCode] = useState("");
+  const [wardCode, setWardCode] = useState("");
+  const [addressLoading, setAddressLoading] = useState(false);
   const [note, setNote] = useState("");
   const [paymentMethod, setPaymentMethod] =
     useState<(typeof paymentMethods)[number][0]>("cod");
@@ -191,6 +201,8 @@ export default function CheckoutPage() {
       const draft = JSON.parse(raw) as {
         contact?: Partial<typeof contact>;
         addressForm?: Partial<AddressForm>;
+        provinceCode?: string;
+        wardCode?: string;
         addressMode?: "saved" | "new";
         recipientDifferent?: boolean;
         note?: string;
@@ -200,6 +212,8 @@ export default function CheckoutPage() {
         setContact((current) => ({ ...current, ...draft.contact }));
       if (draft.addressForm)
         setAddressForm((current) => ({ ...current, ...draft.addressForm }));
+      if (draft.provinceCode) setProvinceCode(draft.provinceCode);
+      if (draft.wardCode) setWardCode(draft.wardCode);
       if (draft.addressMode) setAddressMode(draft.addressMode);
       if (typeof draft.recipientDifferent === "boolean")
         setRecipientDifferent(draft.recipientDifferent);
@@ -217,6 +231,8 @@ export default function CheckoutPage() {
           JSON.stringify({
             contact,
             addressForm,
+            provinceCode,
+            wardCode,
             addressMode,
             recipientDifferent,
             note,
@@ -231,6 +247,8 @@ export default function CheckoutPage() {
   }, [
     contact,
     addressForm,
+    provinceCode,
+    wardCode,
     addressMode,
     recipientDifferent,
     note,
@@ -270,8 +288,20 @@ export default function CheckoutPage() {
     fetch("https://provinces.open-api.vn/api/v2/p/")
       .then((response) => response.json())
       .then((data: Division[]) => setProvinces(data))
-      .catch(() => undefined);
+      .catch(() => setError("Không tải được danh mục tỉnh/thành."));
   }, []);
+  useEffect(() => {
+    if (!provinceCode) {
+      setWards([]);
+      return;
+    }
+    setAddressLoading(true);
+    fetch(`https://provinces.open-api.vn/api/v2/w/?province=${provinceCode}`)
+      .then((response) => response.json())
+      .then((data: Division[]) => setWards(data))
+      .catch(() => setError("Không tải được phường/xã."))
+      .finally(() => setAddressLoading(false));
+  }, [provinceCode]);
   useEffect(() => {
     let cancelled = false;
     async function loadStock() {
@@ -412,6 +442,19 @@ export default function CheckoutPage() {
     setContact((current) => ({ ...current, phone }));
     setAddressForm((current) => ({ ...current, phone }));
     setError("");
+  }
+  function chooseProvince(code: string) {
+    const province = provinces.find((item) => String(item.code) === code);
+    setProvinceCode(code);
+    setWardCode("");
+    changeAddress("province", province?.name ?? "");
+    changeAddress("district", "");
+    changeAddress("ward", "");
+  }
+  function chooseWard(code: string) {
+    const ward = wards.find((item) => String(item.code) === code);
+    setWardCode(code);
+    changeAddress("ward", ward?.name ?? "");
   }
   async function applyCoupon(codeOverride?: string) {
     const code = codeOverride ?? couponInput;
@@ -944,28 +987,35 @@ export default function CheckoutPage() {
                       />
                     </>
                   )}
-                  <input
+                  <select
                     className={field}
-                    list="checkout-provinces"
-                    placeholder="Tỉnh / Thành phố"
-                    value={addressForm.province}
-                    onChange={(event) =>
-                      changeAddress("province", event.target.value)
-                    }
-                  />
-                  <datalist id="checkout-provinces">
+                    value={provinceCode}
+                    onChange={(event) => chooseProvince(event.target.value)}
+                  >
+                    <option value="">Chọn Tỉnh / Thành phố</option>
                     {provinces.map((item) => (
-                      <option key={item.code} value={item.name} />
+                      <option key={item.code} value={item.code}>
+                        {item.name}
+                      </option>
                     ))}
-                  </datalist>
-                  <input
+                  </select>
+                  <select
                     className={field}
-                    placeholder="Phường / Xã"
-                    value={addressForm.ward}
-                    onChange={(event) =>
-                      changeAddress("ward", event.target.value)
-                    }
-                  />
+                    disabled={!provinceCode || addressLoading}
+                    value={wardCode}
+                    onChange={(event) => chooseWard(event.target.value)}
+                  >
+                    <option value="">
+                      {addressLoading
+                        ? "Đang tải phường/xã..."
+                        : "Chọn Phường / Xã"}
+                    </option>
+                    {wards.map((item) => (
+                      <option key={item.code} value={item.code}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </select>
                   <input
                     className={`${field} sm:col-span-2`}
                     placeholder="Số nhà, tên đường, tòa nhà..."
@@ -975,8 +1025,8 @@ export default function CheckoutPage() {
                     }
                   />
                   <p className="text-xs text-slate-500 sm:col-span-2">
-                    Nhập địa chỉ theo cách bạn muốn, không bắt buộc đúng danh
-                    mục hành chính.
+                    Danh mục địa giới hành chính Việt Nam mới (sau sáp nhập
+                    2025).
                   </p>
                   <div className="sm:col-span-2 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-sky-50 p-4 text-sm text-blue-900">
                     <p className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wide text-blue-700">

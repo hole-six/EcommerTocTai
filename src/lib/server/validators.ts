@@ -20,11 +20,11 @@ const phone = z
     "Số điện thoại Việt Nam không hợp lệ",
   );
 export const addressSchema = z.object({
-  recipientName: z.string().trim().max(120).default(""),
+  recipientName: z.string().min(2).max(80),
   phone,
-  province: z.string().trim().max(150).default(""),
-  district: z.string().trim().max(150).default(""),
-  ward: z.string().trim().max(150).default(""),
+  province: z.string().min(2),
+  district: z.string().max(100).default(""),
+  ward: z.string().min(2),
   addressLine: z.string().trim().max(300).default(""),
 });
 export const registerSchema = z.object({
