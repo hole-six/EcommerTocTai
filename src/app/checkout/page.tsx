@@ -2,17 +2,23 @@
 
 import Link from "next/link";
 import {
+  AlertTriangle,
+  Check,
   CheckCircle2,
   ChevronRight,
   Copy,
-  Clock3,
+  Landmark,
+  Loader2,
   MapPin,
   Minus,
   Plus,
+  QrCode,
+  RefreshCw,
   ShieldCheck,
   Tag,
   Trash2,
   UserRound,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/sites/manmatters-com-61d14dee/shared/SiteHeader";
@@ -133,6 +139,12 @@ export default function CheckoutPage() {
   const [transferPayment, setTransferPayment] =
     useState<TransferPayment | null>(null);
   const [transferPaid, setTransferPaid] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [copiedField, setCopiedField] = useState<"code" | "account" | null>(
+    null,
+  );
+  const [manualChecking, setManualChecking] = useState(false);
+  const [manualCheckMissed, setManualCheckMissed] = useState(false);
   const appliedCouponCode = appliedCoupon?.code;
   useEffect(() => {
     fetch("/api/coupons")
@@ -349,12 +361,20 @@ export default function CheckoutPage() {
       value: body.data.value,
     });
   }
-  async function submit() {
+  function validateOrder(): boolean {
     setError("");
-    if (!phoneReady) return setError("Vui lòng xác thực số điện thoại trước.");
-    if (!items.length) return setError("Giỏ hàng đang trống.");
-    if (!deliveryAddress)
-      return setError("Vui lòng nhập đầy đủ địa chỉ giao hàng.");
+    if (!phoneReady) {
+      setError("Vui lòng xác thực số điện thoại trước.");
+      return false;
+    }
+    if (!items.length) {
+      setError("Giỏ hàng đang trống.");
+      return false;
+    }
+    if (!deliveryAddress) {
+      setError("Vui lòng nhập đầy đủ địa chỉ giao hàng.");
+      return false;
+    }
     const requestedByProduct = items.reduce<Record<string, number>>(
       (result, item) => ({
         ...result,
@@ -367,15 +387,29 @@ export default function CheckoutPage() {
         ([productId, quantity]) =>
           stock[productId] !== undefined && quantity > stock[productId],
       )
-    )
-      return setError(
+    ) {
+      setError(
         "Một hoặc nhiều sản phẩm đã vượt quá tồn kho hiện có. Vui lòng điều chỉnh số lượng.",
       );
+      return false;
+    }
+    return true;
+  }
+  function openConfirm() {
+    if (validateOrder()) setConfirmOpen(true);
+  }
+  async function submit() {
+    if (!validateOrder()) {
+      setConfirmOpen(false);
+      return;
+    }
+    if (!deliveryAddress) return;
     const customer = {
       fullName: contact.fullName || deliveryAddress.recipientName,
       phone: contact.phone || verifiedPhone,
       ...(contact.email.trim() ? { email: contact.email.trim() } : {}),
     };
+    setConfirmOpen(false);
     setSubmitting(true);
     try {
       const response = await fetch("/api/orders", {
@@ -414,63 +448,155 @@ export default function CheckoutPage() {
       setSubmitting(false);
     }
   }
+  function copyValue(field: "code" | "account", value: string) {
+    navigator.clipboard.writeText(value);
+    setCopiedField(field);
+    window.setTimeout(() => setCopiedField(null), 1600);
+  }
+  async function checkNow() {
+    if (!orderNumber || manualChecking) return;
+    setManualChecking(true);
+    setManualCheckMissed(false);
+    try {
+      const response = await fetch(`/api/orders/${orderNumber}/payment`);
+      const body = await response.json();
+      if (body.data?.paymentStatus === "paid") setTransferPaid(true);
+      else setManualCheckMissed(true);
+    } catch {
+      setManualCheckMissed(true);
+    } finally {
+      setManualChecking(false);
+    }
+  }
   if (orderNumber && transferPayment && !transferPaid)
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50/60 to-slate-50">
         <SiteHeader compact />
-        <main className="mx-auto max-w-md px-5 py-12">
-          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
-            <div className="bg-gradient-to-br from-[#064f96] to-[#1677c2] p-6 text-white">
-              <Clock3 size={28} />
-              <h1 className="mt-3 text-2xl font-black">
+        <main className="mx-auto max-w-md px-5 py-10">
+          <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-blue-900/10">
+            <div className="relative overflow-hidden bg-gradient-to-br from-[#053b73] via-[#0a5a9e] to-[#1677c2] px-6 pb-7 pt-6 text-white">
+              <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
+              <div className="absolute -bottom-10 -left-6 h-28 w-28 rounded-full bg-white/5" />
+              <div className="relative flex items-start justify-between">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15">
+                  <QrCode size={22} />
+                </div>
+                <span className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold tracking-wide">
+                  #{orderNumber}
+                </span>
+              </div>
+              <h1 className="relative mt-4 text-xl font-black leading-tight">
                 Chờ thanh toán chuyển khoản
               </h1>
-              <p className="mt-2 text-sm text-blue-100">
-                Quét QR hoặc chuyển đúng số tiền với nội dung bên dưới. Đơn tự
-                xác nhận ngay khi SePay nhận tiền.
+              <p className="relative mt-1.5 text-sm text-blue-100">
+                Quét mã QR bằng app ngân hàng hoặc ví điện tử. Đơn tự xác nhận
+                ngay khi SePay nhận được tiền.
               </p>
             </div>
-            <div className="p-6 text-center">
-              <img
-                src={transferPayment.qrUrl}
-                alt="Mã QR thanh toán chuyển khoản"
-                className="mx-auto w-64 max-w-full rounded-xl border border-slate-100"
-              />
-              <p className="mt-5 text-xs font-bold uppercase tracking-wide text-slate-500">
-                Số tiền cần chuyển
-              </p>
-              <b className="mt-1 block text-2xl text-slate-900">
-                {money.format(transferPayment.amount)}
-              </b>
-              <div className="mt-5 space-y-2 rounded-xl bg-slate-50 p-4 text-left text-sm">
-                <p>
-                  <span className="text-slate-500">Ngân hàng:</span>{" "}
-                  <b>{transferPayment.bank}</b>
+            <div className="px-6 pb-6 pt-5">
+              <div className="relative mx-auto w-fit rounded-2xl border-2 border-slate-100 bg-white p-3 shadow-lg shadow-slate-200/60">
+                <img
+                  src={transferPayment.qrUrl}
+                  alt="Mã QR thanh toán chuyển khoản"
+                  className="mx-auto w-60 max-w-full rounded-lg"
+                />
+              </div>
+              <div className="mt-5 text-center">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                  Số tiền cần chuyển
                 </p>
-                <p>
-                  <span className="text-slate-500">Số tài khoản:</span>{" "}
-                  <b>{transferPayment.account}</b>
-                </p>
-                {transferPayment.accountHolder && (
-                  <p>
-                    <span className="text-slate-500">Chủ tài khoản:</span>{" "}
-                    <b>{transferPayment.accountHolder}</b>
-                  </p>
-                )}
+                <b className="mt-1 block text-3xl font-black text-slate-900">
+                  {money.format(transferPayment.amount)}
+                </b>
+              </div>
+              <div className="mt-5 space-y-2.5 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-slate-500">
+                    <Landmark size={14} /> Ngân hàng
+                  </span>
+                  <b className="text-slate-900">{transferPayment.bank}</b>
+                </div>
                 <button
                   type="button"
                   onClick={() =>
-                    navigator.clipboard.writeText(transferPayment.paymentCode)
+                    copyValue("account", transferPayment.account)
                   }
-                  className="flex w-full items-center justify-between rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 font-bold text-blue-700"
+                  className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2"
                 >
-                  <span>Nội dung: {transferPayment.paymentCode}</span>
-                  <Copy size={15} />
+                  <span className="text-left">
+                    <span className="block text-[11px] text-slate-500">
+                      Số tài khoản
+                    </span>
+                    <b className="text-slate-900">{transferPayment.account}</b>
+                  </span>
+                  {copiedField === "account" ? (
+                    <Check size={16} className="text-emerald-600" />
+                  ) : (
+                    <Copy size={15} className="text-slate-400" />
+                  )}
+                </button>
+                {transferPayment.accountHolder && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Chủ tài khoản</span>
+                    <b className="text-slate-900">
+                      {transferPayment.accountHolder}
+                    </b>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => copyValue("code", transferPayment.paymentCode)}
+                  className="flex w-full items-center justify-between rounded-lg border border-blue-100 bg-blue-50 px-3 py-2.5 font-bold text-blue-700"
+                >
+                  <span className="text-left">
+                    <span className="block text-[11px] font-semibold text-blue-500">
+                      Nội dung chuyển khoản (bắt buộc)
+                    </span>
+                    {transferPayment.paymentCode}
+                  </span>
+                  {copiedField === "code" ? (
+                    <Check size={16} className="text-emerald-600" />
+                  ) : (
+                    <Copy size={15} />
+                  )}
                 </button>
               </div>
-              <p className="mt-4 text-xs text-slate-500">
-                Trang đang tự kiểm tra thanh toán mỗi 3 giây.
-              </p>
+              <div className="mt-4 rounded-xl border border-amber-100 bg-amber-50 px-3.5 py-2.5 text-xs leading-5 text-amber-800">
+                Vui lòng nhập đúng <b>nội dung chuyển khoản</b> ở trên để hệ
+                thống tự động đối soát và xác nhận đơn hàng.
+              </div>
+              <div className="mt-5 flex items-center justify-center gap-2 text-xs font-semibold text-slate-500">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-blue-600" />
+                </span>
+                Đang tự động kiểm tra thanh toán mỗi 3 giây...
+              </div>
+              <button
+                type="button"
+                onClick={checkNow}
+                disabled={manualChecking}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-bold text-slate-700 disabled:opacity-60"
+              >
+                {manualChecking ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <RefreshCw size={16} />
+                )}
+                Tôi đã chuyển khoản · Kiểm tra ngay
+              </button>
+              {manualCheckMissed && (
+                <p className="mt-2.5 flex items-center justify-center gap-1.5 text-center text-xs text-amber-600">
+                  <AlertTriangle size={13} />
+                  Chưa nhận được thanh toán, vui lòng thử lại sau ít phút.
+                </p>
+              )}
+              <Link
+                href="/cua-hang"
+                className="mt-4 block text-center text-xs font-semibold text-slate-400 hover:text-slate-600"
+              >
+                Huỷ và quay lại cửa hàng
+              </Link>
             </div>
           </section>
         </main>
@@ -990,7 +1116,7 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 <button
-                  onClick={submit}
+                  onClick={openConfirm}
                   disabled={submitting || !items.length}
                   className="mt-5 w-full rounded-xl bg-gradient-to-r from-[#07579e] to-[#1677c2] py-3.5 text-sm font-extrabold text-white shadow-lg shadow-blue-600/20 disabled:opacity-50"
                 >
@@ -1008,6 +1134,77 @@ export default function CheckoutPage() {
           </aside>
         </div>
       </main>
+      {confirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
+          <section className="w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between bg-gradient-to-br from-brand-navy to-brand-blue px-6 py-5 text-white">
+              <div className="flex items-center gap-2 text-lg font-black">
+                <ShieldCheck size={20} /> Xác nhận đặt hàng
+              </div>
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(false)}
+                className="rounded-full bg-white/15 p-1.5"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="px-6 py-5">
+              <p className="text-sm text-slate-600">
+                Vui lòng kiểm tra lại thông tin bên dưới. Đơn hàng sẽ được xử
+                lý ngay khi bạn xác nhận.
+              </p>
+              <div className="mt-4 space-y-2.5 rounded-2xl bg-slate-50 p-4 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Số sản phẩm</span>
+                  <b className="text-slate-900">
+                    {items.reduce((sum, item) => sum + item.quantity, 0)}
+                  </b>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Phương thức</span>
+                  <b className="text-slate-900">
+                    {paymentMethod === "cod"
+                      ? "Thanh toán khi nhận hàng"
+                      : "Chuyển khoản ngân hàng"}
+                  </b>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="shrink-0 text-slate-500">Giao đến</span>
+                  <b className="text-right text-slate-900">
+                    {[addressPreview.ward, addressPreview.province]
+                      .filter(Boolean)
+                      .join(", ") || "-"}
+                  </b>
+                </div>
+                <div className="flex justify-between border-t border-slate-200 pt-2.5">
+                  <span className="font-bold text-slate-700">Tổng cộng</span>
+                  <b className="text-lg text-blue-700">
+                    {money.format(total)}
+                  </b>
+                </div>
+              </div>
+              <div className="mt-5 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setConfirmOpen(false)}
+                  className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-700"
+                >
+                  Kiểm tra lại
+                </button>
+                <button
+                  type="button"
+                  onClick={submit}
+                  disabled={submitting}
+                  className="flex-1 rounded-xl bg-gradient-to-r from-[#07579e] to-[#1677c2] py-3 text-sm font-bold text-white disabled:opacity-60"
+                >
+                  {submitting ? "Đang xử lý..." : "Xác nhận đặt hàng"}
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
