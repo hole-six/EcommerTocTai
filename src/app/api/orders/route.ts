@@ -203,10 +203,10 @@ export async function POST(request: Request) {
     const { shippingFee } = await getShippingSettings();
     let discount = 0;
     if (data.couponCode) {
-      const result = await resolveCoupon(data.couponCode, subtotal);
+      const result = await resolveCoupon(data.couponCode, subtotal, shippingFee);
       if ("error" in result)
         return NextResponse.json({ error: result.error }, { status: 400 });
-      discount = Math.min(result.discount, subtotal + shippingFee);
+      discount = result.discount;
     }
     const total = Math.max(0, subtotal + shippingFee - discount);
     if (
