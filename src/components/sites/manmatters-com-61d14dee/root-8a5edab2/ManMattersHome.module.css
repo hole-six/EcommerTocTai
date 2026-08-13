@@ -514,12 +514,20 @@
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
 }
+.menVideoLink {
+  display: block;
+  cursor: default;
+}
+a.menVideoLink {
+  cursor: pointer;
+}
 .menVideo {
   width: 100%;
   aspect-ratio: 9 / 16;
   border-radius: 14px;
   background: #000;
   object-fit: cover;
+  pointer-events: none;
 }
 @media (max-width: 900px) {
   .menVideoGrid {
@@ -530,7 +538,7 @@
     scroll-snap-type: inline mandatory;
     padding-bottom: 8px;
   }
-  .menVideo {
+  .menVideoLink {
     scroll-snap-align: start;
   }
 }

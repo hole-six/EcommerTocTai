@@ -32,6 +32,10 @@ type Banner = {
   isActive: boolean;
   sortOrder: number;
 };
+type ProductOption = { id: string; slug: string; name: string };
+function slugFromCtaHref(href?: string) {
+  return href?.match(/^\/san-pham\/(.+)$/)?.[1] ?? "";
+}
 type Slot = {
   key: string;
   page: string;
@@ -68,6 +72,7 @@ export default function AdminBannersPage() {
   const [barCtaHref, setBarCtaHref] = useState("");
   const [barSaving, setBarSaving] = useState(false);
   const [videoUploading, setVideoUploading] = useState<number | null>(null);
+  const [productOptions, setProductOptions] = useState<ProductOption[]>([]);
   const fileInputs = useRef<Record<number, HTMLInputElement | null>>({});
 
   async function load() {
@@ -85,6 +90,20 @@ export default function AdminBannersPage() {
 
   useEffect(() => {
     void load();
+    fetch("/api/commerce/products?status=all")
+      .then((response) => response.json())
+      .then((body) =>
+        setProductOptions(
+          (body.data ?? []).map(
+            (product: { _id?: string; id?: string; slug: string; name: string }) => ({
+              id: String(product._id ?? product.id),
+              slug: product.slug,
+              name: product.name,
+            }),
+          ),
+        ),
+      )
+      .catch(() => undefined);
   }, []);
 
   async function saveSiteBar() {
@@ -162,6 +181,44 @@ export default function AdminBannersPage() {
       setMessage(error instanceof Error ? error.message : "Upload video thất bại");
     } finally {
       setVideoUploading(null);
+    }
+  }
+
+  async function saveMenVideoLink(index: number, productSlug: string) {
+    setMessage("");
+    const current = menVideoBanner(index);
+    const ctaHref = productSlug ? `/san-pham/${productSlug}` : "";
+    const payload = current
+      ? { ctaHref }
+      : {
+          pageKey: "home",
+          slotKey: `${MEN_VIDEO_SLOT_PREFIX}${index + 1}`,
+          placement: "home_men_videos" as const,
+          mediaType: "video" as const,
+          videoUrl: "",
+          ctaHref,
+          alt: `Video Đàn ông đích thực ${index + 1}`,
+          isActive: true,
+          sortOrder: index,
+        };
+    try {
+      const response = await fetch(
+        current ? `/api/banners/${current._id}` : "/api/banners",
+        {
+          method: current ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
+      if (!response.ok) throw new Error("Không thể lưu liên kết sản phẩm");
+      setMessage(
+        productSlug
+          ? `Đã gắn sản phẩm cho video ${index + 1}.`
+          : `Đã gỡ liên kết sản phẩm khỏi video ${index + 1}.`,
+      );
+      await load();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Lưu liên kết thất bại");
     }
   }
 
@@ -389,6 +446,21 @@ export default function AdminBannersPage() {
                           {isCustom ? "Đã tuỳ chỉnh" : "Mặc định"}
                         </span>
                       </div>
+                      <label style={{ display: "block", marginTop: 8, fontSize: 11, fontWeight: 700, color: "var(--admin-muted, #667085)" }}>
+                        Gắn sản phẩm khi bấm video
+                        <select
+                          value={slugFromCtaHref(banner?.ctaHref)}
+                          onChange={(event) => void saveMenVideoLink(index, event.target.value)}
+                          style={{ width: "100%", marginTop: 4, fontWeight: 500 }}
+                        >
+                          <option value="">— Không gắn sản phẩm —</option>
+                          {productOptions.map((product) => (
+                            <option key={product.id} value={product.slug}>
+                              {product.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
                       <input
                         ref={(element) => { fileInputs.current[index] = element; }}
                         type="file"

@@ -138,18 +138,27 @@ export function ManMattersHome({
   );
   const [activeCategory, setActiveCategory] = useState("");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [menVideos, setMenVideos] = useState<string[]>(defaultMenVideos);
+  const [menVideos, setMenVideos] = useState<{ src: string; href: string }[]>(
+    defaultMenVideos.map((src) => ({ src, href: "" })),
+  );
   const { addItem } = useCart();
   const router = useRouter();
   useEffect(() => {
     fetch("/api/banners?placement=home_men_videos")
       .then((response) => (response.ok ? response.json() : { data: [] }))
       .then((body) => {
-        const list = (body.data ?? []) as Array<{ slotKey: string; videoUrl: string }>;
+        const list = (body.data ?? []) as Array<{
+          slotKey: string;
+          videoUrl: string;
+          ctaHref: string;
+        }>;
         setMenVideos(
           defaultMenVideos.map((fallback, index) => {
             const match = list.find((item) => item.slotKey === `men-video-${index + 1}`);
-            return match?.videoUrl || fallback;
+            return {
+              src: match?.videoUrl || fallback,
+              href: match?.ctaHref || "",
+            };
           }),
         );
       })
@@ -437,11 +446,37 @@ export function ManMattersHome({
       <section id="men-videos" className={styles.section}>
         <h2 className={styles.sectionHeading}>Đàn ông đích thực</h2>
         <div className={styles.menVideoGrid}>
-          {menVideos.map((src, index) => (
-            <video key={src + index} className={styles.menVideo} controls muted playsInline preload="metadata">
-              <source src={src} type="video/mp4" />
-            </video>
-          ))}
+          {menVideos.map((video, index) => {
+            const player = (
+              <video
+                className={styles.menVideo}
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                disablePictureInPicture
+                controlsList="nodownload noplaybackrate nofullscreen"
+                onContextMenu={(event) => event.preventDefault()}
+              >
+                <source src={video.src} type="video/mp4" />
+              </video>
+            );
+            return video.href ? (
+              <Link
+                key={video.src + index}
+                href={video.href}
+                className={styles.menVideoLink}
+                aria-label="Xem sản phẩm trong video"
+              >
+                {player}
+              </Link>
+            ) : (
+              <div key={video.src + index} className={styles.menVideoLink}>
+                {player}
+              </div>
+            );
+          })}
         </div>
       </section>
 
