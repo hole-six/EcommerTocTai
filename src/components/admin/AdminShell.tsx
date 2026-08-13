@@ -36,7 +36,6 @@ type NotificationItem = {
 };
 
 const nav = [
-  [CircleHelp, "Tư vấn", "/admin/consultations"],
   [Home, "Tổng quan", "/admin"],
   [ShoppingBag, "Đơn hàng", "/admin/orders"],
   [MessageCircle, "Hỗ trợ", "/admin/support"],
