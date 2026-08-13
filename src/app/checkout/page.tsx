@@ -10,6 +10,7 @@ import {
   Minus,
   Plus,
   ShieldCheck,
+  Tag,
   Trash2,
   UserRound,
 } from "lucide-react";
@@ -117,6 +118,15 @@ export default function CheckoutPage() {
     value: number;
   } | null>(null);
   const [couponError, setCouponError] = useState("");
+  const [availableCoupons, setAvailableCoupons] = useState<
+    {
+      code: string;
+      type: "percent" | "fixed";
+      value: number;
+      minOrderValue: number;
+      maxDiscount: number | null;
+    }[]
+  >([]);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
@@ -124,6 +134,12 @@ export default function CheckoutPage() {
     useState<TransferPayment | null>(null);
   const [transferPaid, setTransferPaid] = useState(false);
   const appliedCouponCode = appliedCoupon?.code;
+  useEffect(() => {
+    fetch("/api/coupons")
+      .then((response) => response.json())
+      .then((body) => setAvailableCoupons(body.data ?? []))
+      .catch(() => {});
+  }, []);
   useEffect(() => {
     const savedPhone = localStorage.getItem("toctai_checkout_phone") ?? "";
     setVerifiedPhone(savedPhone);
@@ -310,13 +326,15 @@ export default function CheckoutPage() {
     setWardCode(code);
     changeAddress("ward", ward?.name ?? "");
   }
-  async function applyCoupon() {
-    if (!couponInput.trim()) return;
+  async function applyCoupon(codeOverride?: string) {
+    const code = codeOverride ?? couponInput;
+    if (!code.trim()) return;
+    setCouponInput(code.toUpperCase());
     setCouponError("");
     const response = await fetch("/api/coupons/apply", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: couponInput.trim(), subtotal }),
+      body: JSON.stringify({ code: code.trim(), subtotal }),
     });
     const body = await response.json();
     if (!response.ok) {
@@ -863,6 +881,29 @@ export default function CheckoutPage() {
                 ))}
               </div>
               <div className="border-t border-slate-100 p-5">
+                {availableCoupons.length > 0 && !appliedCoupon && (
+                  <div className="mb-2.5 flex flex-wrap gap-1.5">
+                    {availableCoupons.map((coupon) => (
+                      <button
+                        type="button"
+                        key={coupon.code}
+                        onClick={() => void applyCoupon(coupon.code)}
+                        className="flex items-center gap-1 rounded-full border border-dashed border-blue-300 bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700 hover:border-blue-500 hover:bg-blue-100"
+                        title={
+                          coupon.minOrderValue
+                            ? `Đơn tối thiểu ${money.format(coupon.minOrderValue)}`
+                            : undefined
+                        }
+                      >
+                        <Tag size={11} />
+                        {coupon.code} ·{" "}
+                        {coupon.type === "percent"
+                          ? `-${coupon.value}%`
+                          : `-${money.format(coupon.value)}`}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <input
                     className={`${field} py-2.5`}
@@ -873,7 +914,7 @@ export default function CheckoutPage() {
                     }
                   />
                   <button
-                    onClick={applyCoupon}
+                    onClick={() => void applyCoupon()}
                     className="rounded-xl bg-slate-100 px-3 text-xs font-bold text-slate-700"
                   >
                     Áp dụng
