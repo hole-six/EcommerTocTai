@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDb } from "@/lib/server/db";
+import { settleOrderInventory } from "@/lib/server/inventory";
 import { notify, notifyAdmins } from "@/lib/server/notifications";
 import { verifySePayApiKey, verifySePaySignature } from "@/lib/server/sepay";
 import { Order } from "@/models/Order";
@@ -117,6 +118,18 @@ export async function POST(request: Request) {
       status: "processed",
       payload: body,
     });
+    if (updated?.inventoryState === "reserved") {
+      try {
+        await settleOrderInventory(updated._id.toString(), "committed");
+      } catch (error) {
+        await notifyAdmins({
+          type: "payment",
+          title: "Cảnh báo tồn kho",
+          body: `Đơn ${updated.orderNumber} đã thanh toán nhưng không tự trừ được tồn kho: ${error instanceof Error ? error.message : "lỗi không xác định"}. Cần kiểm tra thủ công.`,
+          href: "/admin/orders",
+        });
+      }
+    }
     if (updated?.user) {
       await notify(
         { recipientRole: "customer", user: updated.user },

@@ -51,19 +51,12 @@ export async function PATCH(
         );
       await settleOrderInventory(id, "committed");
     }
-    if (
-      (data.status === "cancelled" || data.status === "returned") &&
-      current.inventoryState === "reserved"
-    ) {
-      await settleOrderInventory(id, "released");
-    }
-    if (data.status === "returned" && current.inventoryState !== "returned") {
-      if (current.inventoryState !== "committed")
-        throw new InventoryError(
-          "Chỉ hoàn hàng được sau khi đơn đã hoàn tất.",
-          "BUSY",
-        );
-      await settleOrderInventory(id, "returned");
+    if (data.status === "cancelled" || data.status === "returned") {
+      if (current.inventoryState === "reserved") {
+        await settleOrderInventory(id, "released");
+      } else if (current.inventoryState === "committed") {
+        await settleOrderInventory(id, "returned");
+      }
     }
 
     const update: Record<string, unknown> = { ...data };
