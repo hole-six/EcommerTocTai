@@ -10,7 +10,6 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [shippingFee, setShippingFee] = useState("30000");
-  const [freeShippingThreshold, setFreeShippingThreshold] = useState("499000");
 
   useEffect(() => {
     fetch("/api/settings")
@@ -18,7 +17,6 @@ export default function AdminSettingsPage() {
       .then((body) => {
         if (body.data) {
           setShippingFee(String(body.data.shippingFee));
-          setFreeShippingThreshold(String(body.data.freeShippingThreshold));
         }
       })
       .finally(() => setLoading(false));
@@ -33,13 +31,11 @@ export default function AdminSettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           shippingFee: Number(shippingFee),
-          freeShippingThreshold: Number(freeShippingThreshold),
         }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Lưu thất bại");
       setShippingFee(String(body.data.shippingFee));
-      setFreeShippingThreshold(String(body.data.freeShippingThreshold));
       setMessage("Đã lưu cấu hình phí vận chuyển.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Lưu thất bại");
@@ -85,36 +81,23 @@ export default function AdminSettingsPage() {
                   }}
                 >
                   Áp dụng cho mọi đơn hàng khi tính tổng tiền ở trang thanh
-                  toán.
+                  toán. Muốn miễn phí ship theo đơn thì dùng mã giảm giá
+                  FREESHIP ở trang Mã giảm giá — khách phải tự nhập mã mới
+                  được miễn.
                 </span>
               </div>
             </div>
-            <div className={panel.grid2}>
-              <label>
-                Phí vận chuyển mặc định (đ)
-                <input
-                  type="number"
-                  min={0}
-                  step={1000}
-                  value={shippingFee}
-                  onChange={(event) => setShippingFee(event.target.value)}
-                  placeholder="30000"
-                />
-              </label>
-              <label>
-                Miễn phí vận chuyển từ đơn (đ)
-                <input
-                  type="number"
-                  min={0}
-                  step={1000}
-                  value={freeShippingThreshold}
-                  onChange={(event) =>
-                    setFreeShippingThreshold(event.target.value)
-                  }
-                  placeholder="499000"
-                />
-              </label>
-            </div>
+            <label>
+              Phí vận chuyển mặc định (đ)
+              <input
+                type="number"
+                min={0}
+                step={1000}
+                value={shippingFee}
+                onChange={(event) => setShippingFee(event.target.value)}
+                placeholder="30000"
+              />
+            </label>
             <p
               style={{
                 marginTop: 10,
@@ -122,13 +105,9 @@ export default function AdminSettingsPage() {
                 color: "var(--admin-muted, #667085)",
               }}
             >
-              Đơn hàng có tạm tính từ{" "}
-              <b>
-                {Number(freeShippingThreshold || 0).toLocaleString("vi-VN")}đ
-              </b>{" "}
-              trở lên sẽ được miễn phí vận chuyển. Dưới mức đó, khách trả{" "}
+              Mọi đơn hàng đều tính{" "}
               <b>{Number(shippingFee || 0).toLocaleString("vi-VN")}đ</b> phí
-              ship.
+              ship, không phân biệt giá trị đơn.
             </p>
             <button
               className={panel.saveButton}

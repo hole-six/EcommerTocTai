@@ -109,7 +109,6 @@ export default function CheckoutPage() {
   const [addressForm, setAddressForm] = useState<AddressForm>(emptyAddress);
   const [shippingSettings, setShippingSettings] = useState({
     shippingFee: 30000,
-    freeShippingThreshold: 499000,
   });
   const [stock, setStock] = useState<Record<string, number>>({});
   const [stockError, setStockError] = useState("");
@@ -353,10 +352,7 @@ export default function CheckoutPage() {
     const timer = window.setInterval(check, 3000);
     return () => window.clearInterval(timer);
   }, [orderNumber, transferPaid, transferPayment]);
-  const shippingFee =
-    subtotal >= shippingSettings.freeShippingThreshold || subtotal === 0
-      ? 0
-      : shippingSettings.shippingFee;
+  const shippingFee = subtotal === 0 ? 0 : shippingSettings.shippingFee;
   const discount = appliedCoupon?.discount ?? 0;
   const total = Math.max(0, subtotal + shippingFee - discount);
   const selectedAddress =
@@ -1100,29 +1096,53 @@ export default function CheckoutPage() {
                 ))}
               </div>
               <div className="border-t border-slate-100 p-5">
-                {availableCoupons.length > 0 && !appliedCoupon && (
-                  <div className="mb-2.5 flex flex-wrap gap-1.5">
-                    {availableCoupons.map((coupon) => (
-                      <button
-                        type="button"
-                        key={coupon.code}
-                        onClick={() => void applyCoupon(coupon.code)}
-                        className="flex items-center gap-1 rounded-full border border-dashed border-blue-300 bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700 hover:border-blue-500 hover:bg-blue-100"
-                        title={
-                          coupon.minOrderValue
-                            ? `Đơn tối thiểu ${money.format(coupon.minOrderValue)}`
-                            : undefined
-                        }
-                      >
-                        <Tag size={11} />
-                        {coupon.code} ·{" "}
-                        {coupon.type === "percent"
-                          ? `-${coupon.value}%`
-                          : `-${money.format(coupon.value)}`}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                {(() => {
+                  const eligibleCoupons = availableCoupons.filter(
+                    (coupon) => subtotal >= coupon.minOrderValue,
+                  );
+                  const nextCoupon = availableCoupons
+                    .filter((coupon) => subtotal < coupon.minOrderValue)
+                    .sort((a, b) => a.minOrderValue - b.minOrderValue)[0];
+                  return (
+                    <>
+                      {eligibleCoupons.length > 0 && !appliedCoupon && (
+                        <div className="mb-2.5 flex flex-wrap gap-1.5">
+                          {eligibleCoupons.map((coupon) => (
+                            <button
+                              type="button"
+                              key={coupon.code}
+                              onClick={() => void applyCoupon(coupon.code)}
+                              className="flex items-center gap-1 rounded-full border border-dashed border-blue-300 bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700 hover:border-blue-500 hover:bg-blue-100"
+                            >
+                              <Tag size={11} />
+                              {coupon.code} ·{" "}
+                              {coupon.type === "percent"
+                                ? `-${coupon.value}%`
+                                : `-${money.format(coupon.value)}`}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {eligibleCoupons.length === 0 &&
+                        nextCoupon &&
+                        !appliedCoupon && (
+                          <p className="mb-2.5 text-[11px] text-slate-500">
+                            Mua thêm{" "}
+                            <b className="text-slate-700">
+                              {money.format(
+                                nextCoupon.minOrderValue - subtotal,
+                              )}
+                            </b>{" "}
+                            để dùng mã{" "}
+                            <b className="text-slate-700">
+                              {nextCoupon.code}
+                            </b>
+                            .
+                          </p>
+                        )}
+                    </>
+                  );
+                })()}
                 <div className="flex gap-2">
                   <input
                     className={`${field} py-2.5`}

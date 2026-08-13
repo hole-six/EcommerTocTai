@@ -7,7 +7,6 @@ import { Settings } from "@/models/Settings";
 
 const settingsSchema = z.object({
   shippingFee: z.number().int().min(0).max(1000000),
-  freeShippingThreshold: z.number().int().min(0).max(100000000),
 });
 
 export async function GET() {
@@ -21,7 +20,6 @@ export async function GET() {
     return NextResponse.json({
       data: {
         shippingFee: settings.shippingFee,
-        freeShippingThreshold: settings.freeShippingThreshold,
       },
     });
   } catch (error) {
@@ -42,7 +40,6 @@ export async function PATCH(request: Request) {
     return NextResponse.json({
       data: {
         shippingFee: settings.shippingFee,
-        freeShippingThreshold: settings.freeShippingThreshold,
       },
     });
   } catch (error) {

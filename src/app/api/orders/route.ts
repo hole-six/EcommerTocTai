@@ -200,17 +200,15 @@ export async function POST(request: Request) {
       (sum, item) => sum + item.unitPrice * item.quantity,
       0,
     );
-    const { shippingFee: baseShippingFee, freeShippingThreshold } =
-      await getShippingSettings();
-    const shippingFee = subtotal >= freeShippingThreshold ? 0 : baseShippingFee;
+    const { shippingFee } = await getShippingSettings();
     let discount = 0;
     if (data.couponCode) {
       const result = await resolveCoupon(data.couponCode, subtotal);
       if ("error" in result)
         return NextResponse.json({ error: result.error }, { status: 400 });
-      discount = result.discount;
+      discount = Math.min(result.discount, subtotal + shippingFee);
     }
-    const total = subtotal + shippingFee - discount;
+    const total = Math.max(0, subtotal + shippingFee - discount);
     if (
       data.paymentMethod === "bank_transfer" &&
       !createSePayPayment("CHECK", total)
