@@ -63,7 +63,7 @@ const bottomNavItems: BottomNavItem[] = [
       pathname === "/cua-hang",
   },
   {
-    href: "/hair-form",
+    href: "/pages/hair-form-assessment",
     label: "Kiểm tra",
     icon: ClipboardList,
     isActive: (pathname) =>
@@ -248,7 +248,7 @@ export function SiteHeader({ compact = false }: { compact?: boolean }) {
               Sản phẩm
             </Link>
             <Link
-              href="/hair-form"
+              href="/pages/hair-form-assessment"
               onClick={() => setMenuOpen(false)}
             >
               Kiểm tra tóc

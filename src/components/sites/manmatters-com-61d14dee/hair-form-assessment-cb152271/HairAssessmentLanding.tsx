@@ -1,6 +1,6 @@
+import { HairLossQuiz } from "@/components/store/HairLossQuiz";
 import { SiteFooter } from "../shared/SiteFooter";
 import { SiteHeader } from "../shared/SiteHeader";
-import { HairAssessment } from "./HairAssessment";
 import styles from "./HairAssessmentLanding.module.css";
 
 const stageResults = [1, 2, 3, 4, 5].map((n) => `/images/anhstage${n}.png`);
@@ -30,7 +30,9 @@ export function HairAssessmentLanding() {
         </div>
       </section>
 
-      <HairAssessment embedded />
+      <div id="quiz">
+        <HairLossQuiz />
+      </div>
 
       <section className={styles.stageSection}>
         <div className={styles.stageRow}>
