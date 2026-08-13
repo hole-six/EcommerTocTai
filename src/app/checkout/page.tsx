@@ -88,6 +88,7 @@ const paymentMethods = [
 ] as const;
 const field =
   "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/10 disabled:bg-slate-50";
+const DRAFT_KEY = "toctai_checkout_draft";
 
 export default function CheckoutPage() {
   const { items, subtotal, setQuantity, removeItem, clear } = useCart();
@@ -165,6 +166,66 @@ export default function CheckoutPage() {
       .catch(() => {});
   }, []);
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw) as {
+        contact?: Partial<typeof contact>;
+        addressForm?: Partial<AddressForm>;
+        provinceCode?: string;
+        wardCode?: string;
+        addressMode?: "saved" | "new";
+        recipientDifferent?: boolean;
+        note?: string;
+        paymentMethod?: (typeof paymentMethods)[number][0];
+      };
+      if (draft.contact)
+        setContact((current) => ({ ...current, ...draft.contact }));
+      if (draft.addressForm)
+        setAddressForm((current) => ({ ...current, ...draft.addressForm }));
+      if (draft.provinceCode) setProvinceCode(draft.provinceCode);
+      if (draft.wardCode) setWardCode(draft.wardCode);
+      if (draft.addressMode) setAddressMode(draft.addressMode);
+      if (typeof draft.recipientDifferent === "boolean")
+        setRecipientDifferent(draft.recipientDifferent);
+      if (typeof draft.note === "string") setNote(draft.note);
+      if (draft.paymentMethod) setPaymentMethod(draft.paymentMethod);
+    } catch {
+      // ignore malformed draft
+    }
+  }, []);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      try {
+        localStorage.setItem(
+          DRAFT_KEY,
+          JSON.stringify({
+            contact,
+            addressForm,
+            provinceCode,
+            wardCode,
+            addressMode,
+            recipientDifferent,
+            note,
+            paymentMethod,
+          }),
+        );
+      } catch {
+        // storage full or unavailable — not critical
+      }
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [
+    contact,
+    addressForm,
+    provinceCode,
+    wardCode,
+    addressMode,
+    recipientDifferent,
+    note,
+    paymentMethod,
+  ]);
+  useEffect(() => {
     const savedPhone = localStorage.getItem("toctai_checkout_phone") ?? "";
     setVerifiedPhone(savedPhone);
     setPhoneInput(savedPhone);
@@ -217,22 +278,33 @@ export default function CheckoutPage() {
     async function loadStock() {
       const entries = await Promise.all(
         items.map(async (item) => {
-          const response = await fetch(
-            `/api/commerce/products/${item.productId}`,
-            { cache: "no-store" },
-          );
-          const body = await response.json();
-          const available = response.ok
-            ? Math.max(
-                0,
-                Number(body.data.inventory ?? 0) -
-                  Number(body.data.reservedInventory ?? 0),
-              )
-            : 0;
-          return [item.productId, available] as const;
+          try {
+            const response = await fetch(
+              `/api/commerce/products/${item.productId}`,
+              { cache: "no-store" },
+            );
+            const body = await response.json();
+            if (
+              !response.ok ||
+              !body.data ||
+              typeof body.data.inventory !== "number"
+            ) {
+              // Do not interpret a failed stock lookup as zero stock. The
+              // checkout API remains the authoritative inventory check.
+              return null;
+            }
+            const available = Math.max(
+              0,
+              body.data.inventory - Number(body.data.reservedInventory ?? 0),
+            );
+            return [item.productId, available] as const;
+          } catch {
+            return null;
+          }
         }),
       );
-      if (!cancelled) setStock(Object.fromEntries(entries));
+      if (!cancelled)
+        setStock(Object.fromEntries(entries.filter((entry) => entry !== null)));
     }
     if (items.length) void loadStock();
     else setStock({});
@@ -387,6 +459,10 @@ export default function CheckoutPage() {
       setError("Giỏ hàng đang trống.");
       return false;
     }
+    if (items.some((item) => !item.productId)) {
+      setError("Một sản phẩm trong giỏ bị lỗi dữ liệu. Vui lòng xóa sản phẩm đó và thêm lại từ trang sản phẩm.");
+      return false;
+    }
     if (!deliveryAddress) {
       setError("Vui lòng nhập đầy đủ địa chỉ giao hàng.");
       return false;
@@ -434,7 +510,7 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           customer,
           shippingAddress: deliveryAddress,
-          items: items.map((item) => ({
+          items: items.filter((item) => item.productId).map((item) => ({
             productId: item.productId,
             quantity: item.quantity,
             variantId: item.variantId,
@@ -452,6 +528,7 @@ export default function CheckoutPage() {
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Đặt hàng thất bại");
       clear();
+      localStorage.removeItem(DRAFT_KEY);
       setOrderNumber(body.data.orderNumber);
       setTransferPayment(body.payment ?? null);
     } catch (submitError) {

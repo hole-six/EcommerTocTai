@@ -45,8 +45,25 @@ function itemKey(item: { productId: string; variantId?: string; options?: CartOp
   return [item.productId, item.variantId ?? "", optionKey].join("::");
 }
 
-function normalize(items: CartItem[]) {
-  return items.map((item) => ({ ...item, lineId: item.lineId || itemKey(item) }));
+function normalize(items: unknown[]) {
+  return items.flatMap((raw) => {
+    if (!raw || typeof raw !== "object") return [];
+    const source = raw as Partial<CartItem> & {
+      id?: unknown;
+      _id?: unknown;
+    };
+    const productId = String(
+      source.productId ?? source.id ?? source._id ?? "",
+    ).trim();
+    if (!productId) return [];
+    const quantity = Math.max(1, Number(source.quantity ?? 1));
+    const item = {
+      ...source,
+      productId,
+      quantity: Number.isFinite(quantity) ? quantity : 1,
+    } as CartItem;
+    return [{ ...item, lineId: item.lineId || itemKey(item) }];
+  });
 }
 
 function readItems(): CartItem[] {
@@ -57,7 +74,7 @@ function readItems(): CartItem[] {
   if (!raw) { cachedItems = emptyCart; return cachedItems; }
   try {
     const parsed = JSON.parse(raw) as unknown;
-    cachedItems = Array.isArray(parsed) ? normalize(parsed as CartItem[]) : emptyCart;
+    cachedItems = Array.isArray(parsed) ? normalize(parsed) : emptyCart;
   } catch {
     cachedItems = emptyCart;
   }
@@ -85,6 +102,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const items = useSyncExternalStore(subscribe, readItems, () => emptyCart);
 
   function addItem(item: Omit<CartItem, "quantity" | "lineId"> & { lineId?: string }, quantity = 1) {
+    const productId = String(
+      (item as CartItem & { id?: unknown; _id?: unknown }).productId ??
+        (item as CartItem & { id?: unknown }).id ??
+        (item as CartItem & { _id?: unknown })._id ??
+        "",
+    ).trim();
+    if (!productId) {
+      console.error("Cannot add cart item without productId", item);
+      return;
+    }
+    item = { ...item, productId };
     const current = readItems();
     const lineId = item.lineId ?? itemKey(item);
     const existing = current.find((line) => line.lineId === lineId);

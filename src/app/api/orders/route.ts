@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isValidObjectId } from "mongoose";
 import { randomUUID } from "node:crypto";
 import { Coupon } from "@/models/Coupon";
 import { Order } from "@/models/Order";
@@ -140,7 +141,7 @@ export async function POST(request: Request) {
     await connectDb();
     const ids = [...new Set(data.items.map((item) => item.productId))];
     const products = await Product.find({
-      _id: { $in: ids },
+      _id: { $in: ids.filter((id) => isValidObjectId(id)) },
       status: "active",
     }).lean();
     const catalogProducts = await CatalogProduct.find({

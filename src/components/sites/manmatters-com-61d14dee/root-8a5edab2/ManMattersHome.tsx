@@ -86,7 +86,8 @@ type ParentCategory = {
 };
 
 type HomeProduct = {
-  _id: string;
+  _id?: string;
+  id?: string;
   name: string;
   slug: string;
   shortDescription?: string;
@@ -223,7 +224,14 @@ export function ManMattersHome({
       { signal: controller.signal },
     )
       .then((response) => (response.ok ? response.json() : { data: [] }))
-      .then((payload) => setProducts(payload.data ?? []))
+      .then((payload) =>
+        setProducts(
+          (payload.data ?? []).map((product: HomeProduct) => ({
+            ...product,
+            _id: product._id ?? product.id ?? "",
+          })),
+        ),
+      )
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError")
           return;
@@ -393,7 +401,7 @@ export function ManMattersHome({
                     className={styles.addBtn}
                     onClick={() => {
                       addItem({
-                        productId: p._id,
+                        productId: p._id ?? p.id ?? "",
                         name: p.name,
                         price: p.price,
                         image: p.images[0] ?? "",
@@ -407,7 +415,7 @@ export function ManMattersHome({
                     className={styles.buyBtn}
                     onClick={() => {
                       addItem({
-                        productId: p._id,
+                        productId: p._id ?? p.id ?? "",
                         name: p.name,
                         price: p.price,
                         image: p.images[0] ?? "",
