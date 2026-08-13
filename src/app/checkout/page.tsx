@@ -207,6 +207,7 @@ export default function CheckoutPage() {
         items.map(async (item) => {
           const response = await fetch(
             `/api/commerce/products/${item.productId}`,
+            { cache: "no-store" },
           );
           const body = await response.json();
           const available = response.ok
