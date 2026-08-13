@@ -372,9 +372,9 @@ export default function CheckoutPage() {
         "Một hoặc nhiều sản phẩm đã vượt quá tồn kho hiện có. Vui lòng điều chỉnh số lượng.",
       );
     const customer = {
-      ...contact,
-      phone: contact.phone || verifiedPhone,
       fullName: contact.fullName || deliveryAddress.recipientName,
+      phone: contact.phone || verifiedPhone,
+      ...(contact.email.trim() ? { email: contact.email.trim() } : {}),
     };
     setSubmitting(true);
     try {
