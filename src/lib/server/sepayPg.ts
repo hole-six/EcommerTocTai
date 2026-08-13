@@ -58,12 +58,16 @@ export async function fetchSePayPgOrder(orderInvoiceNumber: string) {
   return response.data;
 }
 
-/** IPN auth: SePay sends the merchant's secret key back verbatim in X-Secret-Key. */
+/**
+ * IPN auth: the SePay dashboard's IPN config ("Cấu hình IPN") issues its own
+ * Secret Key, separate from the merchant API secret_key used to sign
+ * checkout requests. SePay sends this value back verbatim in X-Secret-Key.
+ */
 export function verifySePayPgIpnSecret(headerValue: string | null) {
-  const creds = credentials();
-  if (!creds || !headerValue) return false;
+  const expected = process.env.SEPAY_PG_IPN_SECRET?.trim();
+  if (!expected || !headerValue) return false;
   const supplied = Buffer.from(headerValue);
-  const expected = Buffer.from(creds.secretKey);
-  if (supplied.length !== expected.length) return false;
-  return timingSafeEqual(supplied, expected);
+  const expectedBuf = Buffer.from(expected);
+  if (supplied.length !== expectedBuf.length) return false;
+  return timingSafeEqual(supplied, expectedBuf);
 }
