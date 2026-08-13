@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { HairLossQuiz } from "@/components/store/HairLossQuiz";
 import { SiteFooter } from "../shared/SiteFooter";
 import { SiteHeader } from "../shared/SiteHeader";
@@ -19,10 +20,14 @@ export function HairAssessmentLanding() {
 
       <section className={styles.hero}>
         <div className={styles.heroImageWrap}>
-          <img
+          <Image
             src="/images/baikiemtra.png"
             alt="Rụng tóc, có lời giải — bài kiểm tra tóc miễn phí chỉ 1 phút, lộ trình cá nhân hóa từ chuyên gia"
             className={styles.heroImage}
+            width={1508}
+            height={1043}
+            priority
+            sizes="(max-width: 1100px) 100vw, 1100px"
           />
           <a href="#quiz" className={styles.heroCta}>
             Làm bài kiểm tra tóc ngay <span>→</span>
@@ -37,7 +42,7 @@ export function HairAssessmentLanding() {
       <section className={styles.stageSection}>
         <div className={styles.stageRow}>
           {stageResults.map((src, i) => (
-            <img key={src} src={src} alt={`Kết quả thực tế trước và sau giai đoạn ${i + 1}`} />
+            <Image key={src} src={src} alt={`Kết quả thực tế trước và sau giai đoạn ${i + 1}`} width={936} height={1681} sizes="(max-width: 640px) 62vw, 230px" loading="lazy" />
           ))}
         </div>
       </section>
@@ -54,10 +59,14 @@ export function HairAssessmentLanding() {
       </section>
 
       <section className={styles.bannerSection}>
-        <img
+        <Image
           src="/images/baikiemtra1.png"
           alt="Hiệu quả rõ rệt sau 6 tháng sử dụng lộ trình chăm sóc tóc Tóc Tai"
           className={styles.bannerImage}
+          width={1756}
+          height={896}
+          loading="lazy"
+          sizes="(max-width: 1200px) 100vw, 1200px"
         />
       </section>
 

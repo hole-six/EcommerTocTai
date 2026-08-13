@@ -1,7 +1,7 @@
 import { HairLossQuiz } from "@/components/store/HairLossQuiz";
 
 export const metadata = {
-  title: "Kiểm tra tóc | CareWise",
+  title: "Kiểm tra tóc",
   robots: { index: false, follow: false },
 };
 

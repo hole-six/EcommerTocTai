@@ -1,278 +1,115 @@
-"use client";
+import type { Metadata } from "next";
+import { isValidObjectId } from "mongoose";
+import { notFound } from "next/navigation";
+import { connectDb } from "@/lib/server/db";
+import { CatalogProduct } from "@/models/CatalogProduct";
+import { Product } from "@/models/Product";
+import { Review } from "@/models/Review";
+import { ProductDetailClient } from "./ProductDetailClient";
 
-import Image from "next/image";
-import Link from "next/link";
-import { CheckCircle2, X } from "lucide-react";
-import { use, useEffect, useRef, useState } from "react";
-import { notFound, useRouter } from "next/navigation";
-import { SiteHeader } from "@/components/sites/manmatters-com-61d14dee/shared/SiteHeader";
-import { SiteFooter } from "@/components/sites/manmatters-com-61d14dee/shared/SiteFooter";
-import { ReviewModal } from "@/components/store/ReviewModal";
-import { useCart } from "@/contexts/CartContext";
-import styles from "./product-detail.module.css";
+const siteUrl = "https://moctoc.vn";
 
-const MAX_VISIBLE_REVIEWS = 5;
+async function getProduct(slug: string) {
+  await connectDb();
+  const product = await Product.findOne({ slug, status: "active" })
+    .populate("category", "name slug")
+    .lean();
+  if (product) return product;
 
-type Item = { targetProductId?: string; targetProductSlug?: string; title?: string; label?: string; period?: string; name?: string; value?: string; description?: string; image?: string };
-type Option = { id: string; targetProductSlug?: string; targetProductId?: string; label?: string; value?: string; image?: string; priceAdjustment?: number };
-type OptionGroup = { id: string; title: string; code: string; displayType?: string; required?: boolean; options: Option[] };
-type Product = { _id: string; name: string; slug: string; price: number; salePrice?: number; images: string[]; shortDescription: string; description: string; specifications?: Record<string, string | number | boolean>; specificationRows?: Item[]; category?: { name: string; slug: string }; variantGroup?: string; variantLabel?: string; optionGroups?: OptionGroup[]; stageImages?: Item[]; howToUse?: Item; rootCauses?: Item[]; treatmentKit?: Item[]; treatmentJourney?: Item[]; contentBlocks?: Item[] };
-type Review = { _id: string; rating: number; title: string; body: string; createdAt: string; user?: { fullName: string }; guestName?: string };
-const money = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 });
-function splitOptionLabel(label: string) { const match = label.match(/^(.*?)\s*(\(.*\))\s*$/); return match ? { main: match[1].trim(), sub: match[2].trim() } : { main: label, sub: "" }; }
-function isBlank(item?: { title?: string; label?: string; name?: string; period?: string; description?: string; value?: string; image?: string }) { if (!item) return true; return !item.image && !item.title?.trim() && !item.label?.trim() && !item.name?.trim() && !item.period?.trim() && !item.description?.trim() && !item.value?.trim(); }
-
-export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = use(params); const router = useRouter(); const { addItem } = useCart();
-  const [product, setProduct] = useState<Product | null>(null); const [loading, setLoading] = useState(true); const [failed, setFailed] = useState(false); const [activeImage, setActiveImage] = useState(0); const [selected, setSelected] = useState<Record<string, string>>({}); const [reviews, setReviews] = useState<Review[]>([]); const [loggedIn, setLoggedIn] = useState(false); const [showReviewModal, setShowReviewModal] = useState(false); const [showAllReviews, setShowAllReviews] = useState(false); const [tab, setTab] = useState<"details" | "howToUse">("details"); const [added, setAdded] = useState(false);
-  const [variantModalOpen, setVariantModalOpen] = useState(false); const [variantModalBuyNow, setVariantModalBuyNow] = useState(false);
-  const [stickyVisible, setStickyVisible] = useState(false); const actionsRef = useRef<HTMLDivElement>(null);
-  useEffect(() => { fetch(`/api/commerce/products/${slug}`).then((response) => response.json()).then((body) => body.data ? setProduct(body.data) : setFailed(true)).finally(() => setLoading(false)); }, [slug]);
-  useEffect(() => { if (!product) return; fetch(`/api/reviews?productId=${product._id}`).then((response) => response.json()).then((body) => setReviews(body.data ?? [])); fetch("/api/auth/me").then((response) => response.json()).then((body) => setLoggedIn(Boolean(body.data))); }, [product]);
-  useEffect(() => {
-    const node = actionsRef.current;
-    if (!node) return;
-    const observer = new IntersectionObserver(([entry]) => setStickyVisible(!entry.isIntersecting), { rootMargin: "-72px 0px 0px 0px" });
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [product]);
-  if (failed) notFound(); if (loading || !product) return <><SiteHeader compact /><p style={{ padding: 80, textAlign: "center" }}>Đang tải sản phẩm...</p></>;
-  const selectedOptions = (product.optionGroups ?? []).map((group) => { const option = group.options.find((entry) => (entry.value ?? entry.label ?? "") === selected[group.code]); return option ? { groupCode: group.code, groupTitle: group.title, optionValue: option.value ?? option.label ?? "", optionLabel: option.label ?? option.value ?? "", priceAdjustment: option.priceAdjustment ?? 0 } : null; }).filter(Boolean) as { groupCode: string; groupTitle: string; optionValue: string; optionLabel: string; priceAdjustment: number }[];
-  const price = (product.salePrice ?? product.price) + selectedOptions.reduce((total, option) => total + option.priceAdjustment, 0);
-  const currentProduct = product;
-  const avgRating = reviews.length ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0;
-  function choose(group: OptionGroup, option: Option) { if (option.targetProductSlug) { router.push(`/san-pham/${option.targetProductSlug}`); return; } setSelected((current) => ({ ...current, [group.code]: option.value ?? option.label ?? "" })); }
-  function addToCart(buyNow: boolean) {
-    const missing = groups.find((group) => group.required && !selected[group.code]);
-    if (missing) { setVariantModalBuyNow(buyNow); setVariantModalOpen(true); return; }
-    addItem({ productId: currentProduct._id, name: currentProduct.name, price, image: currentProduct.images[0] ?? "", variantTitle: selectedOptions.map((option) => option.optionLabel).join(" / "), options: selectedOptions });
-    setVariantModalOpen(false);
-    if (buyNow) router.push("/checkout"); else { setAdded(true); setTimeout(() => setAdded(false), 1600); }
-  }
-  function renderSteps() {
-    return groups.map((group, index) => (
-      <div className={styles.step} key={group.id}>
-        <h2>Bước {index + 1}{group.title ? `: ${group.title}` : ""}</h2>
-        <div className={styles.optionRow}>
-          {group.options.map((option) => {
-            const value = option.value ?? option.label ?? "";
-            const isSelected = selected[group.code] === value;
-            if (option.image && group.displayType === "card") {
-              const { main, sub } = splitOptionLabel(option.label ?? "");
-              return (
-                <button type="button" key={option.id} className={`${styles.imageOption} ${isSelected ? styles.selected : ""}`} onClick={() => choose(group, option)}>
-                  <span className={styles.imageOptionImg}><Image src={option.image} alt="" fill sizes="82px" style={{ objectFit: "contain" }} quality={92} /></span>
-                  <span className={styles.imageOptionMain}>{main}</span>
-                  {sub && <span className={styles.imageOptionSub}>{sub}</span>}
-                </button>
-              );
-            }
-            const absolutePrice = (currentProduct.salePrice ?? currentProduct.price) + (option.priceAdjustment ?? 0);
-            return (
-              <button type="button" key={option.id} className={`${styles.option} ${isSelected ? styles.selected : ""}`} onClick={() => choose(group, option)}>
-                {option.label}{option.priceAdjustment ? ` – ${money.format(absolutePrice)}` : ""}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    ));
-  }
-  const stageImages = (product.stageImages ?? []).filter((item) => !isBlank(item));
-  const fallbackGroups: OptionGroup[] = stageImages.length ? [{ id: "stages", title: "Chọn tình trạng tóc / loại da đầu", code: "stage", displayType: "card", options: stageImages.map((item, index) => ({ id: `stage-${index}`, label: item.title || item.label || `Giai đoạn ${index + 1}`, value: item.label || item.title || `stage-${index}`, image: item.image, targetProductId: item.targetProductId, targetProductSlug: item.targetProductSlug })) }] : [];
-  const cleanedOptionGroups = (product.optionGroups ?? []).map((group) => ({ ...group, options: group.options.filter((option) => !isBlank(option)) })).filter((group) => group.options.length > 0);
-  const groups = [...fallbackGroups, ...cleanedOptionGroups];
-  const hasHowToUse = !isBlank(product.howToUse);
-  const visibleReviews = showAllReviews ? reviews : reviews.slice(0, MAX_VISIBLE_REVIEWS);
-
-  return (
-    <div className={styles.page}>
-      <SiteHeader compact />
-      <main className={styles.main}>
-        <div className={styles.crumbs}>
-          <Link href="/cua-hang">Cửa hàng</Link> <span>/</span> {product.category?.name} <span>/</span> {product.name}
-        </div>
-        <div className={styles.purchase}>
-          <section className={styles.gallery}>
-            <div className={styles.thumbs}>
-              {product.images.map((image, index) => (
-                <button className={`${styles.thumb} ${index === activeImage ? styles.active : ""}`} key={`${image}-${index}`} onClick={() => setActiveImage(index)} aria-label={`Ảnh sản phẩm ${index + 1}`}>
-                  <Image src={image} alt="" width={62} height={68} />
-                </button>
-              ))}
-              {product.images.length > 4 && <span className={styles.thumbMore}>↓</span>}
-            </div>
-            <div className={styles.hero}>
-              {product.images[activeImage] ? (
-                <Image src={product.images[activeImage]} alt={product.name} fill priority sizes="(max-width: 900px) 100vw, 50vw" />
-              ) : (
-                <div className={styles.heroFallback}>{product.category?.name}</div>
-              )}
-            </div>
-          </section>
-          <section className={styles.summary}>
-            {product.shortDescription && <p className={styles.eyebrow}>{product.shortDescription}</p>}
-            <h1>{product.name}</h1>
-            <div className={styles.priceRow}>
-              <span className={styles.price}>{money.format(price)}</span>
-              {product.salePrice && <span className={styles.compare}>{money.format(product.price)}</span>}
-              <span className={styles.discount}>{product.salePrice ? `Giảm ${Math.round((1 - product.salePrice / product.price) * 100)}%` : "Bán chạy"}</span>
-            </div>
-            <p className={styles.tax}>Đã bao gồm thuế</p>
-            <div className={styles.ratingRow}>
-              <b>{avgRating ? avgRating.toFixed(1) : "4.0"}</b>
-              <span className={styles.stars}>★★★★☆</span>
-              <span>▣ {reviews.length ? `${reviews.length} đánh giá` : "1.3M đã bán"}</span>
-              <a className={styles.ratingLink} href="#reviews">☆ {reviews.length || "1.3K"} Đánh giá</a>
-            </div>
-            <div className={styles.promo}>
-              <div>
-                <span className={styles.promoLabel}>ĐƯỢC ƯA CHUỘNG NHẤT</span>
-                <strong>GIẢM 30%</strong>
-                <small>Khi thanh toán qua ví</small>
-              </div>
-              <button type="button">Thanh toán qua ví</button>
-            </div>
-            <div className={styles.steps}>{renderSteps()}</div>
-            <div className={styles.details}>
-              <div className={styles.tabs}>
-                <button className={`${styles.tab} ${tab === "details" ? styles.tabActive : ""}`} onClick={() => setTab("details")}>Chi tiết</button>
-                {hasHowToUse && <button className={`${styles.tab} ${tab === "howToUse" ? styles.tabActive : ""}`} onClick={() => setTab("howToUse")}>Cách sử dụng?</button>}
-              </div>
-              <div className={styles.tabPanel}>
-                {tab === "details" || !hasHowToUse ? (
-                  <>
-                    <p>{product.description || "Thông tin chi tiết sản phẩm đang được cập nhật."}</p>
-                    {(() => {
-                      const kit = (product.treatmentKit ?? []).filter((item) => !isBlank(item));
-                      return kit.length ? (
-                        <>
-                          <p>Bộ điều trị này bao gồm:</p>
-                          <ul>{kit.map((item, index) => <li key={index}><b>{item.name || item.title}</b>{item.description && ` – ${item.description}`}</li>)}</ul>
-                        </>
-                      ) : null;
-                    })()}
-                  </>
-                ) : (
-                  <>
-                    {product.howToUse?.description && <p>{product.howToUse.description}</p>}
-                    {product.howToUse?.image && (
-                      <div className={styles.howToImage}>
-                        <Image src={product.howToUse.image} alt="Cách sử dụng" fill sizes="(max-width: 640px) 100vw, 560px" style={{ objectFit: "contain" }} quality={92} />
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-            <div className={styles.actions} ref={actionsRef}>
-              <button className={styles.add} onClick={() => addToCart(false)}>{added ? "Đã thêm ✓" : "Thêm vào giỏ"}</button>
-              <button className={styles.buy} onClick={() => addToCart(true)}>Mua ngay</button>
-            </div>
-            <div className={styles.delivery}>
-              <b>📍 Chọn địa điểm giao hàng</b>
-              <br />
-              Nhập địa chỉ để nhận thời gian giao chính xác.
-            </div>
-          </section>
-        </div>
-
-        <ProductContent product={product} />
-
-        <section id="reviews" className={styles.contentSection}>
-          <h2>Đánh giá sản phẩm {reviews.length ? `(${reviews.length})` : ""}</h2>
-          {reviews.length === 0 ? (
-            <p className={styles.reviewEmpty}>Chưa có đánh giá nào cho sản phẩm này.</p>
-          ) : (
-            <div className={styles.reviewList}>
-              {visibleReviews.map((review) => (
-                <div key={review._id} className={styles.contentCard}>
-                  <div className={styles.reviewHead}>
-                    <b>{review.user?.fullName ?? review.guestName ?? "Khách hàng"} <CheckCircle2 size={14} className={styles.verifiedIcon} /></b>
-                    <small>{new Date(review.createdAt).toLocaleDateString("vi-VN")}</small>
-                  </div>
-                  <span className={styles.stars}>{"★".repeat(review.rating)}</span>
-                  {review.title && <h3 className={styles.reviewTitle}>{review.title}</h3>}
-                  <p>{review.body}</p>
-                </div>
-              ))}
-            </div>
-          )}
-          <div className={styles.reviewActions}>
-            {reviews.length > MAX_VISIBLE_REVIEWS && (
-              <button className={styles.reviewSecondaryButton} onClick={() => setShowAllReviews((value) => !value)}>
-                {showAllReviews ? "Thu gọn đánh giá" : "Xem thêm đánh giá"}
-              </button>
-            )}
-            <button className={styles.reviewPrimaryButton} onClick={() => setShowReviewModal(true)}>Viết đánh giá</button>
-          </div>
-        </section>
-      </main>
-      <SiteFooter />
-
-      <div className={`${styles.stickyBar} ${stickyVisible && !variantModalOpen ? styles.stickyVisible : ""}`}>
-        <div className={styles.stickyProduct}>
-          {product.images[0] && (
-            <div className={styles.stickyThumb}>
-              <Image src={product.images[0]} alt="" fill sizes="48px" style={{ objectFit: "cover" }} />
-            </div>
-          )}
-          <div className={styles.stickyInfo}>
-            <b>{product.name}</b>
-            <span>{money.format(price)}</span>
-          </div>
-        </div>
-        <div className={styles.stickyActions}>
-          <button className={styles.add} onClick={() => addToCart(false)}>{added ? "Đã thêm ✓" : "Thêm vào giỏ"}</button>
-          <button className={styles.buy} onClick={() => addToCart(true)}>Mua ngay</button>
-        </div>
-      </div>
-
-      {variantModalOpen && (
-        <div className={styles.variantModalBackdrop} onClick={() => setVariantModalOpen(false)}>
-          <div className={styles.variantModal} onClick={(event) => event.stopPropagation()}>
-            <header className={styles.variantModalHeader}>
-              <div className={styles.stickyProduct}>
-                {product.images[0] && (
-                  <div className={styles.stickyThumb}>
-                    <Image src={product.images[0]} alt="" fill sizes="48px" style={{ objectFit: "cover" }} />
-                  </div>
-                )}
-                <div className={styles.stickyInfo}>
-                  <b>{product.name}</b>
-                  <span>{money.format(price)}</span>
-                </div>
-              </div>
-              <button type="button" aria-label="Đóng" onClick={() => setVariantModalOpen(false)}><X size={16} /></button>
-            </header>
-            <p className={styles.variantModalHint}>Vui lòng chọn đầy đủ tùy chọn bên dưới trước khi {variantModalBuyNow ? "mua ngay" : "thêm vào giỏ"}.</p>
-            <div className={styles.steps}>{renderSteps()}</div>
-            <button className={styles.buy} style={{ width: "100%" }} onClick={() => addToCart(variantModalBuyNow)}>Xác nhận lựa chọn</button>
-          </div>
-        </div>
-      )}
-
-      {showReviewModal && (
-        <ReviewModal
-          productId={product._id}
-          productName={product.name}
-          productImage={product.images[0]}
-          loggedIn={loggedIn}
-          onClose={() => setShowReviewModal(false)}
-          onSubmitted={(review) => setReviews((current) => [review, ...current])}
-        />
-      )}
-    </div>
-  );
+  const catalogProduct = await CatalogProduct.findOne({ slug, status: "active" }).lean();
+  if (!catalogProduct) return null;
+  const description =
+    (catalogProduct.blocks as Array<{ type?: string; data?: { paragraphs?: string[] } }> | undefined)
+      ?.find((block) => block.type === "richText")
+      ?.data?.paragraphs?.join("\n") ?? "";
+  return {
+    _id: catalogProduct.id,
+    name: catalogProduct.name,
+    slug: catalogProduct.slug,
+    sku: catalogProduct.sku,
+    shortDescription: catalogProduct.shortDescription,
+    description,
+    images: catalogProduct.images,
+    price: catalogProduct.compareAtPrice ?? catalogProduct.price,
+    salePrice: catalogProduct.compareAtPrice ? catalogProduct.price : undefined,
+    inventory: catalogProduct.inventory,
+    category: { name: catalogProduct.category },
+  };
 }
 
-const contentImageSizes = "(max-width: 640px) 100vw, (max-width: 1180px) 45vw, 500px";
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await getProduct(slug);
+  if (!product) return { title: "Sản phẩm không tồn tại" };
 
-function ProductContent({ product }: { product: Product }) {
-  const specRows = (product.specificationRows ?? []).filter((item) => !isBlank(item));
-  const groups: Array<[string, Item[]]> = [["Mô tả nguyên nhân", product.rootCauses], ["Bộ điều trị", product.treatmentKit], ["Lộ trình điều trị", product.treatmentJourney], ["Nội dung bổ sung", product.contentBlocks]].map(([title, items]) => [title as string, (items as Item[] | undefined ?? []).filter((item) => !isBlank(item))]);
-  return <div className={styles.contentBlocks}>
-    {specRows.length ? <section className={styles.contentSection}><h2>Thông số sản phẩm</h2><div className={styles.contentGrid}>{specRows.map((item, index) => <article className={styles.contentCard} key={index}>{item.image && <div className={styles.contentCardImage}><Image src={item.image} alt="" fill sizes={contentImageSizes} style={{ objectFit: "contain" }} quality={92} /></div>}{item.name && <h3>{item.name}</h3>}{item.value && <p>{item.value}</p>}</article>)}</div></section> : null}
-    {groups.map(([title, items]) => items.length ? <section className={styles.contentSection} key={title}><h2>{title}</h2><div className={styles.contentGrid}>{items.map((item, index) => { const titleText = item.title || item.name || item.period; const card = <>{item.image && <div className={styles.contentCardImage}><Image src={item.image} alt="" fill sizes={contentImageSizes} style={{ objectFit: "contain" }} quality={92} /></div>}{titleText && <h3>{titleText}</h3>}{item.description && <p>{item.description}</p>}</>; return item.targetProductSlug ? <Link href={`/san-pham/${item.targetProductSlug}`} className={styles.contentCard} key={index}>{card}</Link> : <article className={styles.contentCard} key={index}>{card}</article>; })}</div></section> : null)}
-  </div>;
+  const description = (product.shortDescription || product.description || "").slice(0, 160);
+  const image = product.images?.[0];
+
+  return {
+    title: product.name,
+    description,
+    alternates: { canonical: `${siteUrl}/san-pham/${product.slug}` },
+    openGraph: {
+      title: product.name,
+      description,
+      url: `${siteUrl}/san-pham/${product.slug}`,
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
+}
+
+export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const product = await getProduct(slug);
+  if (!product) notFound();
+
+  const reviews = isValidObjectId(product._id)
+    ? await Review.find({ product: product._id, isPublished: true }).select("rating").lean()
+    : [];
+  const avgRating = reviews.length ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0;
+
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.shortDescription || product.description || undefined,
+    image: (product.images ?? []).map((image: string) => (image.startsWith("http") ? image : `${siteUrl}${image}`)),
+    sku: product.sku,
+    category: product.category?.name,
+    offers: {
+      "@type": "Offer",
+      url: `${siteUrl}/san-pham/${product.slug}`,
+      priceCurrency: "VND",
+      price: product.salePrice ?? product.price,
+      availability:
+        product.inventory > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+    },
+    ...(reviews.length
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: avgRating.toFixed(1),
+            reviewCount: reviews.length,
+          },
+        }
+      : {}),
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+      <ProductDetailClient slug={slug} />
+    </>
+  );
 }

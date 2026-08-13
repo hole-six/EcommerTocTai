@@ -1,7 +1,7 @@
 .page {
   --navy: #143461;
   --blue: #22548a;
-  --linkblue: #0876e3;
+  --linkblue: #0a5bc4;
   --bg-light: #f2f7fc;
   --bg-mid: #ebf0f5;
   --bg-tint: #d0def1;
@@ -72,16 +72,27 @@
 }
 
 .dots button {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.dots button::after {
+  content: "";
   width: 7px;
   height: 7px;
   border: 1px solid rgba(255, 255, 255, 0.76);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
-  padding: 0;
-  cursor: pointer;
+  transition: width 0.15s ease;
 }
 
-.dots .activeDot {
+.dots .activeDot::after {
   width: 22px;
   background: var(--navy);
   border-color: var(--navy);

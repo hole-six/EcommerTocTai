@@ -91,8 +91,8 @@ export function SupportChatWidget() {
   return (
     <div className={styles.widget}>
       {!open ? (
-        <button className={styles.launcher} onClick={() => setOpen(true)}>
-          <MessageCircle size={20} /> 
+        <button className={styles.launcher} onClick={() => setOpen(true)} aria-label="Mở khung chat hỗ trợ">
+          <MessageCircle size={20} />
           {(thread?.unreadForCustomer ?? 0) > 0 && <b>{thread?.unreadForCustomer}</b>}
         </button>
       ) : (

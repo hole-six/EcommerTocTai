@@ -109,14 +109,19 @@ const faqs = [
   },
 ];
 
-export function ManMattersHome() {
+type PromoBanner = { image: string; alt: string; cta: string; href: string };
+
+export function ManMattersHome({
+  initialBanners = [],
+  initialPromoBanners = [],
+}: {
+  initialBanners?: PromoBanner[];
+  initialPromoBanners?: PromoBanner[];
+}) {
   const [slide, setSlide] = useState(0);
-  const [banners, setBanners] = useState<
-    Array<{ image: string; alt: string; cta: string; href: string }>
-  >([]);
-  const [promoBanners, setPromoBanners] = useState<
-    Array<{ image: string; alt: string; cta: string; href: string }>
-  >([]);
+  const [banners, setBanners] = useState<PromoBanner[]>(initialBanners);
+  const [promoBanners, setPromoBanners] =
+    useState<PromoBanner[]>(initialPromoBanners);
   const [products, setProducts] = useState<HomeProduct[]>([]);
   const [parentCategories, setParentCategories] = useState<ParentCategory[]>(
     [],
