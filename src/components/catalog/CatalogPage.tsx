@@ -20,6 +20,7 @@ type Category = {
 };
 type Product = {
   id: string;
+  _id?: string;
   name: string;
   slug: string;
   category: { name: string; slug: string } | string;
@@ -218,7 +219,7 @@ export function CatalogPage({
               <p>Chưa có sản phẩm trong danh mục này.</p>
             )}
             {shownProducts.map((product) => (
-              <article key={product.id} className={styles.product}>
+              <article key={product._id ?? product.id} className={styles.product}>
                 <Link
                   href={productHref(product)}
                   className={styles.productImage}
@@ -254,7 +255,7 @@ export function CatalogPage({
                       className={styles.addBtn}
                       onClick={() => {
                         addItem({
-                          productId: product.id,
+                          productId: product._id ?? product.id,
                           name: product.name,
                           price: product.salePrice ?? product.price,
                           image: product.images[0] ?? "",
@@ -267,7 +268,7 @@ export function CatalogPage({
                     <button
                       onClick={() => {
                         addItem({
-                          productId: product.id,
+                          productId: product._id ?? product.id,
                           name: product.name,
                           price: product.salePrice ?? product.price,
                           image: product.images[0] ?? "",
