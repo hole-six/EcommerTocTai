@@ -16,7 +16,10 @@ const trackingUrlBuilders: Partial<Record<ShippingProvider, (code: string) => st
 };
 
 export function trackingUrl(provider: ShippingProvider | undefined, code: string | undefined): string | null {
-  if (!provider || !code) return null;
+  const trimmed = code?.trim();
+  if (!trimmed) return null;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (!provider) return null;
   const build = trackingUrlBuilders[provider];
-  return build ? build(code) : null;
+  return build ? build(trimmed) : null;
 }

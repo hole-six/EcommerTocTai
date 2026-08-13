@@ -1,5 +1,6 @@
 "use client";
 
+import { ExternalLink } from "lucide-react";
 import { useEffect, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/sites/manmatters-com-61d14dee/shared/SiteHeader";
@@ -103,22 +104,23 @@ export default function AccountPage() {
                   <b className="text-brand-navy">{money.format(order.total)}</b>
                 </div>
                 {order.trackingNumber && (
-                  <p className="mt-2 text-xs text-brand-muted">
-                    {order.shippingProvider && order.shippingProvider !== "manual" ? providerLabel[order.shippingProvider] : "Mã vận đơn"}
-                    {": "}
+                  <div className="mt-2 flex items-center justify-between gap-2 text-xs text-brand-muted">
+                    <span>
+                      {order.shippingProvider && order.shippingProvider !== "manual" ? providerLabel[order.shippingProvider] : "Mã vận đơn"}
+                    </span>
                     {trackingUrl(order.shippingProvider, order.trackingNumber) ? (
                       <a
                         href={trackingUrl(order.shippingProvider, order.trackingNumber)!}
                         target="_blank"
                         rel="noreferrer"
-                        className="font-bold text-brand-blue underline underline-offset-2"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-brand-blue px-3 py-1.5 text-xs font-bold text-white transition hover:opacity-90"
                       >
-                        {order.trackingNumber}
+                        Xem vận đơn <ExternalLink size={13} />
                       </a>
                     ) : (
                       <b className="text-brand-blue">{order.trackingNumber}</b>
                     )}
-                  </p>
+                  </div>
                 )}
               </div>
             ))}
