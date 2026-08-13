@@ -1,5 +1,18 @@
 import { z } from "zod";
 
+export function onlyProvidedFields<T extends Record<string, unknown>>(
+  parsed: T,
+  raw: unknown,
+) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return parsed;
+  const source = raw as Record<string, unknown>;
+  return Object.fromEntries(
+    Object.entries(parsed).filter(([key]) =>
+      Object.prototype.hasOwnProperty.call(source, key),
+    ),
+  ) as Partial<T>;
+}
+
 const phone = z
   .string()
   .regex(
@@ -81,8 +94,16 @@ const optionGroup = z
       .default([]),
   })
   .passthrough();
-export const productSchema = z
+const quizTags = z
   .object({
+    goals: z.array(z.string()).default([]),
+    stages: z.array(z.string()).default([]),
+    durations: z.array(z.string()).default([]),
+    formats: z.array(z.string()).default([]),
+    priorities: z.array(z.string()).default([]),
+  })
+  .default(() => ({ goals: [], stages: [], durations: [], formats: [], priorities: [] }));
+const productBaseSchema = z.object({
     category: z.string().length(24),
     name: z.string().min(2).max(180),
     slug: z.string().regex(/^[a-z0-9-]+$/),
@@ -106,6 +127,7 @@ export const productSchema = z
       )
       .default([]),
     optionGroups: z.array(optionGroup).default([]),
+    quizTags,
     contentBlocks: z.array(z.record(z.string(), z.unknown())).default([]),
     stageImages: z.array(imageItem).default([]),
     howToUse: z.record(z.string(), z.unknown()).default({}),
@@ -116,7 +138,9 @@ export const productSchema = z
     variantGroup: z.string().max(80).default(""),
     variantLabel: z.string().max(40).default(""),
     variantOrder: z.number().int().default(0),
-  })
+  });
+
+export const productSchema = productBaseSchema
   .refine(
     (data) => data.salePrice === undefined || data.salePrice <= data.price,
     {
@@ -124,6 +148,16 @@ export const productSchema = z
       message: "Giá bán thực tế không thể cao hơn giá gốc",
     },
   );
+export const productPatchSchema = productBaseSchema.partial().refine(
+  (data) =>
+    data.salePrice === undefined ||
+    data.price === undefined ||
+    data.salePrice <= data.price,
+  {
+    path: ["salePrice"],
+    message: "GiÃ¡ bÃ¡n thá»±c táº¿ khÃ´ng thá»ƒ cao hÆ¡n giÃ¡ gá»‘c",
+  },
+);
 export const orderSchema = z.object({
   customer: z.object({
     fullName: z.string().min(2).max(80),

@@ -9,7 +9,7 @@ export default function NewProductPage() {
     <AdminShell breadcrumb="Sản phẩm mới">
       <div className={panel.header}>
         <div>
-          <p>COMMERCE / SẢN PHẨM / MỚI</p>
+          <p>THƯƠNG MẠI / SẢN PHẨM / MỚI</p>
           <h1>Tạo sản phẩm mới</h1>
         </div>
       </div>

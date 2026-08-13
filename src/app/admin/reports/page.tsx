@@ -33,7 +33,7 @@ export default function AdminReportsPage() {
     <AdminShell breadcrumb="Báo cáo">
       <div className={panel.header}>
         <div>
-          <p>COMMERCE / BÁO CÁO</p>
+          <p>THƯƠNG MẠI / BÁO CÁO</p>
           <h1>Báo cáo kinh doanh</h1>
         </div>
       </div>

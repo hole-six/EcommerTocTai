@@ -1,0 +1,545 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowLeft, Check, CheckCircle2, Loader2, PhoneCall, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  QUIZ_DURATIONS,
+  QUIZ_FORMATS,
+  QUIZ_GOALS,
+  QUIZ_PRIORITIES,
+  QUIZ_STAGES,
+  hasAnyQuizTags,
+  scoreProduct,
+  type QuizAnswers,
+  type QuizOption,
+  type QuizTags,
+} from "@/lib/hairQuiz";
+import styles from "./hair-loss-quiz.module.css";
+
+type Answers = QuizAnswers & { noticed?: string; triedBefore?: string; triedResult?: string };
+type StepKey =
+  | "goal"
+  | "stage"
+  | "stageVisual"
+  | "duration"
+  | "noticed"
+  | "triedBefore"
+  | "triedResult"
+  | "proof"
+  | "format"
+  | "priority"
+  | "trust"
+  | "summary"
+  | "matching"
+  | "finalizing"
+  | "result";
+
+type ProductCandidate = {
+  _id: string;
+  name: string;
+  slug: string;
+  price: number;
+  salePrice?: number;
+  images: string[];
+  shortDescription?: string;
+  quizTags?: QuizTags;
+};
+type SessionUser = { fullName: string; phone: string } | null;
+
+const money = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 });
+
+const STAGE_VISUALS: { value: string; label: string; image: string }[] = [
+  { value: "early", label: "Mới bắt đầu", image: "/images/stage1.jpg" },
+  { value: "visible", label: "Nhẹ", image: "/images/stage2.jpg" },
+  { value: "receding", label: "Trung bình", image: "/images/stage3.jpg" },
+  { value: "advanced", label: "Nặng", image: "/images/stage4.jpg" },
+];
+const PROOF_IMAGES = [1, 2, 3, 4, 5].map((n) => `/images/anhstage${n}.png`);
+const TRUST_ROWS = [
+  "Gợi ý sản phẩm dựa trên đúng câu trả lời của bạn, không dùng chung một công thức cho tất cả.",
+  "Đánh giá hiển thị trên CareWise đều đến từ khách hàng đã mua và nhận sản phẩm thực tế.",
+  "Để lại số điện thoại, đội ngũ CareWise phản hồi tư vấn trong vài phút.",
+];
+
+function buildSteps(answers: Answers): StepKey[] {
+  const steps: StepKey[] = ["goal", "stage", "stageVisual", "duration", "noticed", "triedBefore"];
+  if (answers.triedBefore === "yes") steps.push("triedResult");
+  steps.push("proof", "format", "priority", "trust", "summary", "matching", "finalizing", "result");
+  return steps;
+}
+
+function labelOf(options: QuizOption[], value?: string) {
+  return options.find((option) => option.value === value)?.label ?? "—";
+}
+
+function explainMatch(tags: Partial<QuizTags> | undefined, answers: Answers) {
+  const parts: string[] = [];
+  if (tags) {
+    if (answers.goal && tags.goals?.includes(answers.goal)) parts.push(`mục tiêu "${labelOf(QUIZ_GOALS, answers.goal)}"`);
+    if (answers.stage && tags.stages?.includes(answers.stage)) parts.push(`giai đoạn "${labelOf(QUIZ_STAGES, answers.stage)}"`);
+    if (answers.duration && tags.durations?.includes(answers.duration)) parts.push(`thời gian rụng tóc "${labelOf(QUIZ_DURATIONS, answers.duration)}"`);
+    if (answers.format && tags.formats?.includes(answers.format)) parts.push(`hình thức "${labelOf(QUIZ_FORMATS, answers.format)}"`);
+    if (answers.priority && tags.priorities?.includes(answers.priority)) parts.push(`ưu tiên "${labelOf(QUIZ_PRIORITIES, answers.priority)}"`);
+  }
+  if (!parts.length) return "Sản phẩm phù hợp với nhu cầu chăm sóc tóc mà bạn vừa mô tả.";
+  return `Phù hợp với ${parts.join(", ")} mà bạn vừa chọn.`;
+}
+
+function ChoiceStep({
+  eyebrow,
+  title,
+  hint,
+  options,
+  value,
+  onSelect,
+  onNotSure,
+}: {
+  eyebrow?: string;
+  title: string;
+  hint?: string;
+  options: QuizOption[];
+  value?: string;
+  onSelect: (value: string) => void;
+  onNotSure?: () => void;
+}) {
+  return (
+    <div className={styles.stepBody}>
+      {eyebrow && <p className={styles.stepEyebrow}>{eyebrow}</p>}
+      <h1>{title}</h1>
+      {hint && <p className={styles.stepHint}>{hint}</p>}
+      <div className={styles.optionList}>
+        {options.map((option) => {
+          const active = value === option.value;
+          return (
+            <button
+              type="button"
+              key={option.value}
+              className={`${styles.optionRow} ${active ? styles.optionRowActive : ""}`}
+              onClick={() => onSelect(option.value)}
+            >
+              <span className={styles.optionRowText}>
+                <b>{option.label}</b>
+                {option.hint && <small>{option.hint}</small>}
+              </span>
+              {active && <Check size={18} />}
+            </button>
+          );
+        })}
+      </div>
+      {onNotSure && (
+        <button type="button" className={styles.notSureLink} onClick={onNotSure}>
+          Tôi không chắc – giúp tôi chọn
+        </button>
+      )}
+    </div>
+  );
+}
+
+export function HairLossQuiz() {
+  const router = useRouter();
+  const [answers, setAnswers] = useState<Answers>({});
+  const [stepKey, setStepKey] = useState<StepKey>("goal");
+  const [matchProgress, setMatchProgress] = useState(0);
+  const [checklistDone, setChecklistDone] = useState(0);
+  const [products, setProducts] = useState<ProductCandidate[]>([]);
+  const [productsLoaded, setProductsLoaded] = useState(false);
+  const [sessionUser, setSessionUser] = useState<SessionUser>(null);
+  const [leadName, setLeadName] = useState("");
+  const [leadPhone, setLeadPhone] = useState("");
+  const [leadStatus, setLeadStatus] = useState<"idle" | "saving" | "done" | "error">("idle");
+  const [leadError, setLeadError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/auth/me").then((response) => response.json()).then((body) => setSessionUser(body.data ?? null));
+  }, []);
+  useEffect(() => {
+    fetch("/api/commerce/products").then((response) => response.json()).then((body) => setProducts(body.data ?? [])).finally(() => setProductsLoaded(true));
+  }, []);
+
+  const steps = useMemo(() => buildSteps(answers), [answers]);
+  const currentIndex = Math.max(0, steps.indexOf(stepKey));
+  const progress = Math.round(((currentIndex + 1) / steps.length) * 100);
+
+  const scored = useMemo(() => {
+    return products
+      .filter((product) => hasAnyQuizTags(product.quizTags))
+      .map((product) => ({ product, score: scoreProduct(product.quizTags, answers) }))
+      .sort((a, b) => b.score - a.score);
+  }, [products, answers]);
+  const best = scored[0];
+  const hasMatch = Boolean(best && best.score > 0);
+
+  async function submitLead(fullName: string, phone: string) {
+    setLeadStatus("saving");
+    setLeadError("");
+    try {
+      const response = await fetch("/api/consultations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customer: { fullName, phone },
+          category: "hair",
+          answers,
+          appointment: { mode: "now" },
+        }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error ?? "Không thể gửi thông tin, vui lòng thử lại.");
+      setLeadStatus("done");
+    } catch (error) {
+      setLeadStatus("error");
+      setLeadError(error instanceof Error ? error.message : "Không thể gửi thông tin, vui lòng thử lại.");
+    }
+  }
+  useEffect(() => {
+    if (stepKey === "result" && sessionUser?.phone && leadStatus === "idle") {
+      void submitLead(sessionUser.fullName, sessionUser.phone);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stepKey, sessionUser]);
+
+  useEffect(() => {
+    if (stepKey !== "matching") return;
+    setMatchProgress(0);
+    const start = Date.now();
+    const duration = 2000;
+    const timer = window.setInterval(() => {
+      const pct = Math.min(100, Math.round(((Date.now() - start) / duration) * 100));
+      setMatchProgress(pct);
+      if (pct >= 100) {
+        window.clearInterval(timer);
+        window.setTimeout(() => setStepKey("finalizing"), 300);
+      }
+    }, 60);
+    return () => window.clearInterval(timer);
+  }, [stepKey]);
+
+  useEffect(() => {
+    if (stepKey !== "finalizing") return;
+    setChecklistDone(0);
+    const timer = window.setInterval(() => {
+      setChecklistDone((value) => {
+        const next = value + 1;
+        if (next >= 4) {
+          window.clearInterval(timer);
+          window.setTimeout(() => setStepKey("result"), 500);
+        }
+        return next;
+      });
+    }, 450);
+    return () => window.clearInterval(timer);
+  }, [stepKey]);
+
+  function goNext() {
+    const seq = buildSteps(answers);
+    const idx = seq.indexOf(stepKey);
+    setStepKey(seq[idx + 1] ?? stepKey);
+  }
+  function goBack() {
+    const seq = buildSteps(answers);
+    const idx = seq.indexOf(stepKey);
+    if (idx <= 0) {
+      router.push("/");
+      return;
+    }
+    setStepKey(seq[idx - 1]);
+  }
+  function selectAndAdvance(patch: Partial<Answers>) {
+    const nextAnswers = { ...answers, ...patch };
+    setAnswers(nextAnswers);
+    const seq = buildSteps(nextAnswers);
+    const idx = seq.indexOf(stepKey);
+    window.setTimeout(() => setStepKey(seq[idx + 1] ?? stepKey), 260);
+  }
+  function restart() {
+    setAnswers({});
+    setStepKey("goal");
+    setLeadStatus("idle");
+    setLeadName("");
+    setLeadPhone("");
+  }
+
+  if (stepKey === "result") {
+    return (
+      <div className={styles.page}>
+        <main className={styles.resultMain}>
+          <p className={styles.resultEyebrow}>PHÁC ĐỒ GỢI Ý DÀNH RIÊNG CHO BẠN</p>
+          {!productsLoaded ? (
+            <p className={styles.stepHint}>Đang tìm sản phẩm phù hợp…</p>
+          ) : hasMatch && best ? (
+            <>
+              <h1>Đã tìm được sản phẩm phù hợp nhất với bạn.</h1>
+              <p className={styles.resultLead}>{explainMatch(best.product.quizTags, answers)}</p>
+              <div className={styles.productCard}>
+                <div className={styles.productImage}>
+                  {best.product.images[0] && (
+                    <Image src={best.product.images[0]} alt={best.product.name} fill sizes="180px" style={{ objectFit: "cover" }} />
+                  )}
+                </div>
+                <div className={styles.productInfo}>
+                  <b>{best.product.name}</b>
+                  {best.product.shortDescription && <p>{best.product.shortDescription}</p>}
+                  <div className={styles.productPriceRow}>
+                    <span className={styles.productPrice}>{money.format(best.product.salePrice ?? best.product.price)}</span>
+                    {best.product.salePrice && <span className={styles.productCompare}>{money.format(best.product.price)}</span>}
+                  </div>
+                  <Link href={`/san-pham/${best.product.slug}`} className={styles.primaryCta}>
+                    Xem sản phẩm &amp; đặt hàng
+                  </Link>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <h1>Chưa tìm được sản phẩm khớp hoàn toàn hồ sơ của bạn.</h1>
+              <p className={styles.resultLead}>Để lại số điện thoại, đội ngũ CareWise sẽ tư vấn trực tiếp sản phẩm phù hợp nhất với bạn.</p>
+            </>
+          )}
+
+          <div className={styles.summaryTable}>
+            <div className={styles.summaryRow}><span>Mục tiêu</span><b>{labelOf(QUIZ_GOALS, answers.goal)}</b></div>
+            <div className={styles.summaryRow}><span>Giai đoạn rụng tóc</span><b>{labelOf(QUIZ_STAGES, answers.stage)}</b></div>
+            <div className={styles.summaryRow}><span>Thời gian</span><b>{labelOf(QUIZ_DURATIONS, answers.duration)}</b></div>
+            <div className={styles.summaryRow}><span>Hình thức điều trị</span><b>{answers.format ? labelOf(QUIZ_FORMATS, answers.format) : "Chưa xác định"}</b></div>
+            <div className={styles.summaryRow}><span>Ưu tiên</span><b>{labelOf(QUIZ_PRIORITIES, answers.priority)}</b></div>
+          </div>
+
+          <div className={styles.leadBox}>
+            {sessionUser?.phone ? (
+              <p className={styles.leadNote}>
+                <PhoneCall size={16} />
+                {leadStatus === "saving" && "Đang ghi nhận thông tin của bạn…"}
+                {leadStatus === "done" && `Đã ghi nhận! Chuyên gia sẽ gọi tới số ${sessionUser.phone} để tư vấn thêm.`}
+                {leadStatus === "error" && (
+                  <>
+                    {leadError}{" "}
+                    <button type="button" onClick={() => void submitLead(sessionUser.fullName, sessionUser.phone)}>Thử lại</button>
+                  </>
+                )}
+              </p>
+            ) : leadStatus === "done" ? (
+              <p className={styles.leadNote}>
+                <PhoneCall size={16} /> Cảm ơn bạn! Chuyên gia sẽ gọi tới số {leadPhone} trong ít phút để tư vấn thêm.
+              </p>
+            ) : (
+              <form
+                className={styles.leadForm}
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (!leadName.trim() || !leadPhone.trim()) return;
+                  void submitLead(leadName.trim(), leadPhone.trim());
+                }}
+              >
+                <p className={styles.leadTitle}>Muốn chuyên gia gọi tư vấn trực tiếp theo đúng hồ sơ này?</p>
+                <div className={styles.leadFields}>
+                  <input placeholder="Họ và tên" value={leadName} onChange={(event) => setLeadName(event.target.value)} required />
+                  <input placeholder="Số điện thoại" inputMode="tel" value={leadPhone} onChange={(event) => setLeadPhone(event.target.value)} required />
+                  <button type="submit" disabled={leadStatus === "saving"}>
+                    {leadStatus === "saving" ? <Loader2 size={16} className={styles.spin} /> : <PhoneCall size={16} />}
+                    {leadStatus === "saving" ? "Đang gửi…" : "Gửi cho tôi"}
+                  </button>
+                </div>
+                {leadStatus === "error" && <p className={styles.leadError}>{leadError}</p>}
+              </form>
+            )}
+          </div>
+
+          <button type="button" className={styles.restartLink} onClick={restart}>Làm lại bài test</button>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.page}>
+      <header className={styles.quizHeader}>
+        <button type="button" onClick={goBack} aria-label="Quay lại" className={styles.backButton}>
+          <ArrowLeft size={20} />
+        </button>
+        <Link href="/" className={styles.quizLogo}>
+          <Image src="/images/logocarewise.png" alt="CareWise" width={132} height={88} />
+        </Link>
+        <span className={styles.headerSpacer} />
+      </header>
+      <div className={styles.progressTrack}>
+        <div className={styles.progressFill} style={{ width: `${progress}%` }} />
+      </div>
+
+      {stepKey === "goal" && (
+        <ChoiceStep
+          eyebrow="BƯỚC 1"
+          title="Mục tiêu của bạn với mái tóc là gì?"
+          hint="Điều này giúp xác định phác đồ phù hợp nhất."
+          options={QUIZ_GOALS}
+          value={answers.goal}
+          onSelect={(value) => selectAndAdvance({ goal: value })}
+        />
+      )}
+      {stepKey === "stage" && (
+        <ChoiceStep
+          eyebrow="BƯỚC 2"
+          title="Bạn mô tả tình trạng rụng tóc hiện tại như thế nào?"
+          options={QUIZ_STAGES}
+          value={answers.stage}
+          onSelect={(value) => selectAndAdvance({ stage: value })}
+          onNotSure={() => selectAndAdvance({ stage: "visible" })}
+        />
+      )}
+      {stepKey === "stageVisual" && (
+        <div className={styles.stepBody}>
+          <h1>Hình nào gần giống tình trạng của bạn nhất?</h1>
+          <p className={styles.stepHint}>Chỉ mang tính tham khảo trực quan, không thay thế chẩn đoán y tế.</p>
+          <div className={styles.imageGrid}>
+            {STAGE_VISUALS.map((option) => {
+              const active = answers.stage === option.value;
+              return (
+                <button
+                  type="button"
+                  key={option.value}
+                  className={`${styles.imageOption} ${active ? styles.imageOptionActive : ""}`}
+                  onClick={() => selectAndAdvance({ stage: option.value })}
+                >
+                  <span className={styles.imageOptionPic}>
+                    <Image src={option.image} alt={option.label} fill sizes="240px" style={{ objectFit: "cover" }} />
+                  </span>
+                  <span>{option.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      {stepKey === "duration" && (
+        <ChoiceStep
+          eyebrow="BƯỚC 3"
+          title="Tình trạng này đã kéo dài bao lâu?"
+          options={QUIZ_DURATIONS}
+          value={answers.duration}
+          onSelect={(value) => selectAndAdvance({ duration: value })}
+          onNotSure={() => selectAndAdvance({ duration: "6_12m" })}
+        />
+      )}
+      {stepKey === "noticed" && (
+        <ChoiceStep
+          title="Có ai nhận xét hoặc để ý tóc bạn thưa đi không?"
+          hint="Điều này giúp hiểu mức độ rõ rệt của tình trạng."
+          options={[{ value: "yes", label: "Có" }, { value: "no", label: "Không" }]}
+          value={answers.noticed}
+          onSelect={(value) => selectAndAdvance({ noticed: value })}
+        />
+      )}
+      {stepKey === "triedBefore" && (
+        <ChoiceStep
+          title="Bạn đã từng điều trị rụng tóc trước đây chưa?"
+          options={[{ value: "yes", label: "Có" }, { value: "no", label: "Không" }]}
+          value={answers.triedBefore}
+          onSelect={(value) => selectAndAdvance({ triedBefore: value })}
+        />
+      )}
+      {stepKey === "triedResult" && (
+        <ChoiceStep
+          title="Kết quả điều trị trước đó thế nào?"
+          options={[
+            { value: "some", label: "Có thấy cải thiện" },
+            { value: "none", label: "Không thấy cải thiện" },
+            { value: "early_stop", label: "Dừng quá sớm" },
+            { value: "side_effect", label: "Bị tác dụng phụ" },
+          ]}
+          value={answers.triedResult}
+          onSelect={(value) => selectAndAdvance({ triedResult: value })}
+        />
+      )}
+      {stepKey === "proof" && (
+        <div className={styles.stepBody}>
+          <h1>Khách hàng CareWise chia sẻ hành trình của họ.</h1>
+          <div className={styles.testimonialRow}>
+            {PROOF_IMAGES.map((src) => (
+              <div key={src} className={styles.testimonialCard}>
+                <Image src={src} alt="Chia sẻ từ khách hàng CareWise" width={280} height={430} />
+              </div>
+            ))}
+          </div>
+          <button type="button" className={styles.continueButton} onClick={goNext}>Tiếp tục</button>
+        </div>
+      )}
+      {stepKey === "format" && (
+        <ChoiceStep
+          eyebrow="BƯỚC 4"
+          title="Bạn muốn điều trị theo hình thức nào?"
+          options={QUIZ_FORMATS}
+          value={answers.format}
+          onSelect={(value) => selectAndAdvance({ format: value })}
+          onNotSure={() => selectAndAdvance({ format: undefined })}
+        />
+      )}
+      {stepKey === "priority" && (
+        <ChoiceStep
+          eyebrow="BƯỚC 5"
+          title="Ưu tiên hàng đầu của bạn là gì?"
+          hint="Giúp CareWise chọn đúng hướng chăm sóc cho bạn."
+          options={QUIZ_PRIORITIES}
+          value={answers.priority}
+          onSelect={(value) => selectAndAdvance({ priority: value })}
+        />
+      )}
+      {stepKey === "trust" && (
+        <div className={styles.stepBody}>
+          <h1>Bạn đang ở đúng nơi.</h1>
+          <p className={styles.stepHint}>Cách CareWise gợi ý sản phẩm cho bạn:</p>
+          <div className={styles.trustList}>
+            {TRUST_ROWS.map((row) => (
+              <div key={row} className={styles.trustRow}>
+                <CheckCircle2 size={18} />
+                <span>{row}</span>
+              </div>
+            ))}
+          </div>
+          <button type="button" className={styles.continueButton} onClick={goNext}>Tiếp tục</button>
+        </div>
+      )}
+      {stepKey === "summary" && (
+        <div className={styles.stepBody}>
+          <h1>Phân tích của bạn đã hoàn tất.</h1>
+          <p className={styles.stepHint}>Hồ sơ tóc của bạn:</p>
+          <div className={styles.summaryTable}>
+            <div className={styles.summaryRow}><span>Mục tiêu</span><b>{labelOf(QUIZ_GOALS, answers.goal)}</b></div>
+            <div className={styles.summaryRow}><span>Giai đoạn rụng tóc</span><b>{labelOf(QUIZ_STAGES, answers.stage)}</b></div>
+            <div className={styles.summaryRow}><span>Thời gian</span><b>{labelOf(QUIZ_DURATIONS, answers.duration)}</b></div>
+            <div className={styles.summaryRow}><span>Hình thức điều trị</span><b>{answers.format ? labelOf(QUIZ_FORMATS, answers.format) : "Chưa xác định"}</b></div>
+            <div className={styles.summaryRow}><span>Ưu tiên</span><b>{labelOf(QUIZ_PRIORITIES, answers.priority)}</b></div>
+          </div>
+          <button type="button" className={styles.continueButton} onClick={goNext}>Tiếp tục</button>
+        </div>
+      )}
+      {stepKey === "matching" && (
+        <div className={styles.stepBody}>
+          <div className={styles.loadingIcon}><Sparkles size={26} /></div>
+          <h1>Đang tìm phác đồ phù hợp.</h1>
+          <div className={styles.matchTrack}>
+            <div className={styles.matchFill} style={{ width: `${matchProgress}%` }} />
+          </div>
+          <p className={styles.matchPercent}>{matchProgress}%</p>
+        </div>
+      )}
+      {stepKey === "finalizing" && (
+        <div className={styles.stepBody}>
+          <h1>Đang hoàn tất.</h1>
+          <div className={styles.matchTrack}>
+            <div className={styles.matchFill} style={{ width: `${(checklistDone / 4) * 100}%` }} />
+          </div>
+          <div className={styles.checklist}>
+            {["Xác nhận thông tin", "Chọn phác đồ phù hợp", "Đối chiếu sản phẩm còn hàng", "Chuẩn bị kết quả"].map((label, index) => (
+              <div key={label} className={`${styles.checklistRow} ${index < checklistDone ? styles.checklistDone : ""}`}>
+                {index < checklistDone ? <CheckCircle2 size={16} /> : <span className={styles.checklistDot} />}
+                <span>{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

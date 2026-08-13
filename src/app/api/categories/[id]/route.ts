@@ -4,13 +4,14 @@ import { Product } from "@/models/Product";
 import { requireAdmin } from "@/lib/server/auth";
 import { connectDb } from "@/lib/server/db";
 import { apiError } from "@/lib/server/http";
-import { categorySchema } from "@/lib/server/validators";
+import { categorySchema, onlyProvidedFields } from "@/lib/server/validators";
 
 export async function PATCH(request: Request, context: RouteContext<"/api/categories/[id]">) {
   try {
     await requireAdmin();
     const { id } = await context.params;
-    const data = categorySchema.partial().parse(await request.json());
+    const raw = await request.json();
+    const data = onlyProvidedFields(categorySchema.partial().parse(raw), raw);
     await connectDb();
     if (data.parent !== undefined && data.parent !== null) {
       if (data.parent === id) return NextResponse.json({ error: "Danh mục không thể là danh mục cha của chính nó." }, { status: 422 });

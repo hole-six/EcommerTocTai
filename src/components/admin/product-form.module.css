@@ -295,3 +295,81 @@
   font-size: 12px;
   line-height: 1.55;
 }
+
+.fieldHint {
+  margin: 6px 0 0;
+  color: var(--admin-faint);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.slugPreview {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 38px;
+  box-sizing: border-box;
+  padding: 0 11px;
+  border: 1px dashed #d0d5dd;
+  border-radius: 8px;
+  background: var(--admin-soft);
+  color: var(--admin-faint);
+  font-size: 12.5px;
+  overflow: hidden;
+}
+.slugPreview b {
+  color: var(--admin-ink);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.skuRow {
+  display: flex;
+  gap: 8px;
+}
+.skuRow input {
+  flex: 1;
+  min-width: 0;
+}
+.skuRow button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.tagGroup {
+  margin-bottom: 20px;
+}
+.tagGroup:last-child {
+  margin-bottom: 0;
+}
+.tagGroupTitle {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--admin-ink);
+}
+.tagChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tagChip {
+  border: 1px solid #d5e0eb;
+  border-radius: 999px;
+  padding: 7px 14px;
+  background: #fff;
+  color: var(--admin-muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+.tagChip:hover {
+  border-color: var(--admin-blue);
+}
+.tagChipActive {
+  background: var(--admin-blue);
+  border-color: var(--admin-blue);
+  color: #fff;
+}

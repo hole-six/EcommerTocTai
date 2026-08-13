@@ -13,8 +13,7 @@ type Form = {
   password: string;
 };
 const empty: Form = { fullName: "", phone: "", email: "", password: "" };
-const heroImage =
-  "/sites/manmatters-com-61d14dee/root-8a5edab2/hero-wellness.png";
+const heroImage = "/anhdesginlogin.png";
 
 export default function RegisterPage() {
   const router = useRouter();

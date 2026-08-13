@@ -1,4 +1,93 @@
-import Link from "next/link";
+import { SiteFooter } from "../shared/SiteFooter";
+import { SiteHeader } from "../shared/SiteHeader";
+import { HairAssessment } from "./HairAssessment";
 import styles from "./HairAssessmentLanding.module.css";
-const testimonials = [1, 2, 3, 4, 5].map((n) => `https://i.mscwlns.co/media/misc/others/Testimonial%20${n}_f6q8fr.png?tr=w-600`);
-export function HairAssessmentLanding() { return <main className={styles.page}><header className={styles.header}><Link href="/" className={styles.logo}>man<span>matters</span></Link><nav><Link href="/shop/hair">Hair</Link><Link href="/shop/beard">Beard</Link><Link href="/shop/nutrition">Nutrition</Link><Link href="/pages/hair-form-assessment">Hair Assessment</Link></nav><Link href="/login" className={styles.login}>Login</Link></header><section className={styles.hero}><div className={styles.copy}><p className={styles.kicker}>FREE 1-MINUTE HAIR TEST</p><h1>Free Hair Test for Men – Get Your Personalised Hair Loss Plan</h1><p>Know your hair loss stage and get an expert-built plan based on your stage, scalp health and lifestyle.</p><Link className={styles.cta} href="/hair-form?wacategory=hair&skipHome=true">Take the hair test <span>→</span></Link><small>Trusted by 10L+ Indian men</small></div><div className={styles.visual}><div className={styles.orb}/><div className={styles.phone}><b>Your hair.<br/>Your plan.</b><hr/><hr/><button>Start assessment</button></div><div className={styles.tag}>Expert designed solutions<br/><b>80% success rate</b></div></div></section><section className={styles.steps}><h2>How it works</h2><div>{[[1,"Answer some basic health related questions"],[2,"Claim FREE doctor consult to get diet & lifestyle management tips"],[3,"5L+ men have reported positive results from following their personalised regime"]].map(([n,t])=><article key={String(n)}><b>{n}</b><p>{t}</p></article>)}</div></section><section className={styles.trust}><span><b>5L+</b> Consults</span><span><b>150+</b> Doctors</span><span><b>10L+</b> Customers</span></section><section className={styles.testimonials}><h2>Grow visibly thicker, fuller hair</h2><div>{testimonials.map((src, i)=><img key={src} src={src} alt={`user testimonial ${i+1}`}/>)}</div></section><footer>© Man Matters · Personalised care for men</footer></main>; }
+
+const stageResults = [1, 2, 3, 4, 5].map((n) => `/images/anhstage${n}.png`);
+
+const videos = [
+  "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a06c398649c9137d0ba3c14/main.mp4",
+  "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a06c398649c9137d0ba3c18/main.mp4",
+  "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a06c452749a2a229b7e00f6/main.mp4",
+  "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a06c4529981f11df328a048/main.mp4",
+];
+
+export function HairAssessmentLanding() {
+  return (
+    <main className={styles.page}>
+      <SiteHeader />
+
+      <section className={styles.hero}>
+        <div className={styles.heroImageWrap}>
+          <img
+            src="/images/baikiemtra.png"
+            alt="Rụng tóc, có lời giải — bài kiểm tra tóc miễn phí chỉ 1 phút, lộ trình cá nhân hóa từ chuyên gia"
+            className={styles.heroImage}
+          />
+          <a href="#quiz" className={styles.heroCta}>
+            Làm bài kiểm tra tóc ngay <span>→</span>
+          </a>
+        </div>
+      </section>
+
+      <HairAssessment embedded />
+
+      <section className={styles.stageSection}>
+        <div className={styles.stageRow}>
+          {stageResults.map((src, i) => (
+            <img key={src} src={src} alt={`Kết quả thực tế trước và sau giai đoạn ${i + 1}`} />
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.videoSection}>
+        <h2>Khách hàng chia sẻ sau khi theo lộ trình cá nhân hóa</h2>
+        <div className={styles.videoGrid}>
+          {videos.map((src) => (
+            <video key={src} className={styles.video} controls preload="metadata" playsInline>
+              <source src={src} type="video/mp4" />
+            </video>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.bannerSection}>
+        <img
+          src="/images/baikiemtra1.png"
+          alt="Hiệu quả rõ rệt sau 6 tháng sử dụng lộ trình chăm sóc tóc Tóc Tai"
+          className={styles.bannerImage}
+        />
+      </section>
+
+      <section className={styles.steps}>
+        <h2>Cách hoạt động</h2>
+        <div>
+          {[
+            [1, "Trả lời một vài câu hỏi cơ bản về tóc và sức khỏe"],
+            [2, "Nhận tư vấn miễn phí về dinh dưỡng và thói quen sinh hoạt"],
+            [3, "Nhiều khách hàng ghi nhận cải thiện khi duy trì đúng lộ trình cá nhân hóa"],
+          ].map(([n, t]) => (
+            <article key={String(n)}>
+              <b>{n}</b>
+              <p>{t}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.trust}>
+        <span>
+          <b>5L+</b> Lượt tư vấn
+        </span>
+        <span>
+          <b>150+</b> Chuyên gia
+        </span>
+        <span>
+          <b>10L+</b> Khách hàng
+        </span>
+      </section>
+
+      <SiteFooter />
+    </main>
+  );
+}

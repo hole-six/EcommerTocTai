@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import styles from "../auth.module.css";
 
-const heroImage = "/sites/manmatters-com-61d14dee/root-8a5edab2/hero-hair.png";
+const heroImage = "/anhdesginlogin.png";
 
 export default function LoginPage() {
   const router = useRouter();

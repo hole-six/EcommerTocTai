@@ -6,7 +6,7 @@ import { Category } from "@/models/Category";
 import { currentUser, requireAdmin } from "@/lib/server/auth";
 import { connectDb } from "@/lib/server/db";
 import { apiError } from "@/lib/server/http";
-import { productSchema } from "@/lib/server/validators";
+import { onlyProvidedFields, productPatchSchema } from "@/lib/server/validators";
 
 export async function GET(
   _request: Request,
@@ -64,7 +64,8 @@ export async function PATCH(
   try {
     await requireAdmin();
     const { id } = await context.params;
-    const data = productSchema.partial().parse(await request.json());
+    const raw = await request.json();
+    const data = onlyProvidedFields(productPatchSchema.parse(raw), raw);
     await connectDb();
     if (data.category) {
       const category = await Category.findOne({ _id: data.category, isActive: true }).select("_id").lean();

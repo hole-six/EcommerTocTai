@@ -3,7 +3,7 @@ import Link from "next/link";
 import styles from "./SiteChrome.module.css";
 import { FacebookIcon, InstagramIcon, XIcon, YoutubeIcon } from "./SocialIcons";
 const groups = [
-  { title: "Kh\u00e1m ph\u00e1", links: [["S\u1ea3n ph\u1ea9m", "/shop/all"], ["Ch\u1ecdn theo nhu c\u1ea7u", "/"], ["Ki\u1ec3m tra t\u00f3c", "/pages/hair-form-assessment"], ["C\u1ea9m nang t\u00f3c", "/habit/honest-report"]] },
+  { title: "Kh\u00e1m ph\u00e1", links: [["S\u1ea3n ph\u1ea9m", "/shop/all"], ["Ch\u1ecdn theo nhu c\u1ea7u", "/"], ["Ki\u1ec3m tra t\u00f3c", "/hair-form"]] },
   { title: "H\u1ed7 tr\u1ee3 kh\u00e1ch h\u00e0ng", links: [["C\u00e2u h\u1ecfi th\u01b0\u1eddng g\u1eb7p", "/faq"], ["Li\u00ean h\u1ec7", "/contact-us"], ["\u0110\u1ed5i tr\u1ea3 & ho\u00e0n ti\u1ec1n", "/refunds-policy"], ["Theo d\u00f5i \u0111\u01a1n h\u00e0ng", "/account"]] },
   { title: "V\u1ec1 T\u00f3c Tai", links: [["V\u1ec1 ch\u00fang t\u00f4i", "/about-us"], ["Ch\u00ednh s\u00e1ch b\u1ea3o m\u1eadt", "/privacy-policy"], ["\u0110i\u1ec1u kho\u1ea3n s\u1eed d\u1ee5ng", "/terms-and-conditions"], ["S\u01a1 \u0111\u1ed3 website", "/sitemap"]] },
 ] as const;

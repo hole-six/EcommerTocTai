@@ -1,15 +1,19 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Bell,
   ChevronDown,
+  ClipboardList,
+  Home,
   Menu,
   Search,
   ShoppingBag,
+  Store,
   UserRound,
   X,
+  type LucideIcon,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useCart } from "@/contexts/CartContext";
@@ -35,8 +39,57 @@ type NotificationItem = {
   createdAt: string;
 };
 
+type BottomNavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  isActive: (pathname: string) => boolean;
+};
+
+const bottomNavItems: BottomNavItem[] = [
+  {
+    href: "/",
+    label: "Trang chủ",
+    icon: Home,
+    isActive: (pathname) => pathname === "/" || pathname === "/home",
+  },
+  {
+    href: "/shop/all",
+    label: "Cửa hàng",
+    icon: Store,
+    isActive: (pathname) =>
+      pathname.startsWith("/shop") ||
+      pathname.startsWith("/san-pham") ||
+      pathname === "/cua-hang",
+  },
+  {
+    href: "/hair-form",
+    label: "Kiểm tra",
+    icon: ClipboardList,
+    isActive: (pathname) =>
+      pathname.startsWith("/pages/hair-form-assessment") ||
+      pathname.startsWith("/hair-form"),
+  },
+  {
+    href: "/checkout",
+    label: "Giỏ hàng",
+    icon: ShoppingBag,
+    isActive: (pathname) => pathname.startsWith("/checkout"),
+  },
+  {
+    href: "/account",
+    label: "Tài khoản",
+    icon: UserRound,
+    isActive: (pathname) =>
+      pathname.startsWith("/account") ||
+      pathname.startsWith("/login") ||
+      pathname.startsWith("/register"),
+  },
+];
+
 export function SiteHeader({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { count } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
@@ -48,6 +101,11 @@ export function SiteHeader({ compact = false }: { compact?: boolean }) {
   const [categories, setCategories] = useState<CategoryNode[]>([]);
   const catRef = useRef<HTMLDivElement>(null);
   const noticeRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    document.body.classList.add("has-bottom-nav");
+    return () => document.body.classList.remove("has-bottom-nav");
+  }, []);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -190,13 +248,7 @@ export function SiteHeader({ compact = false }: { compact?: boolean }) {
               Sản phẩm
             </Link>
             <Link
-              href="/habit/honest-report"
-              onClick={() => setMenuOpen(false)}
-            >
-              Cẩm nang tóc
-            </Link>
-            <Link
-              href="/pages/hair-form-assessment"
+              href="/hair-form"
               onClick={() => setMenuOpen(false)}
             >
               Kiểm tra tóc
@@ -295,6 +347,29 @@ export function SiteHeader({ compact = false }: { compact?: boolean }) {
           />
         )}
       </div>
+      <nav className={styles.bottomNav} aria-label="Điều hướng chính">
+        {bottomNavItems.map((item) => {
+          const Icon = item.icon;
+          const href =
+            item.href === "/account" && !user ? "/login" : item.href;
+          const active = item.isActive(pathname);
+
+          return (
+            <Link
+              href={href}
+              key={item.href}
+              className={active ? styles.bottomNavActive : ""}
+              aria-current={active ? "page" : undefined}
+            >
+              <span className={styles.bottomNavIcon}>
+                <Icon size={21} strokeWidth={active ? 2.6 : 2.2} />
+                {item.href === "/checkout" && count > 0 && <b>{count}</b>}
+              </span>
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
     </div>
   );
 }

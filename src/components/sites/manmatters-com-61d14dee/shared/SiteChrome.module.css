@@ -22,6 +22,8 @@
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
+  line-height: 1.35;
+  text-align: center;
 }
 .promo button {
   background: #fff;
@@ -40,12 +42,13 @@
   background: #fff;
 }
 .header {
-  height: 64px;
+  height: 80px;
   display: flex;
   align-items: center;
   padding: 0 32px;
   gap: 32px;
   border-bottom: 1px solid #eee;
+  min-width: 0;
 }
 .textLogo {
   color: #173d35;
@@ -72,7 +75,7 @@
   color: #6d827a;
 }
 .logoImg {
-  height: 52px;
+  height: 68px;
   width: auto;
 }
 .footerLogo {
@@ -94,8 +97,10 @@
 .nav {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 24px;
   flex: 1;
+  min-width: 0;
 }
 .nav a,
 .nav button {
@@ -174,6 +179,7 @@
   display: flex;
   gap: 20px;
   align-items: center;
+  flex: 0 0 auto;
 }
 .actions button,
 .actions a {
@@ -348,6 +354,14 @@
   place-items: center;
   font-weight: 700;
 }
+.bottomNav {
+  display: none;
+}
+.bottomNavIcon {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
 .footer {
   background: linear-gradient(135deg, #102b50 0%, #143461 55%, #1b4672 100%);
   color: #dbe4f0;
@@ -455,9 +469,26 @@
   background: rgba(255, 255, 255, 0.25);
 }
 @media (max-width: 900px) {
+  :global(body.has-bottom-nav) {
+    padding-bottom: calc(82px + env(safe-area-inset-bottom));
+  }
+
+  .promo {
+    flex-wrap: wrap;
+    min-height: 0;
+    padding: 8px 12px;
+  }
+
   .header {
+    height: 64px;
     padding: 0 16px;
-    gap: 0;
+    gap: 10px;
+  }
+  .logoImg {
+    height: 48px;
+  }
+  .nav {
+    justify-content: flex-start;
   }
   .menuButton {
     display: grid;
@@ -477,7 +508,7 @@
     bottom: 0;
     width: min(330px, 88vw);
     background: #fff;
-    padding: 20px 16px;
+    padding: 16px 16px 96px;
     box-shadow: 12px 0 36px rgba(7, 31, 61, 0.2);
     flex-direction: column;
     align-items: flex-start;
@@ -501,24 +532,24 @@
     width: 100%;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin: 0 0 16px;
-    padding: 0 4px 16px;
+    justify-content: flex-end;
+    margin: 0 0 12px;
+    padding: 0 0 12px;
     border-bottom: 1px solid #e3ebf4;
   }
   .mobileNavTitle span {
-    color: #6d829b;
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.14em;
+    display: none;
   }
   .mobileNavTitle button {
     display: grid;
     place-items: center;
-    width: 36px;
-    height: 36px;
+    width: 38px !important;
+    min-height: 38px !important;
+    height: 38px;
+    flex: 0 0 auto;
+    padding: 0 !important;
     border: 1px solid #d5e2ee;
-    border-radius: 9px;
+    border-radius: 10px;
     background: #f8fbff;
     color: var(--navy);
   }
@@ -559,7 +590,7 @@
     margin-left: auto;
   }
   .actions {
-    gap: 14px;
+    gap: 10px;
   }
   .actions > button,
   .actions > a[aria-label="Tài khoản"] {
@@ -591,7 +622,7 @@
     width: 100%;
   }
   .footerLinks {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 28px 18px;
     padding: 28px 0;
   }
@@ -605,15 +636,100 @@
     width: 100%;
     justify-content: center;
   }
+  .bottomNav {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    z-index: 58;
+    height: 66px;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 3px;
+    padding: 6px;
+    border: 1px solid rgba(194, 210, 229, 0.82);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 12px 34px rgba(18, 45, 78, 0.18);
+    backdrop-filter: blur(14px);
+  }
+  .bottomNav a {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+    border-radius: 13px;
+    color: #667085;
+    text-decoration: none;
+    font-size: 10.5px;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+    transition:
+      background 0.16s ease,
+      color 0.16s ease,
+      transform 0.16s ease;
+  }
+  .bottomNav a:active {
+    transform: translateY(1px);
+  }
+  .bottomNav a.bottomNavActive {
+    background: #eef5ff;
+    color: var(--navy);
+  }
+  .bottomNavIcon {
+    width: 28px;
+    height: 25px;
+  }
+  .bottomNavIcon b {
+    position: absolute;
+    top: -7px;
+    right: -10px;
+    min-width: 18px;
+    height: 18px;
+    box-sizing: border-box;
+    padding: 0 5px;
+    border: 2px solid #fff;
+    border-radius: 99px;
+    background: #f04438;
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 10px;
+    font-weight: 900;
+    line-height: 1;
+  }
 }
 @media (max-width: 480px) {
   .promo {
-    font-size: 10px;
+    font-size: 10.5px;
     gap: 8px;
   }
   .promo button {
-    font-size: 10px;
-    padding: 4px 8px;
+    min-height: 28px;
+    font-size: 10.5px;
+    padding: 5px 9px;
+  }
+  .header {
+    padding: 0 12px;
+  }
+  .logoImg {
+    height: 42px;
+  }
+  .noticeButton {
+    width: 34px;
+    height: 34px;
+  }
+  .actions .loginButton,
+  .actions .accountButton {
+    max-width: 98px;
+    padding: 0 10px !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .footerLinks {
     grid-template-columns: 1fr;
@@ -621,5 +737,17 @@
   .footerBottom {
     flex-direction: column;
     gap: 12px;
+  }
+}
+@media (max-width: 380px) {
+  .bottomNav {
+    left: 6px;
+    right: 6px;
+    height: 64px;
+    padding: 5px;
+    border-radius: 16px;
+  }
+  .bottomNav a {
+    font-size: 9.5px;
   }
 }

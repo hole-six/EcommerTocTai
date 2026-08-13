@@ -10,7 +10,15 @@ globalMongoose.mongoose = cached;
 export async function connectDb() {
   if (!mongoUri) throw new Error("MONGODB_URI is not configured. Add it to .env.local before using commerce APIs.");
   if (cached.connection) return cached.connection;
-  cached.promise ??= mongoose.connect(mongoUri!, { dbName: process.env.MONGODB_DB ?? "toc_tai" });
+  cached.promise ??= mongoose
+    .connect(mongoUri!, {
+      dbName: process.env.MONGODB_DB ?? "toc_tai",
+      serverSelectionTimeoutMS: 5000,
+    })
+    .catch((error) => {
+      cached.promise = null;
+      throw error;
+    });
   cached.connection = await cached.promise;
   return cached.connection;
 }

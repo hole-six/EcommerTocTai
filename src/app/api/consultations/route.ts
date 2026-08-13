@@ -3,6 +3,7 @@ import { Consultation } from "@/models/Consultation";
 import { currentUser } from "@/lib/server/auth";
 import { connectDb } from "@/lib/server/db";
 import { apiError } from "@/lib/server/http";
+import { paginationMeta, parsePagination } from "@/lib/server/pagination";
 
 export async function POST(request: Request) {
   try {
@@ -18,6 +19,17 @@ export async function POST(request: Request) {
   } catch (error) { return apiError(error); }
 }
 
-export async function GET() {
-  try { const user = await currentUser(); if (!user || user.role !== "admin") return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 }); await connectDb(); return NextResponse.json({ data: await Consultation.find().sort({ createdAt: -1 }).limit(200).lean() }); } catch (error) { return apiError(error); }
+export async function GET(request: Request) {
+  try {
+    const user = await currentUser();
+    if (!user || user.role !== "admin") return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+    await connectDb();
+    const url = new URL(request.url);
+    const { page, limit, skip } = parsePagination(url);
+    const [data, total] = await Promise.all([
+      Consultation.find().sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      Consultation.countDocuments(),
+    ]);
+    return NextResponse.json({ data, pagination: paginationMeta(page, limit, total) });
+  } catch (error) { return apiError(error); }
 }

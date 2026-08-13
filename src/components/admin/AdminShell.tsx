@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Bell,
-  Boxes,
   ChartNoAxesCombined,
   ChevronDown,
   CircleHelp,
@@ -37,7 +36,7 @@ type NotificationItem = {
 };
 
 const nav = [
-  [CircleHelp, "Consultations", "/admin/consultations"],
+  [CircleHelp, "Tư vấn", "/admin/consultations"],
   [Home, "Tổng quan", "/admin"],
   [ShoppingBag, "Đơn hàng", "/admin/orders"],
   [MessageCircle, "Hỗ trợ", "/admin/support"],
@@ -46,9 +45,15 @@ const nav = [
   [ImageIcon, "Banner", "/admin/banners"],
   [Tag, "Mã giảm giá", "/admin/coupons"],
   [Users, "Khách hàng", "/admin/customers"],
-  [Boxes, "Kho hàng", "/admin/inventory"],
   [ChartNoAxesCombined, "Báo cáo", "/admin/reports"],
   [Star, "Đánh giá", "/admin/reviews"],
+] as const;
+
+const bottomNav = [
+  [Home, "Tổng quan", "/admin"],
+  [ShoppingBag, "Đơn", "/admin/orders"],
+  [Package, "Sản phẩm", "/admin/products"],
+  [MessageCircle, "Hỗ trợ", "/admin/support"],
 ] as const;
 
 function initials(name: string) {
@@ -233,7 +238,7 @@ export function AdminShell({
         <div className={styles.workspace}>
           <span>KHÔNG GIAN LÀM VIỆC</span>
           <button>
-            Tóc Tai Commerce <ChevronDown size={14} />
+            Tóc Tai Thương mại <ChevronDown size={14} />
           </button>
         </div>
         <nav>
@@ -277,7 +282,7 @@ export function AdminShell({
             <Menu />
           </button>
           <div className={styles.breadcrumb}>
-            <span>Commerce</span>
+            <span>Thương mại</span>
             <b>/</b>
             <strong>{breadcrumb}</strong>
           </div>
@@ -293,6 +298,28 @@ export function AdminShell({
         </header>
         {children}
       </main>
+      <nav className={styles.bottomNav} aria-label="Điều hướng admin">
+        {bottomNav.map(([Icon, label, href]) => {
+          const active =
+            href === "/admin"
+              ? pathname === "/admin"
+              : pathname.startsWith(href);
+          return (
+            <Link
+              href={href}
+              key={href}
+              className={active ? styles.bottomNavActive : ""}
+            >
+              <Icon size={20} />
+              <span>{label}</span>
+            </Link>
+          );
+        })}
+        <button type="button" onClick={() => setMenuOpen(true)}>
+          <Menu size={20} />
+          <span>Menu</span>
+        </button>
+      </nav>
     </div>
   );
 }

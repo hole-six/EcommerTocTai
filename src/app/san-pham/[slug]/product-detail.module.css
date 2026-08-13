@@ -18,3 +18,66 @@ a.contentCard:hover{transform:translateY(-4px);box-shadow:0 18px 36px rgba(16,40
 .contentCardImage{position:relative;width:100%;aspect-ratio:4/3;border-radius:13px;overflow:hidden;margin-bottom:16px;background:linear-gradient(150deg,#f1f6fb,#e6eef8)}
 .contentCard h3{margin:0;font-size:16.5px;font-weight:800;color:#0b213e;letter-spacing:-.015em;line-height:1.32}
 .contentCard p{margin:8px 0 0;color:#5c718a;font-size:13.5px;line-height:1.65;white-space:pre-line}.actions{display:flex;gap:12px;margin-top:22px}.actions button{flex:1;border:1px solid #153e73;border-radius:8px;padding:14px 18px;font:inherit;font-size:14px;font-weight:900;cursor:pointer}.add{background:#fff;color:#153e73}.buy{background:#153e73;color:#fff}.delivery{margin-top:19px;padding:16px;border-radius:12px;background:#f4f3e9;color:#596d83;font-size:13px}.delivery b{color:#132c4e;font-size:15px}.notice{margin-top:14px;color:#c34835;font-size:12px}@media(max-width:900px){.main{padding:28px 18px 60px}.purchase{grid-template-columns:1fr;gap:30px}.gallery{position:static}.summary h1{font-size:27px}}@media(max-width:560px){.gallery{grid-template-columns:1fr;display:flex;flex-direction:column-reverse}.thumbs{flex-direction:row;overflow-x:auto;justify-content:flex-start}.thumb{flex:0 0 58px}.hero{min-height:280px}.summary h1{font-size:24px}.promo{align-items:flex-start;flex-direction:column}.promo button{width:100%}.contentGrid{grid-template-columns:1fr}.ratingRow{flex-wrap:wrap}.option{min-width:0}}
+
+/* Reviews */
+.reviewList{display:grid;gap:16px;margin-top:18px}
+.reviewHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.reviewHead b{display:inline-flex;align-items:center;gap:5px;font-size:14.5px;color:#0b213e}
+.verifiedIcon{color:#1a9d5c}
+.reviewHead small{color:#8393a5;font-size:12px;white-space:nowrap}
+.reviewTitle{margin:8px 0 0;font-size:14.5px;font-weight:800;color:#0b213e}
+.reviewEmpty{margin-top:14px;color:#75869a;font-size:14px}
+.reviewActions{display:flex;gap:12px;margin-top:22px;padding-top:18px;border-top:1px solid #e6ecf2}
+.reviewActions button{flex:1;border-radius:8px;padding:13px 16px;font:800 13.5px inherit;cursor:pointer}
+.reviewSecondaryButton{border:1px solid #d3dce6;background:#fff;color:#153e73}
+.reviewPrimaryButton{border:1px solid #153e73;background:#153e73;color:#fff}
+
+/* Sticky bottom buy bar */
+.stickyBar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 20px;background:#fff;border-top:1px solid #dde5ee;box-shadow:0 -8px 24px rgba(16,40,80,.1);transform:translateY(100%);transition:transform .22s ease}
+.stickyVisible{transform:translateY(0)}
+.stickyProduct{display:flex;align-items:center;gap:12px;min-width:0}
+.stickyThumb{position:relative;width:48px;height:48px;flex:none;border-radius:8px;overflow:hidden;background:#f4f8fc;border:1px solid #e4ebf2}
+.stickyInfo{display:grid;gap:2px;min-width:0}
+.stickyInfo b{font-size:13.5px;color:#071b38;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40vw}
+.stickyInfo span{font-size:15px;font-weight:900;color:#153e73}
+.stickyActions{display:flex;gap:10px;flex:none}
+.stickyActions button{min-width:120px;min-height:44px;border-radius:8px;padding:0 16px;font:800 13.5px inherit;cursor:pointer}
+
+/* Variant picker modal */
+.variantModalBackdrop{position:fixed;inset:0;z-index:60;background:rgba(7,20,40,.5);display:flex;align-items:flex-end;justify-content:center}
+.variantModal{width:100%;max-width:560px;max-height:86vh;overflow-y:auto;background:#fff;border-radius:20px 20px 0 0;padding:20px 22px 26px;box-shadow:0 -20px 50px rgba(7,20,40,.25)}
+.variantModalHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-bottom:16px;border-bottom:1px solid #e6ecf2}
+.variantModalHeader button{border:0;background:#f2f5f9;color:#3a4b62;width:32px;height:32px;border-radius:50%;cursor:pointer;display:grid;place-items:center;flex:none}
+.variantModalHint{margin:16px 0 6px;color:#c34835;font-size:12.5px;font-weight:700}
+@media(max-width:640px){.stickyInfo b{max-width:34vw}.stickyActions button{min-width:0;flex:1;padding:0 10px}.reviewActions{flex-direction:column}.variantModal{max-height:90vh}}
+
+/* Hide the native scrollbar on the horizontally-scrolling thumbnail rail (mobile
+   gallery layout) — same visible-scrollbar-looks-broken issue as the catalog rail. */
+.thumbs {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.thumbs::-webkit-scrollbar {
+  display: none;
+}
+/* Keep product media inspectable on mobile and desktop. */
+.hero {
+  background: #f3f6f9;
+}
+.hero img {
+  object-fit: contain !important;
+}
+@media (max-width: 560px) {
+  .purchase,
+  .gallery,
+  .summary,
+  .hero {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  .hero {
+    aspect-ratio: 1;
+    min-height: 0 !important;
+  }
+}

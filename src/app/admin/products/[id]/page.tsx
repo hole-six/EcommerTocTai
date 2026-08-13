@@ -20,7 +20,7 @@ export default function EditProductPage({ params }: PageProps<"/admin/products/[
     <AdminShell breadcrumb="Sửa sản phẩm">
       <div className={panel.header}>
         <div>
-          <p>COMMERCE / SẢN PHẨM / SỬA</p>
+          <p>THƯƠNG MẠI / SẢN PHẨM / SỬA</p>
           <h1>{product?.name ?? "Sửa sản phẩm"}</h1>
         </div>
       </div>

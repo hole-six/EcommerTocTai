@@ -14,9 +14,11 @@ import {
   ListChecks,
   Package,
   Plus,
+  RefreshCw,
   Route,
   SlidersHorizontal,
   Tag,
+  Target,
   Trash2,
   type LucideIcon,
 } from "lucide-react";
@@ -25,6 +27,15 @@ import { useRouter } from "next/navigation";
 import { MediaLibraryModal } from "@/components/admin/MediaLibraryModal";
 import panel from "@/components/admin/admin-panel.module.css";
 import styles from "@/components/admin/product-form.module.css";
+import {
+  emptyQuizTags,
+  QUIZ_DURATIONS,
+  QUIZ_FORMATS,
+  QUIZ_GOALS,
+  QUIZ_PRIORITIES,
+  QUIZ_STAGES,
+  type QuizTags,
+} from "@/lib/hairQuiz";
 
 type CategoryOption = { _id: string; label: string };
 type Item = {
@@ -75,6 +86,7 @@ export type ProductInitial = {
   variantGroup?: string;
   variantLabel?: string;
   variantOrder?: number;
+  quizTags?: QuizTags;
 };
 
 const emptyItem = (): Item => ({
@@ -108,6 +120,17 @@ const slugify = (value: string) =>
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+const generateSku = (slugValue: string) => {
+  const initialsFromSlug = slugValue
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 6)
+    .toUpperCase();
+  const random = Math.floor(1000 + Math.random() * 9000);
+  return `${initialsFromSlug || "SP"}-${random}`;
+};
 const statusLabel = {
   draft: "Bản nháp",
   active: "Đang bán",
@@ -119,7 +142,7 @@ const navItems = [
   ["pricing", Tag, "Giá & tồn kho"],
   ["description", FileText, "Mô tả"],
   ["images", Images, "Ảnh sản phẩm"],
-  ["stages", Layers, "Ảnh Stage"],
+  ["stages", Layers, "Ảnh giai đoạn"],
   ["causes", CircleAlert, "Nguyên nhân"],
   ["howto", BookOpen, "Hướng dẫn dùng"],
   ["kit", Package, "Thành phần bộ"],
@@ -127,6 +150,7 @@ const navItems = [
   ["specs", ListChecks, "Thông số"],
   ["blocks", LayoutGrid, "Nội dung tùy biến"],
   ["variants", SlidersHorizontal, "Biến thể"],
+  ["quiz", Target, "Gắn thẻ bài test tóc"],
 ] as const;
 
 export function UploadField({
@@ -167,6 +191,43 @@ export function UploadField({
           onSelect={(urls) => onChange(urls[0] ?? "")}
         />
       )}
+    </div>
+  );
+}
+
+function TagChipGroup({
+  title,
+  hint,
+  options,
+  selected,
+  onToggle,
+}: {
+  title: string;
+  hint?: string;
+  options: { value: string; label: string; hint?: string }[];
+  selected: string[];
+  onToggle: (value: string) => void;
+}) {
+  return (
+    <div className={styles.tagGroup}>
+      <p className={styles.tagGroupTitle}>{title}</p>
+      {hint && <p className={styles.fieldHint}>{hint}</p>}
+      <div className={styles.tagChips}>
+        {options.map((option) => {
+          const active = selected.includes(option.value);
+          return (
+            <button
+              type="button"
+              key={option.value}
+              className={`${styles.tagChip} ${active ? styles.tagChipActive : ""}`}
+              title={option.hint}
+              onClick={() => onToggle(option.value)}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -268,7 +329,7 @@ function StageEditor({
   return (
     <div className={panel["admin-repeat-card"]}>
       <div className={panel["admin-repeat-head"]}>
-        <b>Stage {index + 1}</b>
+        <b>Giai đoạn {index + 1}</b>
         <button type="button" className={panel.dangerButton} onClick={onRemove}>
           <Trash2 size={14} /> Xóa
         </button>
@@ -298,7 +359,7 @@ function StageEditor({
             className={styles.stageImageEmpty}
             onClick={() => setLibraryOpen(true)}
           >
-            <ImagePlus size={22} /> Tải ảnh Stage
+            <ImagePlus size={22} /> Tải ảnh giai đoạn
           </button>
         )}
         <div className={styles.stageFields}>
@@ -307,7 +368,7 @@ function StageEditor({
             <input
               value={item.title}
               onChange={(event) => onChange({ title: event.target.value })}
-              placeholder="VD: Stage 1 – Mới rụng tóc"
+              placeholder="VD: Giai đoạn 1 - Mới rụng tóc"
             />
           </label>
           <label>
@@ -395,13 +456,13 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
   const [stageProducts, setStageProducts] = useState<StageProductOption[]>([]);
   const [name, setName] = useState(initial?.name ?? "");
   const [slug, setSlug] = useState(initial?.slug ?? "");
-  const [slugTouched, setSlugTouched] = useState(Boolean(initial));
   const [category, setCategory] = useState(
     typeof initial?.category === "string"
       ? initial.category
       : (initial?.category?._id ?? ""),
   );
   const [sku, setSku] = useState(initial?.sku ?? "");
+  const [skuTouched, setSkuTouched] = useState(Boolean(initial?.sku));
   const [price, setPrice] = useState(String(initial?.price ?? ""));
   const [salePrice, setSalePrice] = useState(
     initial?.salePrice ? String(initial.salePrice) : "",
@@ -450,6 +511,20 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
   const [groups, setGroups] = useState<OptionGroup[]>(
     initial?.optionGroups ?? [],
   );
+  const [quizTags, setQuizTags] = useState<QuizTags>(
+    initial?.quizTags ?? emptyQuizTags(),
+  );
+  function toggleQuizTag(dimension: keyof QuizTags, value: string) {
+    setQuizTags((current) => {
+      const list = current[dimension];
+      return {
+        ...current,
+        [dimension]: list.includes(value)
+          ? list.filter((entry) => entry !== value)
+          : [...list, value],
+      };
+    });
+  }
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   useEffect(() => {
@@ -556,6 +631,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
         treatmentJourney: journey,
         contentBlocks: blocks,
         optionGroups: groups,
+        quizTags,
         status,
         variantGroup: initial?.variantGroup ?? "",
         variantLabel: initial?.variantLabel ?? "",
@@ -654,26 +730,51 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
                 onChange={(event) => {
                   const value = event.target.value;
                   setName(value);
-                  if (!slugTouched) setSlug(slugify(value));
+                  const nextSlug = slugify(value);
+                  if (!productId) setSlug(nextSlug);
+                  if (!productId && !skuTouched) setSku(generateSku(nextSlug));
                 }}
               />
             </label>
-            <label>
-              Slug
-              <input
-                value={slug}
-                onChange={(event) => {
-                  setSlugTouched(true);
-                  setSlug(event.target.value);
-                }}
-              />
-            </label>
+            <div>
+              <span className={panel["admin-field-label"]}>Đường dẫn (slug)</span>
+              <div className={styles.slugPreview}>
+                <span>/san-pham/</span>
+                <b>{slug || "sẽ tự sinh từ tên sản phẩm"}</b>
+              </div>
+              <p className={styles.fieldHint}>
+                {productId
+                  ? "Đường dẫn được giữ nguyên để không làm hỏng link đã chia sẻ, kể cả khi bạn đổi tên."
+                  : "Tự động tạo từ tên sản phẩm, không cần nhập tay."}
+              </p>
+            </div>
             <label>
               SKU
-              <input
-                value={sku}
-                onChange={(event) => setSku(event.target.value.toUpperCase())}
-              />
+              <div className={styles.skuRow}>
+                <input
+                  value={sku}
+                  onChange={(event) => {
+                    setSkuTouched(true);
+                    setSku(event.target.value.toUpperCase());
+                  }}
+                  placeholder="VD: DGRT-1042"
+                />
+                <button
+                  type="button"
+                  className={panel.secondaryButton}
+                  onClick={() => {
+                    setSkuTouched(true);
+                    setSku(generateSku(slug || slugify(name)));
+                  }}
+                >
+                  <RefreshCw size={13} /> Tạo mã
+                </button>
+              </div>
+              <p className={styles.fieldHint}>
+                Mã quản lý kho nội bộ (SKU) dùng để đối soát tồn kho và đơn hàng, khách hàng
+                không nhìn thấy mã này. Có thể để hệ thống tự tạo hoặc bấm &quot;Tạo mã&quot;
+                để đổi mã khác.
+              </p>
             </label>
           </div>
         </Section>
@@ -868,7 +969,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
         <Section
           id="stages"
           icon={Layers}
-          title="Stage / giai đoạn sản phẩm"
+          title="Giai đoạn sản phẩm"
           description="Ảnh + tên giai đoạn — bấm vào sẽ chuyển thẳng sang đúng sản phẩm của giai đoạn đó"
           badge={stageImages.length ? `${stageImages.length}` : undefined}
           defaultOpen={stageImages.length > 0}
@@ -885,7 +986,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
               className={panel.secondaryButton}
               onClick={() => setStageImages([...stageImages, emptyItem()])}
             >
-              <Plus size={14} /> Thêm Stage
+              <Plus size={14} /> Thêm giai đoạn
             </button>
           </div>
           {stageImages.map((item, index) => (
@@ -906,7 +1007,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           ))}
           {!stageImages.length && (
             <p className={panel.empty} style={{ padding: "20px 0" }}>
-              Chưa có Stage nào. Mỗi Stage chỉ cần 3 thứ: ảnh, tên giai đoạn và
+              Chưa có giai đoạn nào. Mỗi giai đoạn chỉ cần 3 thứ: ảnh, tên giai đoạn và
               sản phẩm sẽ mở ra khi bấm vào.
             </p>
           )}
@@ -942,7 +1043,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           "kit",
           Package,
           "Thành phần bộ sản phẩm",
-          "Các sản phẩm có trong bộ (treatment kit)",
+          "Các sản phẩm có trong bộ điều trị",
           treatmentKit,
           setTreatmentKit,
           "Thành phần",
@@ -969,17 +1070,17 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           "blocks",
           LayoutGrid,
           "Nội dung tùy biến",
-          "Block nội dung tự do khác",
+          "Khối nội dung tự do khác",
           blocks,
           setBlocks,
-          "Block",
+          "Khối",
         )}
 
         <Section
           id="variants"
           icon={SlidersHorizontal}
           title="Biến thể / các bước lựa chọn"
-          description="Ví dụ Stage, độ tuổi, thời gian, pack size"
+          description="Ví dụ giai đoạn, độ tuổi, thời gian, quy cách gói"
           badge={groups.length ? `${groups.length}` : undefined}
           defaultOpen={groups.length > 0}
         >
@@ -1063,8 +1164,8 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
                   >
                     <option value="card">Thẻ ảnh</option>
                     <option value="button">Nút</option>
-                    <option value="radio">Radio</option>
-                    <option value="dropdown">Dropdown</option>
+                    <option value="radio">Nút chọn</option>
+                    <option value="dropdown">Danh sách thả xuống</option>
                   </select>
                 </label>
               </div>
@@ -1084,10 +1185,15 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
                 />{" "}
                 Bắt buộc chọn
               </label>
+              <p className={styles.fieldHint}>
+                Nhập giá riêng (đ) cho từng lựa chọn nếu lựa chọn đó có giá khác giá gốc — ví dụ chai
+                100ml giữ nguyên, chai 500ml nhập giá riêng cao hơn. Để trống ô giá nếu lựa chọn đó
+                dùng đúng giá gốc, hệ thống sẽ không ép bạn phải điền.
+              </p>
               {group.options.map((option, optionIndex) => (
                 <div className={panel["admin-option-row"]} key={option.id}>
                   <input
-                    placeholder="Tên option"
+                    placeholder="Tên lựa chọn"
                     value={option.label || option.title}
                     onChange={(event) =>
                       setGroups(
@@ -1114,9 +1220,17 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
                   />
                   <input
                     type="number"
-                    placeholder="Cộng thêm"
-                    value={option.priceAdjustment}
-                    onChange={(event) =>
+                    placeholder="Giá riêng"
+                    title="Giá riêng cho lựa chọn này — để trống nếu dùng đúng giá gốc phía trên"
+                    value={
+                      option.priceAdjustment
+                        ? Math.round(Number(price || 0) + option.priceAdjustment)
+                        : ""
+                    }
+                    onChange={(event) => {
+                      const raw = event.target.value;
+                      const nextAdjustment =
+                        raw === "" ? 0 : Number(raw) - Number(price || 0);
                       setGroups(
                         groups.map((item, index) =>
                           index === groupIndex
@@ -1125,19 +1239,14 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
                                 options: item.options.map(
                                   (current, childIndex) =>
                                     childIndex === optionIndex
-                                      ? {
-                                          ...current,
-                                          priceAdjustment: Number(
-                                            event.target.value,
-                                          ),
-                                        }
+                                      ? { ...current, priceAdjustment: nextAdjustment }
                                       : current,
                                 ),
                               }
                             : item,
                         ),
-                      )
-                    }
+                      );
+                    }}
                   />
                   <UploadField
                     value={option.image}
@@ -1158,7 +1267,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
                         ),
                       )
                     }
-                    label="Upload ảnh"
+                    label="Tải ảnh lên"
                   />
                   <button
                     type="button"
@@ -1195,7 +1304,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
                   )
                 }
               >
-                <Plus size={14} /> Thêm option
+                <Plus size={14} /> Thêm lựa chọn
               </button>
             </div>
           ))}
@@ -1204,6 +1313,48 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
               Chưa có nhóm biến thể nào.
             </p>
           )}
+        </Section>
+
+        <Section
+          id="quiz"
+          icon={Target}
+          title="Gắn thẻ cho bài test tóc"
+          description="Dùng để bài test tự động gợi ý đúng sản phẩm này — không bắt buộc, để trống nếu sản phẩm không liên quan đến rụng tóc"
+        >
+          <p className={styles.fieldHint} style={{ marginBottom: 16 }}>
+            Chọn tất cả các trường hợp mà sản phẩm này phù hợp. Không cần chọn hết mọi ô — bỏ trống
+            một mục nghĩa là mục đó không ảnh hưởng đến việc gợi ý, không phải là loại trừ sản phẩm.
+          </p>
+          <TagChipGroup
+            title="Mục tiêu phù hợp"
+            options={QUIZ_GOALS}
+            selected={quizTags.goals}
+            onToggle={(value) => toggleQuizTag("goals", value)}
+          />
+          <TagChipGroup
+            title="Giai đoạn rụng tóc phù hợp"
+            options={QUIZ_STAGES}
+            selected={quizTags.stages}
+            onToggle={(value) => toggleQuizTag("stages", value)}
+          />
+          <TagChipGroup
+            title="Thời gian rụng tóc phù hợp"
+            options={QUIZ_DURATIONS}
+            selected={quizTags.durations}
+            onToggle={(value) => toggleQuizTag("durations", value)}
+          />
+          <TagChipGroup
+            title="Hình thức điều trị"
+            options={QUIZ_FORMATS}
+            selected={quizTags.formats}
+            onToggle={(value) => toggleQuizTag("formats", value)}
+          />
+          <TagChipGroup
+            title="Phù hợp ưu tiên của khách"
+            options={QUIZ_PRIORITIES}
+            selected={quizTags.priorities}
+            onToggle={(value) => toggleQuizTag("priorities", value)}
+          />
         </Section>
       </div>
 

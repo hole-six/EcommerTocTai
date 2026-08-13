@@ -92,7 +92,7 @@ export function SupportChatWidget() {
     <div className={styles.widget}>
       {!open ? (
         <button className={styles.launcher} onClick={() => setOpen(true)}>
-          <MessageCircle size={20} /> Chat hỗ trợ
+          <MessageCircle size={20} /> 
           {(thread?.unreadForCustomer ?? 0) > 0 && <b>{thread?.unreadForCustomer}</b>}
         </button>
       ) : (

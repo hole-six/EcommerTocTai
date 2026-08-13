@@ -53,7 +53,7 @@
   margin-left: 5px;
 }
 .brandLogo {
-  height: 38px;
+  height: 56px;
   width: auto;
 }
 .brandRow > button {
@@ -392,7 +392,8 @@
 }
 .menu,
 .mobileUser,
-.mobileBackdrop {
+.mobileBackdrop,
+.bottomNav {
   display: none;
 }
 @media (max-width: 1160px) {
@@ -456,7 +457,7 @@
   }
   .content {
     margin: 0;
-    padding: 0 16px 35px;
+    padding: 0 16px calc(108px + env(safe-area-inset-bottom));
   }
   .topbar {
     height: 60px;
@@ -490,6 +491,68 @@
   }
   .topActions {
     gap: 8px;
+  }
+  .bottomNav {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    z-index: 65;
+    height: 66px;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 3px;
+    padding: 6px;
+    border: 1px solid rgba(208, 213, 221, 0.9);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 14px 38px rgba(16, 24, 40, 0.18);
+    backdrop-filter: blur(14px);
+  }
+  .bottomNav a,
+  .bottomNav button {
+    min-width: 0;
+    min-height: 0;
+    border: 0;
+    border-radius: 13px;
+    background: transparent;
+    color: #667085;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+    font: inherit;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .bottomNav button {
+    cursor: pointer;
+  }
+  .bottomNav a:active,
+  .bottomNav button:active {
+    transform: translateY(1px);
+  }
+  .bottomNavActive {
+    background: #eff6ff !important;
+    color: var(--admin-blue-dark) !important;
+  }
+}
+@media (max-width: 380px) {
+  .bottomNav {
+    left: 6px;
+    right: 6px;
+    height: 64px;
+    padding: 5px;
+    border-radius: 16px;
+  }
+  .bottomNav a,
+  .bottomNav button {
+    font-size: 9.5px;
   }
 }
 .admin :global(.banner-subtitle) {

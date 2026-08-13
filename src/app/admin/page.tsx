@@ -141,7 +141,7 @@ export default function AdminPage() {
 
         <article className={styles.taskPanel}>
           <div className={styles.panelHeader}><div><p>CẦN XỬ LÝ</p><h3>Việc cần làm</h3></div><span className={styles.taskCount}>{(lowStockCount ? 1 : 0) + (pending ? 1 : 0)}</span></div>
-          {lowStockCount > 0 && <Link href="/admin/inventory" className={styles.task}><i className={styles.alert}>!</i><div><b>{lowStockCount} sản phẩm sắp hết hàng</b><span>Kiểm tra và bổ sung tồn kho.</span></div><ArrowUpRight size={16} /></Link>}
+          {lowStockCount > 0 && <Link href="/admin/products" className={styles.task}><i className={styles.alert}>!</i><div><b>{lowStockCount} sản phẩm sắp hết hàng</b><span>Kiểm tra và bổ sung tồn kho.</span></div><ArrowUpRight size={16} /></Link>}
           {pending > 0 && <Link href="/admin/orders" className={styles.task}><i className={styles.info}>↗</i><div><b>{pending} đơn hàng chờ xác nhận</b><span>Xác nhận hoặc huỷ đơn sớm nhất.</span></div><ArrowUpRight size={16} /></Link>}
           {lowStockCount === 0 && pending === 0 && <p style={{ padding: "16px 0", color: "var(--admin-faint)", fontSize: 12 }}>Không có việc cần xử lý gấp.</p>}
 

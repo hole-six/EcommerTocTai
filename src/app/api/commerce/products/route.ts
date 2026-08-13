@@ -5,6 +5,7 @@ import { Category } from "@/models/Category";
 import { requireAdmin } from "@/lib/server/auth";
 import { connectDb } from "@/lib/server/db";
 import { apiError } from "@/lib/server/http";
+import { escapeRegex, paginationMeta, parsePagination } from "@/lib/server/pagination";
 import { productSchema } from "@/lib/server/validators";
 
 export async function GET(request: Request) {
@@ -28,6 +29,42 @@ export async function GET(request: Request) {
         ...children.map((child) => child._id.toString()),
       ];
     }
+
+    // Admin table listings (products/inventory pages) opt in with `page` — server-side
+    // search + filter + pagination over Product only. CatalogProduct is a legacy,
+    // admin-unmanaged import source (currently empty) so it's intentionally excluded
+    // here; every other caller omits `page` and keeps the original full-list behavior
+    // below for backward compatibility (dashboards, dropdown pickers, storefront).
+    if (url.searchParams.get("page")) {
+      const { page, limit, skip } = parsePagination(url);
+      const q = url.searchParams.get("q")?.trim();
+      const productStatus = url.searchParams.get("productStatus");
+      const stock = url.searchParams.get("stock");
+      const filter: Record<string, unknown> = {};
+      if (!includeAll) filter.status = "active";
+      else if (productStatus && productStatus !== "all") filter.status = productStatus;
+      if (categoryIds) filter.category = { $in: categoryIds };
+      if (variantGroup) filter.variantGroup = variantGroup;
+      if (q) {
+        const regex = new RegExp(escapeRegex(q), "i");
+        filter.$or = [{ name: regex }, { sku: regex }, { slug: regex }, { shortDescription: regex }];
+      }
+      if (stock === "low") {
+        filter.status = "active";
+        filter.inventory = { $lt: 10 };
+      } else if (stock === "reserved") {
+        filter.reservedInventory = { $gt: 0 };
+      } else if (stock === "available") {
+        filter.$expr = { $gt: ["$inventory", "$reservedInventory"] };
+      }
+      const sort: Record<string, 1 | -1> = variantGroup ? { variantOrder: 1 } : { createdAt: -1 };
+      const [data, total] = await Promise.all([
+        Product.find(filter).populate("category", "name slug parent").sort(sort).skip(skip).limit(limit).lean(),
+        Product.countDocuments(filter),
+      ]);
+      return NextResponse.json({ data, pagination: paginationMeta(page, limit, total) });
+    }
+
     const filter = {
       ...(includeAll ? {} : { status: "active" }),
       ...(categoryIds ? { category: { $in: categoryIds } } : {}),

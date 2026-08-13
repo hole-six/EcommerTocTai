@@ -1,5 +1,10 @@
-import { HairConsultationFlow } from "@/components/sites/manmatters-com-61d14dee/hair-form/HairConsultationFlow";
+import { HairLossQuiz } from "@/components/store/HairLossQuiz";
 
-export const metadata = { title: "Hair Assessment | Man Matters", robots: { index: false, follow: false } };
+export const metadata = {
+  title: "Kiểm tra tóc | CareWise",
+  robots: { index: false, follow: false },
+};
 
-export default function HairFormPage() { return <HairConsultationFlow />; }
+export default function HairFormPage() {
+  return <HairLossQuiz />;
+}

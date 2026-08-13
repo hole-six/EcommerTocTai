@@ -11,6 +11,7 @@ import { resolveCoupon } from "@/lib/server/coupons";
 import { apiError } from "@/lib/server/http";
 import { InventoryError, reserveOrder } from "@/lib/server/inventory";
 import { notify, notifyAdmins } from "@/lib/server/notifications";
+import { escapeRegex, paginationMeta, parsePagination } from "@/lib/server/pagination";
 import { createPaymentCode, createSePayPayment } from "@/lib/server/sepay";
 import { orderSchema } from "@/lib/server/validators";
 
@@ -91,13 +92,42 @@ function resolveLine(product: ProductLike, line: OrderLineInput) {
   };
 }
 
-export async function GET() {
+const METRIC_STATUSES = ["pending", "confirmed", "processing", "shipping", "completed"] as const;
+
+export async function GET(request: Request) {
   try {
     await requireAdmin();
     await connectDb();
-    return NextResponse.json({
-      data: await Order.find().sort({ createdAt: -1 }).limit(100).lean(),
-    });
+    const url = new URL(request.url);
+    const { page, limit, skip } = parsePagination(url);
+    const status = url.searchParams.get("status");
+    const q = url.searchParams.get("q")?.trim();
+    const filter: Record<string, unknown> = {};
+    if (status && status !== "all") filter.status = status;
+    if (q) {
+      const regex = new RegExp(escapeRegex(q), "i");
+      filter.$or = [
+        { orderNumber: regex },
+        { "customer.fullName": regex },
+        { "customer.phone": regex },
+      ];
+    }
+    const [data, total, statusAgg] = await Promise.all([
+      Order.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      Order.countDocuments(filter),
+      Order.aggregate([
+        { $match: { status: { $in: METRIC_STATUSES as unknown as string[] } } },
+        { $group: { _id: "$status", count: { $sum: 1 }, revenue: { $sum: "$total" } } },
+      ]),
+    ]);
+    const byStatus = Object.fromEntries(statusAgg.map((row) => [row._id, row]));
+    const metrics = {
+      pending: byStatus.pending?.count ?? 0,
+      processing: (byStatus.confirmed?.count ?? 0) + (byStatus.processing?.count ?? 0),
+      shipping: byStatus.shipping?.count ?? 0,
+      revenue: byStatus.completed?.revenue ?? 0,
+    };
+    return NextResponse.json({ data, pagination: paginationMeta(page, limit, total), metrics });
   } catch (error) {
     return apiError(error);
   }

@@ -239,19 +239,17 @@
   .formSide {
     min-height: 100vh;
     align-items: flex-start;
-    padding: 30px 24px 46px;
+    padding: 24px 24px 44px;
   }
   .formWrap {
     margin: auto;
-    padding-top: 10px;
+    padding-top: 0;
   }
   .mobileBrand {
-    display: inline-flex;
-    margin-bottom: 60px;
-    color: #123b73;
+    display: none;
   }
   .back {
-    margin-bottom: 30px;
+    margin-bottom: 26px;
   }
   .title {
     font-size: 32px;
@@ -259,10 +257,7 @@
 }
 @media (max-width: 420px) {
   .formSide {
-    padding: 24px 18px 36px;
-  }
-  .mobileBrand {
-    margin-bottom: 45px;
+    padding: 20px 18px 34px;
   }
   .title {
     font-size: 29px;

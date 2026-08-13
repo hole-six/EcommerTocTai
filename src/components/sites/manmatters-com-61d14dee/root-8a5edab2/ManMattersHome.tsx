@@ -20,45 +20,45 @@ import styles from "./ManMattersHome.module.css";
 const asset = "/sites/manmatters-com-61d14dee/root-8a5edab2/";
 const concerns = [
   {
-    name: "Hair",
-    alt: "Men's hair care and regrowth solutions",
+    name: "Tóc",
+    alt: "Giải pháp chăm sóc tóc và hỗ trợ mọc tóc cho nam giới",
     image: "concern-hair.png",
     href: "/hair-matters",
   },
   {
-    name: "Beard",
-    alt: "Men's beard growth and grooming solutions",
+    name: "Râu",
+    alt: "Giải pháp chăm sóc và hỗ trợ mọc râu cho nam giới",
     image: "concern-beard.png",
     href: "/beard-matters",
   },
   {
-    name: "Skin",
-    alt: "Men's skin care solutions",
+    name: "Da",
+    alt: "Giải pháp chăm sóc da cho nam giới",
     image: "concern-skin.png",
     href: "/skin-matters",
   },
   {
-    name: "Nutrition",
-    alt: "Men's nutrition and wellness supplements",
+    name: "Dinh dưỡng",
+    alt: "Thực phẩm bổ sung và giải pháp sức khỏe cho nam giới",
     image: "concern-nutrition.png",
     href: "/nutrition-matters",
   },
 ];
 
 const trustBadges = [
-  "Third Party Lab Tested",
-  "Clinically Tested",
-  "Scientifically Backed",
-  "Clean Ingredients",
-  "Expert Formulated",
-  "NABL Lab Tested",
+  "Kiểm nghiệm bởi phòng lab độc lập",
+  "Được kiểm chứng lâm sàng",
+  "Dựa trên cơ sở khoa học",
+  "Thành phần lành tính",
+  "Công thức từ chuyên gia",
+  "Kiểm nghiệm theo tiêu chuẩn lab",
 ];
 
 const steps = [
-  { icon: ClipboardList, label: "Take the Hair Test", n: "01" },
-  { icon: Package, label: "Get a stage-matched kit", n: "02" },
-  { icon: Stethoscope, label: "Consult an expert", n: "03" },
-  { icon: CalendarCheck, label: "See results in 5-6 months", n: "04" },
+  { icon: ClipboardList, label: "Làm bài kiểm tra tóc", n: "01" },
+  { icon: Package, label: "Nhận bộ chăm sóc phù hợp giai đoạn", n: "02" },
+  { icon: Stethoscope, label: "Tư vấn cùng chuyên gia", n: "03" },
+  { icon: CalendarCheck, label: "Theo dõi kết quả sau 5-6 tháng", n: "04" },
 ];
 
 const reviews = [
@@ -88,24 +88,24 @@ type HomeProduct = {
 
 const faqs = [
   {
-    q: "What is Man Matters?",
-    a: "Man Matters is India's leading science-backed men's health platform focused on providing clinically credible solutions across hair care, beard growth, nutrition, sleep, and wellness. Built around doctor consultations and evidence-led formulations, the platform has helped over 10 lakh Indian men address hair loss and other health concerns over the past six years.",
+    q: "Tóc Tai là gì?",
+    a: "Tóc Tai là nền tảng chăm sóc tóc và sức khỏe nam giới, tập trung vào các giải pháp có cơ sở khoa học cho tóc, da đầu, râu, dinh dưỡng và thói quen sống. Chúng tôi kết hợp tư vấn chuyên gia với công thức được chọn lọc để giúp nam giới chăm sóc bản thân đơn giản và đều đặn hơn.",
   },
   {
-    q: "Are Man Matters products safe to use?",
-    a: "Yes. Every formulation goes through ingredient-level clinical review before it's added to a product, and active ingredient levels are tested for consistency and purity. Prescription-only treatments require a valid prescription and doctor consultation. Always check the product label, and consult a doctor if you have an existing health condition.",
+    q: "Sản phẩm Tóc Tai có an toàn không?",
+    a: "Mỗi công thức đều được rà soát theo thành phần trước khi đưa vào sản phẩm. Với các hoạt chất đặc trị, bạn nên đọc kỹ hướng dẫn trên nhãn và hỏi ý kiến bác sĩ nếu đang có bệnh nền, kích ứng da đầu hoặc đang dùng thuốc điều trị.",
   },
   {
-    q: "Does Man Matters actually work?",
-    a: "Results depend on the concern, the product, and consistency of use — outcomes vary by individual. Every formulation is backed by clinical evidence and developed with category experts, and each concern comes with a realistic timeline rather than a blanket promise.",
+    q: "Dùng sản phẩm có thật sự hiệu quả không?",
+    a: "Kết quả phụ thuộc vào tình trạng tóc, sản phẩm được chọn và mức độ duy trì. Tóc Tai ưu tiên lộ trình thực tế theo từng nhu cầu thay vì hứa hẹn chung chung cho mọi người.",
   },
   {
-    q: "Are Man Matters products doctor-recommended?",
-    a: "Every formulation is developed with domain experts and research scientists — involved from the start. Prescription treatments are additionally reviewed by a registered medical practitioner before they're recommended to you.",
+    q: "Sản phẩm có được chuyên gia khuyên dùng không?",
+    a: "Các công thức được xây dựng dựa trên kiến thức chuyên môn và dữ liệu thành phần. Với những liệu trình cần tư vấn y khoa, khách hàng nên trao đổi trực tiếp với bác sĩ hoặc chuyên gia phù hợp trước khi sử dụng.",
   },
   {
-    q: "What concerns can I use Man Matters for?",
-    a: "Man Matters covers concerns such as: hair (loss, thinning, dandruff), skin, beard growth and grooming, and nutrition and supplements. Pick your concern on the homepage, and the platform recommends products built for it — no browsing a generic catalogue, no guessing what's relevant to you.",
+    q: "Tóc Tai hỗ trợ những nhu cầu nào?",
+    a: "Bạn có thể tìm giải pháp cho rụng tóc, tóc thưa, gàu, chăm sóc da đầu, chăm sóc râu và dinh dưỡng. Hãy chọn nhu cầu trên trang chủ để xem các sản phẩm phù hợp, thay vì phải tự lọc giữa một danh mục quá rộng.",
   },
 ];
 
@@ -228,7 +228,7 @@ export function ManMattersHome() {
                 key={s.image}
                 onClick={() => setSlide(index)}
                 className={index === slide ? styles.activeDot : ""}
-                aria-label={`Show slide ${index + 1}`}
+                aria-label={`Hiển thị banner ${index + 1}`}
               />
             ))}
           </div>
@@ -264,7 +264,7 @@ export function ManMattersHome() {
         </div>
       </section>
 
-      <section className={styles.section}>
+      <section id="concerns" className={styles.section}>
         <h1 className={styles.sectionHeading}>Chọn theo điều tóc cần</h1>
         <div className={styles.concernGrid}>
           {concerns.map((c) => (
@@ -358,7 +358,7 @@ export function ManMattersHome() {
                     })
                   }
                 >
-                  <Plus size={16} /> ADD
+                  <Plus size={16} /> Thêm
                 </button>
               </div>
             </article>
@@ -366,7 +366,7 @@ export function ManMattersHome() {
         </div>
       </section>
 
-      <section className={styles.section}>
+      <section id="assessment" className={styles.section}>
         <div className={styles.guessworkCard}>
           <h2>Đừng để mái tóc chỉ là một phỏng đoán</h2>
           <div className={styles.stepsGrid}>
@@ -384,14 +384,14 @@ export function ManMattersHome() {
         </div>
       </section>
 
-      <section className={styles.section}>
+      <section id="reviews" className={styles.section}>
         <h2 className={styles.sectionHeading}>Chia sẻ từ khách hàng</h2>
         <div className={styles.reviews}>
           {reviews.map((r) => (
             <Image
               key={r}
               src={`${asset}${r}`}
-              alt="Review from a Man Matters customer"
+              alt="Chia sẻ từ khách hàng Tóc Tai"
               width={500}
               height={735}
             />
@@ -399,7 +399,7 @@ export function ManMattersHome() {
         </div>
       </section>
 
-      <section className={styles.section}>
+      <section id="routine" className={styles.section}>
         <div className={styles.experts}>
           <h2>Xây routine bằng sự thấu hiểu.</h2>
           <p>
@@ -409,7 +409,7 @@ export function ManMattersHome() {
         </div>
       </section>
 
-      <section className={styles.section}>
+      <section id="faq" className={styles.section}>
         <h2 className={styles.sectionHeading}>Câu hỏi thường gặp</h2>
         <div className={styles.faq}>
           {faqs.map((f, i) => (

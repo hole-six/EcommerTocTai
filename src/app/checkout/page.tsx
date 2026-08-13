@@ -13,7 +13,7 @@ import {
   Trash2,
   UserRound,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/sites/manmatters-com-61d14dee/shared/SiteHeader";
 import { useCart } from "@/contexts/CartContext";
 
@@ -123,6 +123,7 @@ export default function CheckoutPage() {
   const [transferPayment, setTransferPayment] =
     useState<TransferPayment | null>(null);
   const [transferPaid, setTransferPaid] = useState(false);
+  const appliedCouponCode = appliedCoupon?.code;
   useEffect(() => {
     const savedPhone = localStorage.getItem("toctai_checkout_phone") ?? "";
     setVerifiedPhone(savedPhone);
@@ -199,12 +200,12 @@ export default function CheckoutPage() {
     };
   }, [items]);
   useEffect(() => {
-    if (!appliedCoupon) return;
+    if (!appliedCouponCode) return;
     const timer = window.setTimeout(() => {
       fetch("/api/coupons/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: appliedCoupon.code, subtotal }),
+        body: JSON.stringify({ code: appliedCouponCode, subtotal }),
       })
         .then((response) =>
           response.json().then((body) => ({ response, body })),
@@ -225,7 +226,7 @@ export default function CheckoutPage() {
         .catch(() => undefined);
     }, 250);
     return () => window.clearTimeout(timer);
-  }, [subtotal, appliedCoupon?.code]);
+  }, [subtotal, appliedCouponCode]);
   useEffect(() => {
     if (!orderNumber || !transferPayment || transferPaid) return;
     const check = () =>
@@ -483,8 +484,8 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen bg-slate-50">
         <SiteHeader compact />
-        <main className="mx-auto max-w-lg px-5 py-16">
-          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
+          <section className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
             <div className="bg-gradient-to-br from-[#064f96] to-[#1677c2] p-7 text-white">
               <UserRound size={30} />
               <h1 className="mt-4 text-2xl font-black">Trước khi thanh toán</h1>
@@ -531,7 +532,7 @@ export default function CheckoutPage() {
               {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
             </div>
           </section>
-        </main>
+        </div>
       </div>
     );
   return (
