@@ -8,6 +8,7 @@ import { notFound, useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/sites/manmatters-com-61d14dee/shared/SiteHeader";
 import { SiteFooter } from "@/components/sites/manmatters-com-61d14dee/shared/SiteFooter";
 import { ReviewModal } from "@/components/store/ReviewModal";
+import { showCartToast } from "@/components/cart/CartToast";
 import { useCart } from "@/contexts/CartContext";
 import styles from "./product-detail.module.css";
 
@@ -55,7 +56,7 @@ export function ProductDetailClient({ slug }: { slug: string }) {
     if (missing) { setVariantModalBuyNow(buyNow); setVariantModalOpen(true); return; }
     addItem({ productId: currentProduct._id, name: currentProduct.name, price, image: currentProduct.images[0] ?? "", variantTitle: selectedOptions.map((option) => option.optionLabel).join(" / "), options: selectedOptions });
     setVariantModalOpen(false);
-    if (buyNow) router.push("/checkout"); else { setAdded(true); setTimeout(() => setAdded(false), 1600); }
+    if (buyNow) { showCartToast(`Đã thêm "${currentProduct.name}" · đang chuyển đến giỏ hàng`); router.push("/checkout"); } else { showCartToast(`Đã thêm "${currentProduct.name}" vào giỏ hàng`); setAdded(true); setTimeout(() => setAdded(false), 1600); }
   }
   function formatEstimate(date: Date) {
     return date.toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });

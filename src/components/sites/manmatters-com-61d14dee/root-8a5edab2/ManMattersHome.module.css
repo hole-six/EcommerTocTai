@@ -394,22 +394,41 @@
   white-space: nowrap;
 }
 
-.productBody button {
+.productActions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.productActions button {
   display: inline-flex;
   width: 100%;
+  min-width: 0;
   min-height: 40px;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  margin-top: auto;
+  gap: 6px;
   border: 0;
   border-radius: 9px;
-  background: var(--navy);
-  color: #fff;
   cursor: pointer;
   font-size: 12px;
   font-weight: 850;
   letter-spacing: 0;
+}
+
+.buyBtn {
+  background: var(--navy);
+  color: #fff;
+}
+
+.addBtn {
+  background: #fff;
+  color: var(--navy);
+  border: 1.5px solid var(--navy) !important;
+}
+
+.addBtn:hover {
+  background: #eef3fa;
 }
 
 .guessworkCard {

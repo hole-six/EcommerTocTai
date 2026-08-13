@@ -6,15 +6,18 @@ import {
   ChevronDown,
   ChevronRight,
   Plus,
+  Zap,
   ClipboardList,
   Package,
   Stethoscope,
   CalendarCheck,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { SiteHeader } from "../shared/SiteHeader";
 import { SiteFooter } from "../shared/SiteFooter";
 import { useEffect, useState } from "react";
 import { useCart } from "@/contexts/CartContext";
+import { showCartToast } from "@/components/cart/CartToast";
 import styles from "./ManMattersHome.module.css";
 
 const asset = "/sites/manmatters-com-61d14dee/root-8a5edab2/";
@@ -137,6 +140,7 @@ export function ManMattersHome({
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [menVideos, setMenVideos] = useState<string[]>(defaultMenVideos);
   const { addItem } = useCart();
+  const router = useRouter();
   useEffect(() => {
     fetch("/api/banners?placement=home_men_videos")
       .then((response) => (response.ok ? response.json() : { data: [] }))
@@ -375,18 +379,37 @@ export function ManMattersHome({
                   )}
                   <em>★ {p.rating ?? "-"}</em>
                 </div>
-                <button
-                  onClick={() =>
-                    addItem({
-                      productId: p._id,
-                      name: p.name,
-                      price: p.price,
-                      image: p.images[0] ?? "",
-                    })
-                  }
-                >
-                  <Plus size={16} /> Thêm
-                </button>
+                <div className={styles.productActions}>
+                  <button
+                    className={styles.addBtn}
+                    onClick={() => {
+                      addItem({
+                        productId: p._id,
+                        name: p.name,
+                        price: p.price,
+                        image: p.images[0] ?? "",
+                      });
+                      showCartToast(`Đã thêm "${p.name}" vào giỏ hàng`);
+                    }}
+                  >
+                    <Plus size={16} /> Thêm
+                  </button>
+                  <button
+                    className={styles.buyBtn}
+                    onClick={() => {
+                      addItem({
+                        productId: p._id,
+                        name: p.name,
+                        price: p.price,
+                        image: p.images[0] ?? "",
+                      });
+                      showCartToast(`Đã thêm "${p.name}" · đang chuyển đến giỏ hàng`);
+                      router.push("/checkout");
+                    }}
+                  >
+                    <Zap size={16} /> Mua ngay
+                  </button>
+                </div>
               </div>
             </article>
           ))}

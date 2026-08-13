@@ -1,12 +1,13 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingBag, Star, Zap } from "lucide-react";
+import { Plus, ShoppingBag, Star, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { SiteHeader } from "@/components/sites/manmatters-com-61d14dee/shared/SiteHeader";
 import { SiteFooter } from "@/components/sites/manmatters-com-61d14dee/shared/SiteFooter";
 import { useCart } from "@/contexts/CartContext";
+import { showCartToast } from "@/components/cart/CartToast";
 import styles from "./CatalogPage.module.css";
 
 type Category = {
@@ -248,19 +249,36 @@ export function CatalogPage({
                       </del>
                     )}
                   </div>
-                  <button
-                    onClick={() => {
-                      addItem({
-                        productId: product.id,
-                        name: product.name,
-                        price: product.salePrice ?? product.price,
-                        image: product.images[0] ?? "",
-                      });
-                      router.push("/checkout");
-                    }}
-                  >
-                    <Zap size={14} /> MUA NGAY
-                  </button>
+                  <div className={styles.actions}>
+                    <button
+                      className={styles.addBtn}
+                      onClick={() => {
+                        addItem({
+                          productId: product.id,
+                          name: product.name,
+                          price: product.salePrice ?? product.price,
+                          image: product.images[0] ?? "",
+                        });
+                        showCartToast(`Đã thêm "${product.name}" vào giỏ hàng`);
+                      }}
+                    >
+                      <Plus size={14} /> THÊM VÀO GIỎ
+                    </button>
+                    <button
+                      onClick={() => {
+                        addItem({
+                          productId: product.id,
+                          name: product.name,
+                          price: product.salePrice ?? product.price,
+                          image: product.images[0] ?? "",
+                        });
+                        showCartToast(`Đã thêm "${product.name}" · đang chuyển đến giỏ hàng`);
+                        router.push("/checkout");
+                      }}
+                    >
+                      <Zap size={14} /> MUA NGAY
+                    </button>
+                  </div>
                 </div>
               </article>
             ))}
