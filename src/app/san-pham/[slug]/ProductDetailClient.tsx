@@ -70,19 +70,19 @@ export function ProductDetailClient({ slug }: { slug: string }) {
           const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`, { headers: { Accept: "application/json" } });
           const body = await response.json();
           const address = body?.address ?? {};
-          const countryCode: string = address.country_code ?? "";
           const city: string = address.city || address.state || address.town || "";
-          const majorCities = ["hà nội", "ha noi", "hồ chí minh", "ho chi minh", "hcmc", "đà nẵng", "da nang"];
-          const isMajorCity = majorCities.some((name) => city.toLowerCase().includes(name));
-          const days = countryCode !== "vn" ? 6 : isMajorCity ? 2 : 4;
-          const eta = new Date(); eta.setDate(eta.getDate() + days);
+          const eta = new Date(); eta.setDate(eta.getDate() + 2);
           setDeliveryEstimate(`Nhận trước ${formatEstimate(eta)}${city ? ` · giao đến ${city}` : ""}`);
         } catch {
-          const eta = new Date(); eta.setDate(eta.getDate() + 4);
+          const eta = new Date(); eta.setDate(eta.getDate() + 2);
           setDeliveryEstimate(`Nhận trước ${formatEstimate(eta)} (ước tính)`);
         } finally { setLocationChecking(false); }
       },
-      () => { setLocationChecking(false); setLocationError("Không thể truy cập vị trí. Giao hàng dự kiến trong 2-5 ngày."); },
+      () => {
+        setLocationChecking(false);
+        const eta = new Date(); eta.setDate(eta.getDate() + 2);
+        setDeliveryEstimate(`Nhận trước ${formatEstimate(eta)} (không truy cập được vị trí)`);
+      },
       { timeout: 8000 },
     );
   }
