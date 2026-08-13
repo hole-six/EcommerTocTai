@@ -11,7 +11,7 @@ const lexend = Lexend({
   subsets: ["latin", "vietnamese"],
 });
 
-const siteUrl = "https://moctoc.vn";
+const siteUrl = "https://thuocmoctocchinhhang.com";
 const siteName = "CareWise";
 const siteDescription =
   "Giải pháp chăm sóc tóc và da đầu được chọn lọc cho routine riêng của bạn — sản phẩm chính hãng, tư vấn theo từng giai đoạn, giao hàng toàn quốc.";

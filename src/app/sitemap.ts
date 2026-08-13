@@ -3,7 +3,7 @@ import { connectDb } from "@/lib/server/db";
 import { Category } from "@/models/Category";
 import { Product } from "@/models/Product";
 
-const siteUrl = "https://moctoc.vn";
+const siteUrl = "https://thuocmoctocchinhhang.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [

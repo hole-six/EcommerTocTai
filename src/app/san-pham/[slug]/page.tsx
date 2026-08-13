@@ -7,7 +7,7 @@ import { Product } from "@/models/Product";
 import { Review } from "@/models/Review";
 import { ProductDetailClient } from "./ProductDetailClient";
 
-const siteUrl = "https://moctoc.vn";
+const siteUrl = "https://thuocmoctocchinhhang.com";
 
 async function getProduct(slug: string) {
   await connectDb();
