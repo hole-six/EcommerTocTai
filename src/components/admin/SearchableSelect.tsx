@@ -1,7 +1,8 @@
 "use client";
 
 import { Check, ChevronDown, Search, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import styles from "./searchable-select.module.css";
 
 export type SearchableSelectOption = {
@@ -39,7 +40,9 @@ export function SearchableSelect({
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0, width: 0 });
   const rootRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const selected = options.find((option) => option.value === value);
   const filtered = useMemo(() => {
@@ -54,7 +57,10 @@ export function SearchableSelect({
 
   useEffect(() => {
     function close(event: MouseEvent) {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      if (rootRef.current?.contains(target)) return;
+      if (menuRef.current?.contains(target)) return;
+      setOpen(false);
     }
     function closeWithEscape(event: KeyboardEvent) {
       if (event.key === "Escape") setOpen(false);
@@ -66,6 +72,22 @@ export function SearchableSelect({
       document.removeEventListener("keydown", closeWithEscape);
     };
   }, []);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    function updatePosition() {
+      const rect = rootRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setMenuPos({ top: rect.bottom + 6, left: rect.left, width: rect.width });
+    }
+    updatePosition();
+    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
+    return () => {
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, [open]);
 
   function choose(nextValue: string) {
     onChange(nextValue);
@@ -96,8 +118,13 @@ export function SearchableSelect({
         </span>
         <ChevronDown size={15} className={open ? styles.chevronOpen : ""} />
       </button>
-      {open && (
-        <div className={styles.menu} role="listbox">
+      {open && typeof document !== "undefined" && createPortal(
+        <div
+          className={styles.menu}
+          role="listbox"
+          ref={menuRef}
+          style={{ top: menuPos.top, left: menuPos.left, width: menuPos.width }}
+        >
           <div className={styles.searchBox}>
             <Search size={15} />
             <input
@@ -144,7 +171,8 @@ export function SearchableSelect({
             ))}
             {filtered.length === 0 && <p className={styles.empty}>{emptyLabel}</p>}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

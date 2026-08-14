@@ -143,14 +143,14 @@ export function ProductDetailClient({ slug }: { slug: string }) {
             <div className={styles.thumbs}>
               {product.images.map((image, index) => (
                 <button className={`${styles.thumb} ${index === activeImage ? styles.active : ""}`} key={`${image}-${index}`} onClick={() => setActiveImage(index)} aria-label={`Ảnh sản phẩm ${index + 1}`}>
-                  <Image src={image} alt="" width={62} height={68} />
+                  <Image src={image} alt="" width={62} height={68} unoptimized={image.startsWith("/uploads/")} />
                 </button>
               ))}
               {product.images.length > 4 && <span className={styles.thumbMore}>↓</span>}
             </div>
             <div className={styles.hero}>
               {product.images[activeImage] ? (
-                <Image src={product.images[activeImage]} alt={displayName} fill priority sizes="(max-width: 900px) 100vw, 50vw" />
+                <Image src={product.images[activeImage]} alt={displayName} fill priority sizes="(max-width: 900px) 100vw, 50vw" unoptimized={product.images[activeImage].startsWith("/uploads/")} />
               ) : (
                 <div className={styles.heroFallback}>{product.category?.name}</div>
               )}
@@ -170,14 +170,6 @@ export function ProductDetailClient({ slug }: { slug: string }) {
               <span className={styles.stars}>★★★★☆</span>
               <span>▣ {reviews.length ? `${reviews.length} đánh giá` : "1.3M đã bán"}</span>
               <a className={styles.ratingLink} href="#reviews">☆ {reviews.length || "1.3K"} Đánh giá</a>
-            </div>
-            <div className={styles.promo}>
-              <div>
-                <span className={styles.promoLabel}>ĐƯỢC ƯA CHUỘNG NHẤT</span>
-                <strong>GIẢM 30%</strong>
-                <small>Khi thanh toán qua ví</small>
-              </div>
-              <button type="button">Thanh toán qua ví</button>
             </div>
             <div className={styles.steps}>{renderSteps()}</div>
             <div className={styles.details}>
@@ -306,7 +298,7 @@ export function ProductDetailClient({ slug }: { slug: string }) {
               <div className={styles.stickyProduct}>
                 {product.images[0] && (
                   <div className={styles.stickyThumb}>
-                    <Image src={product.images[0]} alt="" fill sizes="48px" style={{ objectFit: "cover" }} />
+                    <Image src={product.images[0]} alt="" fill sizes="48px" style={{ objectFit: "cover" }} unoptimized={product.images[0].startsWith("/uploads/")} />
                   </div>
                 )}
                 <div className={styles.stickyInfo}>

@@ -237,6 +237,7 @@ export function CatalogPage({
                       alt={product.name}
                       width={480}
                       height={480}
+                      unoptimized={product.images[0].startsWith("/uploads/")}
                     />
                   )}
                 </Link>

@@ -481,6 +481,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
   const [stageProducts, setStageProducts] = useState<StageProductOption[]>([]);
   const [name, setName] = useState(initial?.name ?? "");
   const [slug, setSlug] = useState(initial?.slug ?? "");
+  const [slugTouched, setSlugTouched] = useState(Boolean(initial?.slug));
   const [categoryIds, setCategoryIds] = useState<string[]>(
     (initial?.category ?? []).map((entry) =>
       typeof entry === "string" ? entry : entry._id,
@@ -779,23 +780,41 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
                   const value = event.target.value;
                   setName(value);
                   const nextSlug = slugify(value);
-                  if (!productId) setSlug(nextSlug);
+                  if (!slugTouched) setSlug(nextSlug);
                   if (!productId && !skuTouched) setSku(generateSku(nextSlug));
                 }}
               />
             </label>
-            <div>
-              <span className={panel["admin-field-label"]}>Đường dẫn (slug)</span>
-              <div className={styles.slugPreview}>
-                <span>/san-pham/</span>
-                <b>{slug || "sẽ tự sinh từ tên sản phẩm"}</b>
+            <label>
+              Đường dẫn (slug)
+              <div className={styles.skuRow}>
+                <input
+                  value={slug}
+                  onChange={(event) => {
+                    setSlugTouched(true);
+                    setSlug(slugify(event.target.value));
+                  }}
+                  placeholder="tu-dong-sinh-tu-ten"
+                />
+                <button
+                  type="button"
+                  className={panel.secondaryButton}
+                  onClick={() => {
+                    setSlugTouched(false);
+                    setSlug(slugify(name));
+                  }}
+                >
+                  <RefreshCw size={13} /> Tự sinh
+                </button>
               </div>
               <p className={styles.fieldHint}>
+                /san-pham/{slug || "..."}
+                {" — "}
                 {productId
-                  ? "Đường dẫn được giữ nguyên để không làm hỏng link đã chia sẻ, kể cả khi bạn đổi tên."
-                  : "Tự động tạo từ tên sản phẩm, không cần nhập tay."}
+                  ? "Sửa cẩn thận: đổi link sẽ làm hỏng các link đã chia sẻ trước đó."
+                  : "Tự động tạo từ tên, có thể sửa tay."}
               </p>
-            </div>
+            </label>
             <label>
               SKU
               <div className={styles.skuRow}>
