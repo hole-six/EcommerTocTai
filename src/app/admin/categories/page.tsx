@@ -6,6 +6,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminTableToolbar } from "@/components/admin/AdminTableTools";
 import { UploadField } from "@/components/admin/ProductForm";
 import panel from "@/components/admin/admin-panel.module.css";
+import { showToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/lib/client/errors";
 import styles from "./categories.module.css";
 
@@ -166,13 +167,16 @@ export default function AdminCategoriesPage() {
       );
       const body = await response.json();
       if (!response.ok) throw new Error(extractApiError(body, "Lưu danh mục thất bại"));
-      setMessage(editingId ? "Đã cập nhật danh mục." : "Đã tạo danh mục mới.");
+      const successMessage = editingId ? "Đã cập nhật danh mục." : "Đã tạo danh mục mới.";
+      setMessage(successMessage);
+      showToast(successMessage, "success");
       resetForm();
       load();
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Lưu danh mục thất bại",
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : "Lưu danh mục thất bại";
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
     } finally {
       setSaving(false);
     }
@@ -189,9 +193,12 @@ export default function AdminCategoriesPage() {
     const body = await response.json();
     if (response.ok) {
       setMessage("Đã xóa danh mục.");
+      showToast("Đã xóa danh mục.", "success");
       load();
     } else {
-      setMessage(extractApiError(body, "Không thể xóa danh mục."));
+      const errorMessage = extractApiError(body, "Không thể xóa danh mục.");
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
     }
   }
 

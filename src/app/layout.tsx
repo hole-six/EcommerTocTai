@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Lexend } from "next/font/google";
 import { CartProvider } from "@/contexts/CartContext";
-import { CartToastHost } from "@/components/cart/CartToast";
+import { ToastHost } from "@/components/ui/Toast";
 import { PwaRegister } from "@/components/PwaRegister";
 import { ContactButtons } from "@/components/support/ContactButtons";
 import { SupportChatWidget } from "@/components/support/SupportChatWidget";
@@ -124,7 +124,7 @@ export default function RootLayout({
         />
         <CartProvider>
           {children}
-          <CartToastHost />
+          <ToastHost />
           <ContactButtons />
           <SupportChatWidget />
           <PwaRegister />

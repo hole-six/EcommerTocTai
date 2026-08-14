@@ -7,6 +7,7 @@ import { AdminTableToolbar } from "@/components/admin/AdminTableTools";
 import { SearchableSelect } from "@/components/admin/SearchableSelect";
 import { UploadField } from "@/components/admin/ProductForm";
 import panel from "@/components/admin/admin-panel.module.css";
+import { showToast } from "@/components/ui/Toast";
 
 const SITE_BAR_SLOT_KEY = "site-announcement-bar";
 const MEN_VIDEO_SLOT_PREFIX = "men-video-";
@@ -206,9 +207,12 @@ export default function AdminBannersPage() {
       );
       if (!response.ok) throw new Error("Không thể lưu thanh thông báo");
       setMessage("Đã lưu thanh thông báo đầu trang.");
+      showToast("Đã lưu thanh thông báo đầu trang.", "success");
       await load();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Lưu thất bại");
+      const errorMessage = error instanceof Error ? error.message : "Lưu thất bại";
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
     } finally {
       setBarSaving(false);
     }
@@ -246,9 +250,11 @@ export default function AdminBannersPage() {
         throw new Error(body.error ?? "Không thể lưu nút liên hệ");
       }
       setMessage("Đã lưu các nút liên hệ.");
+      showToast("Đã lưu các nút liên hệ.", "success");
       await load();
     } catch {
       setMessage("Lưu nút liên hệ thất bại");
+      showToast("Lưu nút liên hệ thất bại", "error");
     } finally {
       setContactSaving(false);
     }
@@ -291,9 +297,13 @@ export default function AdminBannersPage() {
       );
       if (!saveResponse.ok) throw new Error("Không thể lưu video");
       setMessage(`Đã thay video ${index + 1}.`);
+      showToast(`Đã thay video ${index + 1}.`, "success");
       await load();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Upload video thất bại");
+      const errorMessage =
+        error instanceof Error ? error.message : "Upload video thất bại";
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
     } finally {
       setVideoUploading(null);
     }
@@ -326,14 +336,17 @@ export default function AdminBannersPage() {
         },
       );
       if (!response.ok) throw new Error("Không thể lưu liên kết sản phẩm");
-      setMessage(
-        productSlug
-          ? `Đã gắn sản phẩm cho video ${index + 1}.`
-          : `Đã gỡ liên kết sản phẩm khỏi video ${index + 1}.`,
-      );
+      const successMessage = productSlug
+        ? `Đã gắn sản phẩm cho video ${index + 1}.`
+        : `Đã gỡ liên kết sản phẩm khỏi video ${index + 1}.`;
+      setMessage(successMessage);
+      showToast(successMessage, "success");
       await load();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Lưu liên kết thất bại");
+      const errorMessage =
+        error instanceof Error ? error.message : "Lưu liên kết thất bại";
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
     }
   }
 
@@ -399,9 +412,13 @@ export default function AdminBannersPage() {
       );
       if (!response.ok) throw new Error("Không thể lưu banner");
       setMessage(`Đã lưu ${slot.label}.`);
+      showToast(`Đã lưu ${slot.label}.`, "success");
       await load();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Lưu banner thất bại");
+      const errorMessage =
+        error instanceof Error ? error.message : "Lưu banner thất bại";
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
     } finally {
       setSaving(null);
     }

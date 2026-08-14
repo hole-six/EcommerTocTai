@@ -15,6 +15,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminPagination } from "@/components/admin/AdminTableTools";
 import panel from "@/components/admin/admin-panel.module.css";
+import { showToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/lib/client/errors";
 import styles from "./products.module.css";
 
@@ -168,10 +169,12 @@ export default function AdminProductsPage() {
         return next;
       });
       setMessage(`Đã cập nhật tồn kho ${product.name}.`);
+      showToast(`Đã cập nhật tồn kho ${product.name}.`, "success");
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Không thể cập nhật tồn kho",
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : "Không thể cập nhật tồn kho";
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
     } finally {
       setSavingInventoryId(null);
     }
@@ -184,7 +187,9 @@ export default function AdminProductsPage() {
     });
     const body = await response.json();
     if (!response.ok) {
-      setMessage(extractApiError(body, "Không thể xóa sản phẩm"));
+      const errorMessage = extractApiError(body, "Không thể xóa sản phẩm");
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
       return;
     }
     setProducts((current) =>
@@ -193,6 +198,7 @@ export default function AdminProductsPage() {
       ),
     );
     setMessage(`Đã ngừng bán ${product.name}.`);
+    showToast(`Đã ngừng bán ${product.name}.`, "success");
   }
 
   async function restore(product: Product) {
@@ -203,7 +209,9 @@ export default function AdminProductsPage() {
     });
     const body = await response.json();
     if (!response.ok) {
-      setMessage(extractApiError(body, "Không thể khôi phục sản phẩm"));
+      const errorMessage = extractApiError(body, "Không thể khôi phục sản phẩm");
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
       return;
     }
     setProducts((current) =>
@@ -212,6 +220,7 @@ export default function AdminProductsPage() {
       ),
     );
     setMessage(`Đã khôi phục ${product.name} về bản nháp.`);
+    showToast(`Đã khôi phục ${product.name} về bản nháp.`, "success");
   }
 
   return (

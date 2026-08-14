@@ -31,6 +31,7 @@ import { MediaLibraryModal } from "@/components/admin/MediaLibraryModal";
 import { SearchableSelect } from "@/components/admin/SearchableSelect";
 import panel from "@/components/admin/admin-panel.module.css";
 import styles from "@/components/admin/product-form.module.css";
+import { showToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/lib/client/errors";
 import {
   emptyQuizTags,
@@ -699,12 +700,15 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
       );
       const body = await response.json();
       if (!response.ok) throw new Error(extractApiError(body, "Lưu sản phẩm thất bại"));
-      setMessage(productId ? "Đã cập nhật sản phẩm." : "Đã tạo sản phẩm mới.");
+      const successMessage = productId ? "Đã cập nhật sản phẩm." : "Đã tạo sản phẩm mới.";
+      setMessage(successMessage);
+      showToast(successMessage, "success");
       if (!productId) router.push(`/admin/products/${body.data._id}`);
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Lưu sản phẩm thất bại",
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : "Lưu sản phẩm thất bại";
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
     } finally {
       setSaving(false);
     }

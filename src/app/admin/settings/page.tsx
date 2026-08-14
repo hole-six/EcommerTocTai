@@ -4,6 +4,7 @@ import { Save, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import panel from "@/components/admin/admin-panel.module.css";
+import { showToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/lib/client/errors";
 
 export default function AdminSettingsPage() {
@@ -42,8 +43,11 @@ export default function AdminSettingsPage() {
       setShippingFee(String(body.data.shippingFee));
       setFreeShippingThreshold(String(body.data.freeShippingThreshold));
       setMessage("Đã lưu cấu hình phí vận chuyển.");
+      showToast("Đã lưu cấu hình phí vận chuyển.", "success");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Lưu thất bại");
+      const errorMessage = error instanceof Error ? error.message : "Lưu thất bại";
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
     } finally {
       setSaving(false);
     }

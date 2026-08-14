@@ -6,6 +6,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminPagination, AdminTableToolbar } from "@/components/admin/AdminTableTools";
 import { SearchableSelect } from "@/components/admin/SearchableSelect";
 import panel from "@/components/admin/admin-panel.module.css";
+import { showToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/lib/client/errors";
 import styles from "./reviews.module.css";
 
@@ -103,10 +104,14 @@ export default function AdminReviewsPage() {
       const body = await response.json();
       if (!response.ok) throw new Error(extractApiError(body, "Không thể tạo đánh giá."));
       setMessage("Đã tạo đánh giá và hiển thị trên sản phẩm đã chọn.");
+      showToast("Đã tạo đánh giá và hiển thị trên sản phẩm đã chọn.", "success");
       setDraft(emptyDraft); setDrawerOpen(false); setPage(1);
       setRefreshKey((value) => value + 1);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Không thể tạo đánh giá.");
+      const errorMessage =
+        error instanceof Error ? error.message : "Không thể tạo đánh giá.";
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
     } finally { setSubmitting(false); }
   }
 
@@ -117,11 +122,15 @@ export default function AdminReviewsPage() {
       body: JSON.stringify({ isPublished: !review.isPublished }),
     });
     if (!response.ok) {
-      setMessage(extractApiError(await response.json(), "Không thể cập nhật đánh giá.")); return;
+      const errorMessage = extractApiError(await response.json(), "Không thể cập nhật đánh giá.");
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
+      return;
     }
     setReviews((current) => current.map((item) =>
       item._id === review._id ? { ...item, isPublished: !review.isPublished } : item,
     ));
+    showToast(review.isPublished ? "Đã ẩn đánh giá." : "Đã hiện đánh giá.", "success");
   }
 
   async function remove(id: string) {
@@ -129,8 +138,12 @@ export default function AdminReviewsPage() {
     setMessage("");
     const response = await fetch(`/api/admin/reviews/${id}`, { method: "DELETE" });
     if (!response.ok) {
-      setMessage(extractApiError(await response.json(), "Không thể xóa đánh giá.")); return;
+      const errorMessage = extractApiError(await response.json(), "Không thể xóa đánh giá.");
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
+      return;
     }
+    showToast("Đã xóa đánh giá.", "success");
     if (reviews.length === 1 && page > 1) setPage((value) => value - 1);
     else setRefreshKey((value) => value + 1);
   }

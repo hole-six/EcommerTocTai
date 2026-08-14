@@ -35,6 +35,7 @@ import {
   type PaymentStatus,
   type ShippingProvider,
 } from "@/lib/orderLabels";
+import { showToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/lib/client/errors";
 import styles from "./account.module.css";
 
@@ -213,11 +214,14 @@ export default function AccountPage() {
       });
       const body = await response.json();
       if (!response.ok) {
-        setMessage(extractApiError(body, "Lưu thông tin cá nhân thất bại."));
+        const errorMessage = extractApiError(body, "Lưu thông tin cá nhân thất bại.");
+        setMessage(errorMessage);
+        showToast(errorMessage, "error");
         return;
       }
       setProfile(body.data);
       setMessage("Đã cập nhật thông tin cá nhân.");
+      showToast("Đã cập nhật thông tin cá nhân.", "success");
     } finally {
       setSaving("");
     }
@@ -234,13 +238,16 @@ export default function AccountPage() {
       });
       const body = await response.json();
       if (!response.ok) {
-        setMessage(extractApiError(body, "Đổi số điện thoại thất bại."));
+        const errorMessage = extractApiError(body, "Đổi số điện thoại thất bại.");
+        setMessage(errorMessage);
+        showToast(errorMessage, "error");
         return;
       }
       setProfile(body.data);
       setShowPhoneChange(false);
       setPhoneForm({ phone: "", currentPassword: "" });
       setMessage("Đã đổi số điện thoại đăng nhập.");
+      showToast("Đã đổi số điện thoại đăng nhập.", "success");
     } finally {
       setSaving("");
     }
@@ -262,16 +269,18 @@ export default function AccountPage() {
       );
       const body = await response.json();
       if (!response.ok) {
-        setMessage(
-          extractApiError(
-            body,
-            editingAddressId ? "Cập nhật địa chỉ thất bại." : "Thêm địa chỉ thất bại.",
-          ),
+        const errorMessage = extractApiError(
+          body,
+          editingAddressId ? "Cập nhật địa chỉ thất bại." : "Thêm địa chỉ thất bại.",
         );
+        setMessage(errorMessage);
+        showToast(errorMessage, "error");
         return;
       }
       setProfile(body.data);
-      setMessage(editingAddressId ? "Đã cập nhật địa chỉ." : "Đã thêm địa chỉ mới.");
+      const successMessage = editingAddressId ? "Đã cập nhật địa chỉ." : "Đã thêm địa chỉ mới.";
+      setMessage(successMessage);
+      showToast(successMessage, "success");
       closeAddressForm();
     } finally {
       setSaving("");
@@ -291,8 +300,11 @@ export default function AccountPage() {
       if (response.ok) {
         setProfile(body.data);
         setMessage("Đã đặt làm địa chỉ mặc định.");
+        showToast("Đã đặt làm địa chỉ mặc định.", "success");
       } else {
-        setMessage(extractApiError(body, "Đặt địa chỉ mặc định thất bại."));
+        const errorMessage = extractApiError(body, "Đặt địa chỉ mặc định thất bại.");
+        setMessage(errorMessage);
+        showToast(errorMessage, "error");
       }
     } finally {
       setSaving("");
@@ -311,8 +323,11 @@ export default function AccountPage() {
       if (response.ok) {
         setProfile(body.data);
         setMessage("Đã xóa địa chỉ.");
+        showToast("Đã xóa địa chỉ.", "success");
       } else {
-        setMessage(extractApiError(body, "Xóa địa chỉ thất bại."));
+        const errorMessage = extractApiError(body, "Xóa địa chỉ thất bại.");
+        setMessage(errorMessage);
+        showToast(errorMessage, "error");
       }
     } finally {
       setSaving("");

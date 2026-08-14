@@ -17,6 +17,7 @@ import {
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminPagination } from "@/components/admin/AdminTableTools";
 import panel from "@/components/admin/admin-panel.module.css";
+import { showToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/lib/client/errors";
 import drawer from "../coupons/coupons.module.css";
 import styles from "./customers.module.css";
@@ -195,8 +196,12 @@ export default function AdminCustomersPage() {
         current.map((customer) => (customer.id === selected.id ? { ...customer, ...draft, email: draft.email || undefined } : customer)),
       );
       setMessage("Đã cập nhật thông tin khách hàng.");
+      showToast("Đã cập nhật thông tin khách hàng.", "success");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Không thể cập nhật khách hàng");
+      const errorMessage =
+        error instanceof Error ? error.message : "Không thể cập nhật khách hàng";
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
     } finally {
       setSaving(false);
     }
@@ -216,6 +221,7 @@ export default function AdminCustomersPage() {
       setTab("registered");
       setPage(1);
       load({ tab: "registered", page: 1 });
+      showToast("Đã tạo tài khoản khách hàng.", "success");
       if (body.generatedPassword) {
         setRevealedPassword(body.generatedPassword);
         setMessage("Đã tạo tài khoản khách hàng. Gửi mật khẩu tạm bên dưới cho khách để đăng nhập.");
@@ -224,7 +230,10 @@ export default function AdminCustomersPage() {
         closeDrawer();
       }
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Không thể tạo khách hàng");
+      const errorMessage =
+        error instanceof Error ? error.message : "Không thể tạo khách hàng";
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
     } finally {
       setSaving(false);
     }
@@ -251,8 +260,12 @@ export default function AdminCustomersPage() {
       setResetOpen(false);
       setResetPassword("");
       setMessage("Đã đặt lại mật khẩu. Gửi mật khẩu mới bên dưới cho khách hàng.");
+      showToast("Đã đặt lại mật khẩu.", "success");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Không thể đặt lại mật khẩu");
+      const errorMessage =
+        error instanceof Error ? error.message : "Không thể đặt lại mật khẩu";
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
     } finally {
       setResetting(false);
     }

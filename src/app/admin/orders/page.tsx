@@ -6,6 +6,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminPagination } from "@/components/admin/AdminTableTools";
 import panel from "@/components/admin/admin-panel.module.css";
 import { paymentLabel, providerLabel, statusLabel, type OrderStatus, type PaymentStatus, type ShippingProvider } from "@/lib/orderLabels";
+import { showToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/lib/client/errors";
 import styles from "./orders.module.css";
 
@@ -56,7 +57,7 @@ export default function AdminOrdersPage() {
   }, []);
 
   function open(order: Order) { setSelected(order); setDraft({ status: order.status, shippingProvider: order.shippingProvider ?? "manual", trackingNumber: order.trackingNumber ?? "" }); }
-  async function save() { if (!selected) return; setSaving(true); setMessage(""); try { const response = await fetch(`/api/orders/${selected._id}/status`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(draft) }); const body = await response.json(); if (!response.ok) throw new Error(extractApiError(body, "Cập nhật thất bại")); setOrders((current) => current.map((order) => order._id === selected._id ? body.data : order)); setSelected(null); setMessage(`Đã cập nhật ${selected.orderNumber}.`); } catch (error) { setMessage(error instanceof Error ? error.message : "Cập nhật thất bại"); } finally { setSaving(false); } }
+  async function save() { if (!selected) return; setSaving(true); setMessage(""); try { const response = await fetch(`/api/orders/${selected._id}/status`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(draft) }); const body = await response.json(); if (!response.ok) throw new Error(extractApiError(body, "Cập nhật thất bại")); setOrders((current) => current.map((order) => order._id === selected._id ? body.data : order)); setSelected(null); setMessage(`Đã cập nhật ${selected.orderNumber}.`); showToast(`Đã cập nhật ${selected.orderNumber}.`, "success"); } catch (error) { const errorMessage = error instanceof Error ? error.message : "Cập nhật thất bại"; setMessage(errorMessage); showToast(errorMessage, "error"); } finally { setSaving(false); } }
 
   return <AdminShell breadcrumb="Đơn hàng"><div className={panel.header}><div><p>THƯƠNG MẠI / ĐƠN HÀNG</p><h1>Quản lý đơn hàng</h1></div></div>
     <section className={styles.metrics}><article><span>CHỜ XÁC NHẬN</span><strong>{metrics.pending}</strong><small>Cần xử lý ngay</small></article><article><span>ĐANG ĐÓNG GÓI</span><strong>{metrics.processing}</strong><small>Đã xác nhận / xử lý</small></article><article><span>ĐANG GIAO</span><strong>{metrics.shipping}</strong><small>Đơn có vận đơn</small></article><article><span>DOANH THU HOÀN TẤT</span><strong>{money.format(metrics.revenue)}</strong><small>Từ đơn hoàn tất</small></article></section>
