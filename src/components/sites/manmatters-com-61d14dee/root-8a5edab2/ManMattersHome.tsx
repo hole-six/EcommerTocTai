@@ -275,6 +275,32 @@ export function ManMattersHome({
   }, [activeCategory]);
 
   useEffect(() => {
+    if (!activeCategory) return;
+    const controller = new AbortController();
+
+    fetch(
+      `/api/commerce/products?categorySlug=${encodeURIComponent(activeCategory)}`,
+      { signal: controller.signal },
+    )
+      .then((response) => (response.ok ? response.json() : { data: [] }))
+      .then((payload) =>
+        setProducts(
+          (payload.data ?? []).map((product: HomeProduct) => ({
+            ...product,
+            _id: product._id ?? product.id ?? "",
+          })),
+        ),
+      )
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError")
+          return;
+        setProducts([]);
+      });
+
+    return () => controller.abort();
+  }, [activeCategory]);
+
+  useEffect(() => {
     if (banners.length < 2) return undefined;
     const timer = window.setInterval(
       () => setSlide((value) => (value + 1) % banners.length),
@@ -286,6 +312,9 @@ export function ManMattersHome({
   return (
     <main className={styles.page}>
       <SiteHeader />
+      <h1 style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', border: 0 }}>
+        CareWise - Phân phối thuốc mọc tóc chính hãng và giải pháp trị hói đầu chuẩn y khoa
+      </h1>
 
       {banners.length > 0 && (
         <section className={styles.hero}>
@@ -338,22 +367,8 @@ export function ManMattersHome({
         </section>
       )}
 
-      <section className={styles.statBar}>
-        <div className={styles.statBarInner}>
-          <div>
-            <b>10.000+</b>
-            <span>Khách hàng đã tin chọn</span>
-          </div>
-          <div className={styles.statDivider} />
-          <div>
-            <b>4.9/5</b>
-            <span>Đánh giá trung bình</span>
-          </div>
-        </div>
-      </section>
-
       <section id="concerns" className={styles.section}>
-        <h1 className={styles.sectionHeading}>Chọn theo điều tóc cần</h1>
+        <h2 className={styles.sectionHeading}>Chọn theo điều tóc cần</h2>
         <div className={styles.concernGrid}>
           {concernSlots.map((c) => (
             <Link href={c.href} className={styles.concern} key={c.name}>

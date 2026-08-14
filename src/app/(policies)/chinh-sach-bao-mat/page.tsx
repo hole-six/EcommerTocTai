@@ -23,7 +23,7 @@ export default function PrivacyPolicyPage() {
       </ul>
       
       <h2>3. Không chia sẻ cho bên thứ ba</h2>
-      <p>Tuyệt đối không có bất kỳ thông tin nào về việc bạn đang tìm kiếm <em>"cách mọc tóc nhanh"</em> hay <em>"thuốc trị hói đầu"</em> bị bán cho bên thứ ba vì mục đích quảng cáo chéo.</p>
+      <p>Tuyệt đối không có bất kỳ thông tin nào về việc bạn đang tìm kiếm <em>&quot;cách mọc tóc nhanh&quot;</em> hay <em>&quot;thuốc trị hói đầu&quot;</em> bị bán cho bên thứ ba vì mục đích quảng cáo chéo.</p>
 
       <h2>4. Quyền của khách hàng</h2>
       <p>Bạn có quyền yêu cầu CareWise xóa toàn bộ dữ liệu lịch sử tư vấn, hình ảnh da đầu và thông tin cá nhân bất cứ lúc nào thông qua tính năng trong Cài đặt tài khoản.</p>

@@ -5,6 +5,7 @@ import { CartToastHost } from "@/components/cart/CartToast";
 import { PwaRegister } from "@/components/PwaRegister";
 import { ContactButtons } from "@/components/support/ContactButtons";
 import { SupportChatWidget } from "@/components/support/SupportChatWidget";
+import { SITE_URL, SITE_NAME, DEFAULT_DESCRIPTION, DEFAULT_OG_IMAGE, PUBLISHER } from "@/lib/seo.config";
 import "./globals.css";
 
 const lexend = Lexend({
@@ -12,36 +13,36 @@ const lexend = Lexend({
   subsets: ["latin", "vietnamese"],
 });
 
-const siteUrl = "https://thuocmoctocchinhhang.com";
-const siteName = "CareWise";
-const siteDescription =
-  "Giải pháp chăm sóc tóc và da đầu được chọn lọc cho routine riêng của bạn — sản phẩm chính hãng, tư vấn theo từng giai đoạn, giao hàng toàn quốc.";
+
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  applicationName: siteName,
+  metadataBase: new URL(SITE_URL),
+  applicationName: SITE_NAME,
   title: {
-    template: `%s | ${siteName}`,
-    default: "CareWise | Chăm sóc tóc từ sự thấu hiểu",
+    template: `%s | Thuốc mọc tóc chính hãng CareWise`,
+    default: "CareWise | Thuốc mọc tóc chính hãng & Giải pháp trị hói",
   },
-  description: siteDescription,
-  keywords: ["chăm sóc tóc", "rụng tóc", "mọc tóc", "trị gàu", "dưỡng tóc", "carewise", "tóc nam", "hói đầu"],
+  description: DEFAULT_DESCRIPTION,
+  keywords: ["thuốc mọc tóc chính hãng", "trị hói đầu", "thuốc mọc tóc", "chăm sóc tóc", "rụng tóc", "mọc tóc", "carewise", "tóc nam", "hói đầu"],
   authors: [{ name: "CareWise Team" }],
   creator: "CareWise",
-  publisher: "CareWise",
+  publisher: SITE_NAME,
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
+  alternates: {
+    canonical: SITE_URL,
+  },
   openGraph: {
-    title: "CareWise | Chăm sóc tóc từ sự thấu hiểu",
-    description: siteDescription,
-    url: siteUrl,
-    siteName: siteName,
+    title: "CareWise | Thuốc mọc tóc chính hãng & Giải pháp trị hói",
+    description: DEFAULT_DESCRIPTION,
+    url: SITE_URL,
+    siteName: SITE_NAME,
     images: [
       {
-        url: "/images/toc-tai-hero.png",
+        url: DEFAULT_OG_IMAGE,
         width: 1200,
         height: 630,
         alt: "CareWise - Chăm sóc tóc",
@@ -52,9 +53,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "CareWise | Chăm sóc tóc",
-    description: siteDescription,
-    images: ["/images/toc-tai-hero.png"],
+    title: "CareWise | Thuốc mọc tóc chính hãng & Giải pháp trị hói",
+    description: DEFAULT_DESCRIPTION,
+    images: [DEFAULT_OG_IMAGE],
     creator: "@carewise",
   },
   robots: {
@@ -78,7 +79,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: siteName,
+    title: SITE_NAME,
     statusBarStyle: "default",
   },
 };
@@ -86,20 +87,25 @@ export const metadata: Metadata = {
 const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: siteName,
-  url: siteUrl,
-  logo: `${siteUrl}/images/logocarewise-trimmed.png`,
+  name: SITE_NAME,
+  url: SITE_URL,
+  logo: PUBLISHER.logo,
   sameAs: [],
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "customer service",
+    availableLanguage: "Vietnamese",
+  },
 };
 
 const websiteJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: siteName,
-  url: siteUrl,
+  name: SITE_NAME,
+  url: SITE_URL,
   potentialAction: {
     "@type": "SearchAction",
-    target: `${siteUrl}/shop/all?q={search_term_string}`,
+    target: `${SITE_URL}/shop/all?q={search_term_string}`,
     "query-input": "required name=search_term_string",
   },
 };

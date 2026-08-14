@@ -12,7 +12,7 @@ export default function ShippingPolicyPage() {
       <p style={{ color: "#64748b", marginBottom: "2rem" }}>Cập nhật lần cuối: 15/08/2026</p>
       
       <h2>1. Cam kết đóng gói bảo mật (Discreet Packaging)</h2>
-      <p>Nhiều khách hàng nam giới e ngại khi nhận các bưu phẩm có ghi rõ chữ <em>"thuốc trị hói đầu", "xịt mọc tóc" hay "chống rụng tóc"</em>. Thấu hiểu điều đó, toàn bộ bưu kiện của CareWise đều được đóng hộp carton trơn, che tên sản phẩm hoàn toàn trên bill giao hàng. Chỉ bạn mới biết bên trong có gì.</p>
+      <p>Nhiều khách hàng nam giới e ngại khi nhận các bưu phẩm có ghi rõ chữ <em>&quot;thuốc trị hói đầu&quot;, &quot;xịt mọc tóc&quot; hay &quot;chống rụng tóc&quot;</em>. Thấu hiểu điều đó, toàn bộ bưu kiện của CareWise đều được đóng hộp carton trơn, che tên sản phẩm hoàn toàn trên bill giao hàng. Chỉ bạn mới biết bên trong có gì.</p>
       
       <h2>2. Thời gian giao hàng</h2>
       <p>Việc điều trị nang tóc cần sự liên tục, không ngắt quãng. Do đó, chúng tôi luôn ưu tiên giao hàng nhanh nhất:</p>
