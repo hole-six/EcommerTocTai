@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { CheckCircle2, ChevronLeft, ChevronRight, Loader2, MapPin, X } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Loader2, MapPin, X } from "lucide-react";
 import { Children, useEffect, useRef, useState, type ReactNode } from "react";
 import { notFound, useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/sites/manmatters-com-61d14dee/shared/SiteHeader";
@@ -13,11 +13,12 @@ import { useCart } from "@/contexts/CartContext";
 import styles from "./product-detail.module.css";
 
 const MAX_VISIBLE_REVIEWS = 5;
+const RECENTLY_VIEWED_KEY = "toctai_recently_viewed";
 
 type Item = { targetProductId?: string; targetProductSlug?: string; title?: string; label?: string; period?: string; name?: string; value?: string; description?: string; image?: string };
 type Option = { id: string; targetProductSlug?: string; targetProductId?: string; label?: string; value?: string; image?: string; priceAdjustment?: number };
 type OptionGroup = { id: string; title: string; code: string; displayType?: string; required?: boolean; options: Option[] };
-type Product = { _id?: string; id?: string; name: string; slug: string; price: number; salePrice?: number; images: string[]; shortDescription: string; description: string; specifications?: Record<string, string | number | boolean>; specificationRows?: Item[]; category?: { name: string; slug: string }; variantGroup?: string; variantLabel?: string; optionGroups?: OptionGroup[]; stageImages?: Item[]; howToUse?: Item; rootCauses?: Item[]; detailHighlights?: Item[]; treatmentKit?: Item[]; treatmentJourney?: Item[]; contentBlocks?: Item[]; translations?: { en?: { name?: string; shortDescription?: string; description?: string; howToUseDescription?: string } } };
+type Product = { _id?: string; id?: string; name: string; slug: string; price: number; salePrice?: number; compareAtPrice?: number; rating?: number; images: string[]; shortDescription: string; description: string; specifications?: Record<string, string | number | boolean>; specificationRows?: Item[]; category?: { name: string; slug: string }; variantGroup?: string; variantLabel?: string; optionGroups?: OptionGroup[]; stageImages?: Item[]; howToUse?: Item; rootCauses?: Item[]; detailHighlights?: Item[]; treatmentKit?: Item[]; treatmentJourney?: Item[]; contentBlocks?: Item[]; faqs?: Item[]; whyChooseUs?: Item[]; additionalInfo?: Item[]; translations?: { en?: { name?: string; shortDescription?: string; description?: string; howToUseDescription?: string } } };
 type Review = { _id: string; rating: number; title: string; body: string; createdAt: string; user?: { fullName: string }; guestName?: string };
 const money = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 });
 function splitOptionLabel(label: string) { const match = label.match(/^(.*?)\s*(\(.*\))\s*$/); return match ? { main: match[1].trim(), sub: match[2].trim() } : { main: label, sub: "" }; }
@@ -32,6 +33,19 @@ export function ProductDetailClient({ slug }: { slug: string }) {
   const [lang, setLang] = useState<"vi" | "en">("vi");
   useEffect(() => { fetch(`/api/commerce/products/${slug}`).then((response) => response.json()).then((body) => body.data ? setProduct(body.data) : setFailed(true)).finally(() => setLoading(false)); }, [slug]);
   useEffect(() => { if (!product) return; fetch(`/api/reviews?productId=${product._id}`).then((response) => response.json()).then((body) => setReviews(body.data ?? [])); fetch("/api/auth/me").then((response) => response.json()).then((body) => setLoggedIn(Boolean(body.data))); }, [product]);
+  useEffect(() => {
+    if (!product) return;
+    const id = product._id ?? product.id ?? "";
+    if (!id) return;
+    try {
+      const raw = localStorage.getItem(RECENTLY_VIEWED_KEY);
+      const current: string[] = raw ? JSON.parse(raw) : [];
+      const next = [id, ...current.filter((entry) => entry !== id)].slice(0, 12);
+      localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(next));
+    } catch {
+      // storage unavailable — not critical
+    }
+  }, [product]);
   useEffect(() => {
     const node = actionsRef.current;
     if (!node) return;
@@ -258,6 +272,11 @@ export function ProductDetailClient({ slug }: { slug: string }) {
             <button className={styles.reviewPrimaryButton} onClick={() => setShowReviewModal(true)}>Viết đánh giá</button>
           </div>
         </section>
+
+        <FaqSection items={(product.faqs ?? []).filter((item) => !isBlank(item))} />
+        <WhyChooseUsSection items={(product.whyChooseUs ?? []).filter((item) => !isBlank(item))} />
+        <AdditionalInfoSection items={(product.additionalInfo ?? []).filter((item) => !isBlank(item))} />
+        <RecentlyViewedSection currentId={productId} />
       </main>
       <SiteFooter />
 
@@ -426,4 +445,137 @@ function ProductContent({ product }: { product: Product }) {
     {specRows.length ? <section className={styles.contentSection}><h2>Thông số sản phẩm</h2><ScrollRow>{specRows.map((item, index) => <article className={styles.contentCard} key={index}>{item.image && <div className={styles.contentCardImage}><Image src={item.image} alt="" fill sizes={contentImageSizes} style={{ objectFit: "contain" }} quality={92} /></div>}{item.name && <h3>{item.name}</h3>}{item.value && <p>{item.value}</p>}</article>)}</ScrollRow></section> : null}
     {groups.map(([title, items]) => items.length ? <section className={styles.contentSection} key={title}><h2>{title}</h2><ScrollRow>{items.map((item, index) => { const titleText = item.title || item.name || item.period; const card = <>{item.image && <div className={styles.contentCardImage}><Image src={item.image} alt="" fill sizes={contentImageSizes} style={{ objectFit: "contain" }} quality={92} /></div>}{titleText && <h3>{titleText}</h3>}{item.description && <p>{item.description}</p>}</>; return item.targetProductSlug ? <Link href={`/san-pham/${item.targetProductSlug}`} className={styles.contentCard} key={index}>{card}</Link> : <article className={styles.contentCard} key={index}>{card}</article>; })}</ScrollRow></section> : null)}
   </div>;
+}
+
+function FaqSection({ items }: { items: Item[] }) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  if (!items.length) return null;
+  return (
+    <section className={styles.contentSection}>
+      <h2>Bạn có câu hỏi gì không?</h2>
+      <div className={styles.faqList}>
+        {items.map((item, index) => {
+          const open = openIndex === index;
+          return (
+            <div className={`${styles.faqItem} ${open ? styles.faqOpen : ""}`} key={index}>
+              <button
+                type="button"
+                className={styles.faqQuestion}
+                onClick={() => setOpenIndex(open ? null : index)}
+                aria-expanded={open}
+              >
+                <span>{item.title}</span>
+                <ChevronDown size={17} className={styles.faqChevron} />
+              </button>
+              {open && <p className={styles.faqAnswer}>{item.description}</p>}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function WhyChooseUsSection({ items }: { items: Item[] }) {
+  if (!items.length) return null;
+  return (
+    <section className={styles.contentSection}>
+      <h2>Tại sao nên chọn CareWise?</h2>
+      <ScrollRow>
+        {items.map((item, index) => (
+          <article className={styles.contentCard} key={index}>
+            {item.image && (
+              <div className={styles.contentCardImage}>
+                <Image src={item.image} alt="" fill sizes={contentImageSizes} style={{ objectFit: "contain" }} quality={92} />
+              </div>
+            )}
+            {item.title && <h3>{item.title}</h3>}
+            {item.description && <p>{item.description}</p>}
+          </article>
+        ))}
+      </ScrollRow>
+    </section>
+  );
+}
+
+function AdditionalInfoSection({ items }: { items: Item[] }) {
+  if (!items.length) return null;
+  return (
+    <section className={styles.contentSection}>
+      <h2>Thông tin bổ sung</h2>
+      <div className={styles.infoTable}>
+        {items.map((item, index) => (
+          <div className={styles.infoRow} key={index}>
+            <span>{item.name}</span>
+            <b>{item.value}</b>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function RecentlyViewedSection({ currentId }: { currentId: string }) {
+  const [items, setItems] = useState<Product[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let ids: string[] = [];
+    try {
+      const raw = localStorage.getItem(RECENTLY_VIEWED_KEY);
+      ids = raw ? JSON.parse(raw) : [];
+    } catch {
+      ids = [];
+    }
+    const others = ids.filter((id) => id !== currentId).slice(0, 8);
+    if (!others.length) return;
+    Promise.all(
+      others.map((id) =>
+        fetch(`/api/commerce/products/${id}`)
+          .then((response) => (response.ok ? response.json() : null))
+          .then((body) => body?.data ?? null)
+          .catch(() => null),
+      ),
+    ).then((results) => {
+      if (!cancelled) setItems(results.filter(Boolean) as Product[]);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentId]);
+
+  if (!items.length) return null;
+
+  return (
+    <section className={styles.contentSection}>
+      <h2>Đã xem gần đây</h2>
+      <ScrollRow>
+        {items.map((item) => {
+          const itemId = item._id ?? item.id ?? "";
+          const itemPrice = item.salePrice ?? item.price;
+          return (
+            <Link href={`/san-pham/${item.slug}`} className={styles.recentCard} key={itemId}>
+              <div className={styles.recentImage}>
+                {item.images?.[0] && (
+                  <Image
+                    src={item.images[0]}
+                    alt={item.name}
+                    fill
+                    sizes="200px"
+                    style={{ objectFit: "cover" }}
+                    unoptimized={item.images[0].startsWith("/uploads/")}
+                  />
+                )}
+              </div>
+              <b>{item.name}</b>
+              <span className={styles.recentPrice}>
+                {money.format(itemPrice)}
+                {item.salePrice && <del>{money.format(item.price)}</del>}
+              </span>
+            </Link>
+          );
+        })}
+      </ScrollRow>
+    </section>
+  );
 }

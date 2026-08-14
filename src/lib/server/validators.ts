@@ -148,6 +148,9 @@ const productBaseSchema = z.object({
     detailHighlights: z.array(imageItem).default([]),
     treatmentKit: z.array(imageItem).default([]),
     treatmentJourney: z.array(imageItem).default([]),
+    faqs: z.array(imageItem).default([]),
+    whyChooseUs: z.array(imageItem).default([]),
+    additionalInfo: z.array(imageItem).default([]),
     status: z.enum(["draft", "active", "archived"]).default("draft"),
     translations: z
       .object({

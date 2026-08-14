@@ -6,6 +6,7 @@ import {
   CircleAlert,
   ExternalLink,
   FileText,
+  HelpCircle,
   Images,
   ImagePlus,
   Info,
@@ -17,6 +18,7 @@ import {
   Plus,
   RefreshCw,
   Route,
+  ShieldCheck,
   SlidersHorizontal,
   Sparkles,
   Star,
@@ -89,6 +91,9 @@ export type ProductInitial = {
   detailHighlights?: Item[];
   treatmentKit?: Item[];
   treatmentJourney?: Item[];
+  faqs?: Item[];
+  whyChooseUs?: Item[];
+  additionalInfo?: Item[];
   status: "draft" | "active" | "archived";
   variantGroup?: string;
   variantLabel?: string;
@@ -157,6 +162,9 @@ const navItems = [
   ["journey", Route, "Lộ trình điều trị"],
   ["specs", ListChecks, "Thông số"],
   ["blocks", LayoutGrid, "Nội dung tùy biến"],
+  ["faqs", HelpCircle, "Câu hỏi thường gặp"],
+  ["whyChooseUs", ShieldCheck, "Tại sao chọn CareWise"],
+  ["additionalInfo", Info, "Thông tin bổ sung"],
   ["variants", SlidersHorizontal, "Biến thể"],
   ["quiz", Target, "Gắn thẻ bài test tóc"],
 ] as const;
@@ -546,6 +554,13 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
   const [journey, setJourney] = useState<Item[]>(
     initial?.treatmentJourney ?? [],
   );
+  const [faqs, setFaqs] = useState<Item[]>(initial?.faqs ?? []);
+  const [whyChooseUs, setWhyChooseUs] = useState<Item[]>(
+    initial?.whyChooseUs ?? [],
+  );
+  const [additionalInfo, setAdditionalInfo] = useState<Item[]>(
+    initial?.additionalInfo ?? [],
+  );
   const [howToUse, setHowToUse] = useState<Item>(
     initial?.howToUse ?? emptyItem(),
   );
@@ -680,6 +695,9 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
         },
         treatmentKit,
         treatmentJourney: journey,
+        faqs,
+        whyChooseUs,
+        additionalInfo,
         contentBlocks: blocks,
         optionGroups: groups,
         quizTags,
@@ -1214,6 +1232,33 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           blocks,
           setBlocks,
           "Khối",
+        )}
+        {repeat(
+          "faqs",
+          HelpCircle,
+          "Câu hỏi thường gặp (FAQ)",
+          "Hiện dưới dạng hỏi/đáp có thể mở rộng, phía dưới phần đánh giá",
+          faqs,
+          setFaqs,
+          "Câu hỏi",
+        )}
+        {repeat(
+          "whyChooseUs",
+          ShieldCheck,
+          "Tại sao nên chọn CareWise",
+          "3 lý do / điểm mạnh, hiện phía dưới phần đánh giá",
+          whyChooseUs,
+          setWhyChooseUs,
+          "Lý do",
+        )}
+        {repeat(
+          "additionalInfo",
+          Info,
+          "Thông tin bổ sung",
+          "Bảng thông tin dạng nhãn/giá trị (VD: Xuất xứ, Nhà sản xuất...), hiện phía dưới phần đánh giá",
+          additionalInfo,
+          setAdditionalInfo,
+          "Dòng",
         )}
 
         <Section
