@@ -10,12 +10,16 @@ import { apiError } from "@/lib/server/http";
 import { escapeRegex, paginationMeta, parsePagination } from "@/lib/server/pagination";
 
 const createReviewSchema = z.object({
-  userId: z.string().refine(isValidObjectId, "Người dùng không hợp lệ."),
+  userId: z.string().trim().refine((value) => !value || isValidObjectId(value), "Người dùng không hợp lệ.").default(""),
+  guestName: z.string().trim().max(100).default(""),
   productId: z.string().refine(isValidObjectId, "Sản phẩm không hợp lệ."),
   rating: z.coerce.number().int().min(1).max(5),
   title: z.string().trim().max(120).default(""),
   body: z.string().trim().min(3, "Nội dung đánh giá cần ít nhất 3 ký tự.").max(2000),
   isPublished: z.boolean().default(true),
+}).refine((data) => data.userId || data.guestName.length >= 2, {
+  message: "Hãy chọn khách hàng hoặc nhập tên người đánh giá.",
+  path: ["guestName"],
 });
 
 export async function GET(request: Request) {
@@ -88,14 +92,16 @@ export async function POST(request: Request) {
     await connectDb();
 
     const [user, product] = await Promise.all([
-      User.findOne({ _id: data.userId, role: "customer", isActive: true })
-        .select("_id fullName")
-        .lean(),
+      data.userId
+        ? User.findOne({ _id: data.userId, role: "customer", isActive: true })
+            .select("_id fullName")
+            .lean()
+        : Promise.resolve(null),
       Product.findOne({ _id: data.productId, status: { $ne: "archived" } })
         .select("_id name")
         .lean(),
     ]);
-    if (!user) {
+    if (data.userId && !user) {
       return NextResponse.json(
         { error: "Không tìm thấy khách hàng đang hoạt động." },
         { status: 422 },
@@ -108,11 +114,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const existing = await Review.exists({
-      product: product._id,
-      user: user._id,
-    });
-    if (existing) {
+    const existing = user
+      ? await Review.exists({ product: product._id, user: user._id })
+      : null;
+    if (user && existing) {
       return NextResponse.json(
         { error: "Người dùng này đã đánh giá sản phẩm đã chọn." },
         { status: 409 },
@@ -121,7 +126,8 @@ export async function POST(request: Request) {
 
     const review = await Review.create({
       product: product._id,
-      user: user._id,
+      user: user?._id ?? null,
+      guestName: user ? "" : data.guestName,
       // Giữ tương thích với cấu trúc đánh giá cũ mà không tạo đơn hàng giả.
       // ObjectId riêng này chỉ đóng vai trò khóa duy nhất cho đánh giá do admin tạo.
       order: new Types.ObjectId(),

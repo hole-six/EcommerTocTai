@@ -14,12 +14,12 @@ export async function GET() {
       User.find({ role: "customer", isActive: true })
         .select("fullName phone email")
         .sort({ fullName: 1, createdAt: -1 })
-        .limit(500)
+        .limit(2000)
         .lean(),
       Product.find({ status: { $ne: "archived" } })
-        .select("name sku status")
+        .select("name sku slug status")
         .sort({ name: 1, createdAt: -1 })
-        .limit(500)
+        .limit(2000)
         .lean(),
     ]);
 

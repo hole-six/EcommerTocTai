@@ -27,6 +27,7 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { MediaLibraryModal } from "@/components/admin/MediaLibraryModal";
+import { SearchableSelect } from "@/components/admin/SearchableSelect";
 import panel from "@/components/admin/admin-panel.module.css";
 import styles from "@/components/admin/product-form.module.css";
 import { extractApiError } from "@/lib/client/errors";
@@ -398,25 +399,24 @@ function StageEditor({
           </label>
           <label>
             Sản phẩm liên kết
-            <select
+            <SearchableSelect
               value={selectValue}
-              onChange={(event) => {
-                const selected = options.find(
-                  (product) => product.id === event.target.value,
-                );
+              onChange={(value) => {
+                const selected = options.find((product) => product.id === value);
                 onChange({
                   targetProductId: selected?.id ?? "",
                   targetProductSlug: selected?.slug ?? "",
                 });
               }}
-            >
-              <option value="">— Chọn sản phẩm —</option>
-              {options.map((product) => (
-                <option key={product.id} value={product.id}>
-                  {product.name}
-                </option>
-              ))}
-            </select>
+              options={options.map((product) => ({
+                value: product.id,
+                label: product.name,
+                keywords: product.slug,
+              }))}
+              placeholder="Chọn sản phẩm liên kết"
+              searchPlaceholder="Tìm tên hoặc slug sản phẩm..."
+              clearLabel="Không liên kết sản phẩm"
+            />
           </label>
         </div>
       </div>

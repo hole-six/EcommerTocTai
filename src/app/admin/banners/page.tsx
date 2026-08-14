@@ -4,6 +4,7 @@ import { Check, Film, ImagePlus, Megaphone, Save, Trash2, Upload } from "lucide-
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminTableToolbar } from "@/components/admin/AdminTableTools";
+import { SearchableSelect } from "@/components/admin/SearchableSelect";
 import { UploadField } from "@/components/admin/ProductForm";
 import panel from "@/components/admin/admin-panel.module.css";
 
@@ -443,18 +444,20 @@ export default function AdminBannersPage() {
                   </div>
                   <label style={{ display: "block", marginTop: 8, fontSize: 11, fontWeight: 700, color: "var(--admin-muted, #667085)" }}>
                     Gắn sản phẩm khi bấm video
-                    <select
-                      value={slugFromCtaHref(banner?.ctaHref)}
-                      onChange={(event) => void saveManagedVideoLink(config, index, event.target.value)}
-                      style={{ width: "100%", marginTop: 4, fontWeight: 500 }}
-                    >
-                      <option value="">— Không gắn sản phẩm —</option>
-                      {productOptions.map((product) => (
-                        <option key={product.id} value={product.slug}>
-                          {product.name}
-                        </option>
-                      ))}
-                    </select>
+                    <div style={{ marginTop: 4 }}>
+                      <SearchableSelect
+                        value={slugFromCtaHref(banner?.ctaHref)}
+                        onChange={(value) => void saveManagedVideoLink(config, index, value)}
+                        options={productOptions.map((product) => ({
+                          value: product.slug,
+                          label: product.name,
+                          keywords: product.slug,
+                        }))}
+                        placeholder="Chọn sản phẩm"
+                        searchPlaceholder="Tìm sản phẩm theo tên hoặc slug..."
+                        clearLabel="Không gắn sản phẩm"
+                      />
+                    </div>
                   </label>
                   <input
                     ref={(element) => { fileInputs.current[inputKey] = element; }}
@@ -647,18 +650,20 @@ export default function AdminBannersPage() {
                       </div>
                       <label style={{ display: "block", marginTop: 8, fontSize: 11, fontWeight: 700, color: "var(--admin-muted, #667085)" }}>
                         Gắn sản phẩm khi bấm video
-                        <select
-                          value={slugFromCtaHref(banner?.ctaHref)}
-                          onChange={(event) => void saveManagedVideoLink(HOME_VIDEO_MANAGER, index, event.target.value)}
-                          style={{ width: "100%", marginTop: 4, fontWeight: 500 }}
-                        >
-                          <option value="">— Không gắn sản phẩm —</option>
-                          {productOptions.map((product) => (
-                            <option key={product.id} value={product.slug}>
-                              {product.name}
-                            </option>
-                          ))}
-                        </select>
+                        <div style={{ marginTop: 4 }}>
+                          <SearchableSelect
+                            value={slugFromCtaHref(banner?.ctaHref)}
+                            onChange={(value) => void saveManagedVideoLink(HOME_VIDEO_MANAGER, index, value)}
+                            options={productOptions.map((product) => ({
+                              value: product.slug,
+                              label: product.name,
+                              keywords: product.slug,
+                            }))}
+                            placeholder="Chọn sản phẩm"
+                            searchPlaceholder="Tìm sản phẩm theo tên hoặc slug..."
+                            clearLabel="Không gắn sản phẩm"
+                          />
+                        </div>
                       </label>
                       <input
                         ref={(element) => { fileInputs.current[inputKey] = element; }}
