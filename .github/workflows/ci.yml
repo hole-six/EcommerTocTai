@@ -12,6 +12,8 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
 
     steps:
       - name: Checkout
@@ -28,6 +30,9 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: Generate route types
+        run: npx next typegen
 
       - name: Type check
         run: npm run typecheck
@@ -50,6 +55,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
+            export NEXT_TELEMETRY_DISABLED=1
             cd /var/www/carewise
             git fetch origin master
             git reset --hard origin/master
