@@ -19,13 +19,13 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   applicationName: SITE_NAME,
   title: {
-    template: `%s | Thuốc mọc tóc chính hãng CareWise`,
-    default: "CareWise | Thuốc mọc tóc chính hãng & Giải pháp trị hói",
+    template: `%s | Thuốc Mọc Tóc Chính Hãng`,
+    default: "Thuốc Mọc Tóc Chính Hãng | Giải pháp trị hói & phục hồi tóc",
   },
   description: DEFAULT_DESCRIPTION,
-  keywords: ["thuốc mọc tóc chính hãng", "trị hói đầu", "thuốc mọc tóc", "chăm sóc tóc", "rụng tóc", "mọc tóc", "carewise", "tóc nam", "hói đầu"],
-  authors: [{ name: "CareWise Team" }],
-  creator: "CareWise",
+  keywords: ["thuốc mọc tóc chính hãng", "trị hói đầu", "thuốc mọc tóc", "chăm sóc tóc", "rụng tóc", "mọc tóc", "tóc nam", "hói đầu"],
+  authors: [{ name: "Thuốc Mọc Tóc Chính Hãng" }],
+  creator: "Thuốc Mọc Tóc Chính Hãng",
   publisher: SITE_NAME,
   formatDetection: {
     email: false,
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     canonical: SITE_URL,
   },
   openGraph: {
-    title: "CareWise | Thuốc mọc tóc chính hãng & Giải pháp trị hói",
+    title: "Thuốc Mọc Tóc Chính Hãng | Giải pháp trị hói & phục hồi tóc",
     description: DEFAULT_DESCRIPTION,
     url: SITE_URL,
     siteName: SITE_NAME,
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
         url: DEFAULT_OG_IMAGE,
         width: 1200,
         height: 630,
-        alt: "CareWise - Chăm sóc tóc",
+        alt: "Thuốc Mọc Tóc Chính Hãng",
       },
     ],
     locale: "vi_VN",
@@ -53,10 +53,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "CareWise | Thuốc mọc tóc chính hãng & Giải pháp trị hói",
+    title: "Thuốc Mọc Tóc Chính Hãng | Giải pháp trị hói & phục hồi tóc",
     description: DEFAULT_DESCRIPTION,
     images: [DEFAULT_OG_IMAGE],
-    creator: "@carewise",
+    creator: "@thuocmoctoc",
   },
   robots: {
     index: true,
@@ -68,14 +68,6 @@ export const metadata: Metadata = {
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
-  },
-  manifest: "/manifest.webmanifest",
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/icon.png", type: "image/png", sizes: "32x32" },
-    ],
-    apple: [{ url: "/apple-icon.png", sizes: "180x180" }],
   },
   appleWebApp: {
     capable: true,

@@ -11,9 +11,9 @@
 /* ------------------------------------------------------------------ */
 
 export const SITE_URL = "https://thuocmoctocchinhhang.com";
-export const SITE_NAME = "CareWise";
+export const SITE_NAME = "Thuốc Mọc Tóc Chính Hãng";
 export const DEFAULT_DESCRIPTION =
-  "CareWise - Hệ thống phân phối thuốc mọc tóc chính hãng, giải pháp trị hói đầu và chăm sóc da đầu chuẩn y khoa. Giao hàng toàn quốc, tư vấn chuyên sâu.";
+  "Hệ thống phân phối thuốc mọc tóc chính hãng, giải pháp trị hói đầu và chăm sóc da đầu an toàn hiệu quả. Giao hàng toàn quốc, tư vấn chuyên sâu.";
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/images/toc-tai-hero.png`;
 export const DEFAULT_LOCALE = "vi_VN";
 export const PUBLISHER = {

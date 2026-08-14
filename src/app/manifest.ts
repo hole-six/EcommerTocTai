@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "CareWise",
-    short_name: "CareWise",
+    name: "Thuốc Mọc Tóc Chính Hãng",
+    short_name: "Thuốc Mọc Tóc",
     description:
-      "CareWise - chăm sóc tóc và da đầu với routine phù hợp cho nam giới.",
+      "Hệ thống phân phối thuốc mọc tóc chính hãng, giải pháp trị hói đầu và chăm sóc da đầu an toàn hiệu quả.",
     start_url: "/",
     scope: "/",
     display: "standalone",
