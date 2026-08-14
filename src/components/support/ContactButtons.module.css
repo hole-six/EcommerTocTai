@@ -12,15 +12,21 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #143461;
-  color: #fff;
+  background: #fff;
   display: grid;
   place-items: center;
   box-shadow: 0 10px 26px rgba(20, 52, 97, 0.24);
   text-decoration: none;
+  transition: transform 0.15s ease;
 }
 .button:hover {
-  background: #1c4a86;
+  transform: scale(1.06);
+}
+.button img {
+  display: block;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
 }
 @media (max-width: 560px) {
   .stack {
@@ -31,5 +37,9 @@
   .button {
     width: 40px;
     height: 40px;
+  }
+  .button img {
+    width: 22px;
+    height: 22px;
   }
 }

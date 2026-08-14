@@ -316,20 +316,40 @@ function ItemEditor({
   );
 }
 
+const SELF_TARGET = "__self__";
+
 function StageEditor({
   item,
   index,
   productOptions,
+  currentId,
+  currentSlug,
+  currentName,
   onChange,
   onRemove,
 }: {
   item: Item;
   index: number;
   productOptions: StageProductOption[];
+  currentId?: string;
+  currentSlug: string;
+  currentName: string;
   onChange: (patch: Partial<Item>) => void;
   onRemove: () => void;
 }) {
   const [libraryOpen, setLibraryOpen] = useState(false);
+  const selfOption: StageProductOption = {
+    id: currentId || SELF_TARGET,
+    slug: currentSlug || SELF_TARGET,
+    name: currentName
+      ? `${currentName} (sản phẩm đang tạo)`
+      : "Sản phẩm này (đang tạo)",
+  };
+  const options = [selfOption, ...productOptions];
+  const isSelf = Boolean(
+    currentSlug && item.targetProductSlug === currentSlug,
+  );
+  const selectValue = isSelf ? selfOption.id : (item.targetProductId ?? "");
   return (
     <div className={panel["admin-repeat-card"]}>
       <div className={panel["admin-repeat-head"]}>
@@ -378,9 +398,9 @@ function StageEditor({
           <label>
             Sản phẩm liên kết
             <select
-              value={item.targetProductId ?? ""}
+              value={selectValue}
               onChange={(event) => {
-                const selected = productOptions.find(
+                const selected = options.find(
                   (product) => product.id === event.target.value,
                 );
                 onChange({
@@ -390,7 +410,7 @@ function StageEditor({
               }}
             >
               <option value="">— Chọn sản phẩm —</option>
-              {productOptions.map((product) => (
+              {options.map((product) => (
                 <option key={product.id} value={product.id}>
                   {product.name}
                 </option>
@@ -1050,6 +1070,9 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
               index={index}
               item={item}
               productOptions={stageProducts}
+              currentId={productId}
+              currentSlug={slug}
+              currentName={name}
               onChange={(patch) =>
                 updateList(stageImages, setStageImages, index, patch)
               }
