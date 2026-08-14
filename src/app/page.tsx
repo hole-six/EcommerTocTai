@@ -19,7 +19,7 @@ async function getInitialBanners(placement: "home_hero" | "home_promo") {
       image: banner.image,
       alt: banner.alt,
       cta: banner.ctaLabel,
-      href: banner.ctaHref,
+      href: banner.ctaHref || "/shop/all",
     }));
   } catch {
     return [];

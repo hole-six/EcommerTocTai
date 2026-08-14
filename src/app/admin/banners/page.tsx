@@ -9,6 +9,13 @@ import panel from "@/components/admin/admin-panel.module.css";
 
 const SITE_BAR_SLOT_KEY = "site-announcement-bar";
 const MEN_VIDEO_SLOT_PREFIX = "men-video-";
+const CONCERN_SLOT_PREFIX = "concern-";
+const CONCERN_LABELS = ["Tóc", "Râu", "Da", "Dinh dưỡng"];
+const CONTACT_SLOTS = [
+  { key: "contact-zalo", label: "Nút Zalo", placeholder: "https://zalo.me/0901234567" },
+  { key: "contact-call", label: "Nút gọi điện", placeholder: "tel:0901234567" },
+  { key: "contact-fanpage", label: "Nút Fanpage", placeholder: "https://facebook.com/..." },
+] as const;
 const DEFAULT_MEN_VIDEOS = [
   "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a5f1dd8e4e7b5ab468e85ba/main.mp4",
   "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a5f1dd8a151fd521855d7fa/main.mp4",
@@ -20,7 +27,7 @@ type Banner = {
   _id: string;
   pageKey: string;
   slotKey: string;
-  placement: "home_hero" | "home_promo" | "all_products" | "category" | "site_bar" | "home_men_videos";
+  placement: "home_hero" | "home_promo" | "all_products" | "category" | "site_bar" | "home_men_videos" | "home_concerns" | "site_contact_buttons";
   categorySlug: string;
   image: string;
   mobileImage: string;
@@ -56,6 +63,15 @@ const homeSlots: Slot[] = [1, 2, 3].map((number) => ({
   defaultHref: "/shop/all",
   sort: number - 1,
 }));
+const homeConcernSlots: Slot[] = CONCERN_LABELS.map((label, index) => ({
+  key: `${CONCERN_SLOT_PREFIX}${index + 1}`,
+  page: "Trang chủ",
+  label: `Chủ đề ${index + 1}: ${label}`,
+  placement: "home_concerns",
+  defaultAlt: label,
+  defaultHref: "/shop/all",
+  sort: index,
+}));
 function normalize(value: string) {
   return value.toLocaleLowerCase("vi-VN");
 }
@@ -63,6 +79,7 @@ function normalize(value: string) {
 export default function AdminBannersPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [hrefDrafts, setHrefDrafts] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -73,6 +90,8 @@ export default function AdminBannersPage() {
   const [barSaving, setBarSaving] = useState(false);
   const [videoUploading, setVideoUploading] = useState<number | null>(null);
   const [productOptions, setProductOptions] = useState<ProductOption[]>([]);
+  const [contactHrefs, setContactHrefs] = useState<Record<string, string>>({});
+  const [contactSaving, setContactSaving] = useState(false);
   const fileInputs = useRef<Record<number, HTMLInputElement | null>>({});
 
   async function load() {
@@ -85,6 +104,14 @@ export default function AdminBannersPage() {
     setBarText(bar?.title ?? "MIỄN PHÍ VẬN CHUYỂN CHO ĐƠN HÀNG TỪ 499.000đ");
     setBarCtaLabel(bar?.ctaLabel ?? "Khám phá sản phẩm");
     setBarCtaHref(bar?.ctaHref ?? "/shop/all");
+    setContactHrefs(
+      Object.fromEntries(
+        CONTACT_SLOTS.map(({ key }) => [
+          key,
+          list.find((banner) => banner.slotKey === key)?.ctaHref ?? "",
+        ]),
+      ),
+    );
     setLoading(false);
   }
 
@@ -137,6 +164,41 @@ export default function AdminBannersPage() {
       setMessage(error instanceof Error ? error.message : "Lưu thất bại");
     } finally {
       setBarSaving(false);
+    }
+  }
+
+  async function saveContactButtons() {
+    setContactSaving(true);
+    setMessage("");
+    try {
+      await Promise.all(
+        CONTACT_SLOTS.map(({ key, label }) => {
+          const current = banners.find((banner) => banner.slotKey === key);
+          const ctaHref = contactHrefs[key] ?? "";
+          const payload = current
+            ? { ctaHref }
+            : {
+                pageKey: "global",
+                slotKey: key,
+                placement: "site_contact_buttons" as const,
+                alt: label,
+                ctaHref,
+                isActive: true,
+                sortOrder: 0,
+              };
+          return fetch(current ? `/api/banners/${current._id}` : "/api/banners", {
+            method: current ? "PATCH" : "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+        }),
+      );
+      setMessage("Đã lưu các nút liên hệ.");
+      await load();
+    } catch {
+      setMessage("Lưu nút liên hệ thất bại");
+    } finally {
+      setContactSaving(false);
     }
   }
 
@@ -223,6 +285,7 @@ export default function AdminBannersPage() {
   }
 
   const slots = useMemo(() => [...homeSlots], []);
+  const concernSlots = useMemo(() => [...homeConcernSlots], []);
 
   const filteredSlots = useMemo(() => {
     const term = normalize(search.trim());
@@ -268,7 +331,7 @@ export default function AdminBannersPage() {
       title: current?.alt || slot.defaultAlt,
       subtitle: "",
       ctaLabel: "Khám phá ngay",
-      ctaHref: current?.ctaHref || slot.defaultHref,
+      ctaHref: hrefDrafts[slot.key] ?? current?.ctaHref ?? slot.defaultHref,
       isActive: true,
       sortOrder: slot.sort,
     };
@@ -336,6 +399,17 @@ export default function AdminBannersPage() {
                   }
                   label={image ? "Thay ảnh" : "Upload ảnh"}
                 />
+                <label style={{ display: "block", marginTop: 8, fontSize: 11, fontWeight: 700, color: "var(--admin-muted, #667085)" }}>
+                  Link khi bấm vào ảnh
+                  <input
+                    value={hrefDrafts[slot.key] ?? current?.ctaHref ?? slot.defaultHref}
+                    onChange={(event) =>
+                      setHrefDrafts((draft) => ({ ...draft, [slot.key]: event.target.value }))
+                    }
+                    placeholder="/shop/all hoặc /san-pham/ten-san-pham"
+                    style={{ width: "100%", marginTop: 4, fontWeight: 500 }}
+                  />
+                </label>
                 <div className="banner-slot-actions">
                   <button
                     className={panel.saveButton}
@@ -485,6 +559,38 @@ export default function AdminBannersPage() {
                   );
                 })}
               </div>
+            </div>
+          </div>
+
+          <div className={panel.panel} style={{ marginBottom: 16 }}>
+            <div className={panel.panelPad}>
+              {renderSection("Trang chủ · 4 ảnh chủ đề (\"Chọn theo điều tóc cần\")", concernSlots)}
+            </div>
+          </div>
+
+          <div className={panel.panel} style={{ marginBottom: 16 }}>
+            <div className={panel.panelPad}>
+              <b style={{ display: "block", fontSize: 14, marginBottom: 4 }}>Nút liên hệ nổi</b>
+              <span style={{ fontSize: 12, color: "var(--admin-muted, #667085)" }}>
+                Hiện phía trên khung chat ở mọi trang. Để trống link nào thì nút đó tự ẩn.
+              </span>
+              <div className={panel.grid2} style={{ marginTop: 12 }}>
+                {CONTACT_SLOTS.map(({ key, label, placeholder }) => (
+                  <label key={key}>
+                    {label}
+                    <input
+                      value={contactHrefs[key] ?? ""}
+                      onChange={(event) =>
+                        setContactHrefs((current) => ({ ...current, [key]: event.target.value }))
+                      }
+                      placeholder={placeholder}
+                    />
+                  </label>
+                ))}
+              </div>
+              <button className={panel.saveButton} disabled={contactSaving} onClick={() => void saveContactButtons()} style={{ marginTop: 12 }}>
+                {contactSaving ? "Đang lưu..." : (<><Save size={14} /> Lưu nút liên hệ</>)}
+              </button>
             </div>
           </div>
 

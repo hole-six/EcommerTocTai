@@ -142,6 +142,9 @@ export function ManMattersHome({
   const [menVideos, setMenVideos] = useState<{ src: string; href: string }[]>(
     defaultMenVideos.map((src) => ({ src, href: "" })),
   );
+  const [concernSlots, setConcernSlots] = useState(
+    concerns.map((c) => ({ ...c, image: `${asset}${c.image}` })),
+  );
   const { addItem } = useCart();
   const router = useRouter();
   useEffect(() => {
@@ -159,6 +162,30 @@ export function ManMattersHome({
             return {
               src: match?.videoUrl || fallback,
               href: match?.ctaHref || "",
+            };
+          }),
+        );
+      })
+      .catch(() => undefined);
+  }, []);
+  useEffect(() => {
+    fetch("/api/banners?placement=home_concerns")
+      .then((response) => (response.ok ? response.json() : { data: [] }))
+      .then((body) => {
+        const list = (body.data ?? []) as Array<{
+          slotKey: string;
+          image: string;
+          alt: string;
+          ctaHref: string;
+        }>;
+        setConcernSlots(
+          concerns.map((fallback, index) => {
+            const match = list.find((item) => item.slotKey === `concern-${index + 1}`);
+            return {
+              name: fallback.name,
+              alt: match?.alt || fallback.alt,
+              image: match?.image || `${asset}${fallback.image}`,
+              href: match?.ctaHref || fallback.href,
             };
           }),
         );
@@ -189,7 +216,7 @@ export function ManMattersHome({
               image: banner.image,
               alt: banner.alt,
               cta: banner.ctaLabel,
-              href: banner.ctaHref,
+              href: banner.ctaHref || "/shop/all",
             }),
           ),
         );
@@ -204,7 +231,7 @@ export function ManMattersHome({
               image: banner.image,
               alt: banner.alt,
               cta: banner.ctaLabel,
-              href: banner.ctaHref,
+              href: banner.ctaHref || "/shop/all",
             }),
           ),
         );
@@ -267,6 +294,11 @@ export function ManMattersHome({
               priority={index === 0}
             />
           ))}
+          <Link
+            href={banners[slide].href}
+            className={styles.heroLink}
+            aria-label={banners[slide].alt}
+          />
           <a className={styles.heroCta} href={banners[slide].href}>
             {banners[slide].cta}
           </a>
@@ -315,10 +347,10 @@ export function ManMattersHome({
       <section id="concerns" className={styles.section}>
         <h1 className={styles.sectionHeading}>Chọn theo điều tóc cần</h1>
         <div className={styles.concernGrid}>
-          {concerns.map((c) => (
-            <Link href="/shop/all" className={styles.concern} key={c.name}>
+          {concernSlots.map((c) => (
+            <Link href={c.href} className={styles.concern} key={c.name}>
               <Image
-                src={`${asset}${c.image}`}
+                src={c.image}
                 alt={c.alt}
                 width={640}
                 height={800}

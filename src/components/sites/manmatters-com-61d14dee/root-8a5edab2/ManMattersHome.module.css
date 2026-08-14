@@ -39,6 +39,12 @@
   opacity: 1;
 }
 
+.heroLink {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
 .heroCta {
   position: absolute;
   left: clamp(16px, 4vw, 48px);
@@ -688,10 +694,6 @@ a.menVideoLink {
   .heroImage {
     object-fit: contain;
     object-position: center;
-  }
-
-  .heroCta {
-    display: none;
   }
 
   .section[id] {
