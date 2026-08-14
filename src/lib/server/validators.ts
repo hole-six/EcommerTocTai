@@ -34,8 +34,15 @@ export const addressSchema = z.object({
 });
 export const registerSchema = z.object({
   fullName: z.string().min(2).max(80),
-  email: z.string().email().optional(),
+  email: z.string().email("Email không hợp lệ"),
   phone,
+  password: z.string().min(8).max(100),
+});
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Email không hợp lệ"),
+});
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1),
   password: z.string().min(8).max(100),
 });
 export const loginSchema = z

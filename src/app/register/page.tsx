@@ -120,8 +120,9 @@ export default function RegisterPage() {
                 />
               </label>
               <label className={styles.field}>
-                Email <span>(không bắt buộc)</span>
+                Email
                 <input
+                  required
                   type="email"
                   placeholder="Nhập email của bạn"
                   {...field("email")}

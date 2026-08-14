@@ -118,6 +118,9 @@ export default function LoginPage() {
               </button>
             </form>
             <p className={styles.switch}>
+              <Link href="/forgot-password">Quên mật khẩu?</Link>
+            </p>
+            <p className={styles.switch}>
               Chưa có tài khoản?<Link href="/register">Tạo tài khoản</Link>
             </p>
             <p className={styles.note}>
