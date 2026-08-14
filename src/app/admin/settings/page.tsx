@@ -1,8 +1,9 @@
 "use client";
 
-import { Save, Truck } from "lucide-react";
+import { HelpCircle, Plus, Save, ShieldCheck, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { emptyItem, ItemEditor, type Item } from "@/components/admin/ProductForm";
 import panel from "@/components/admin/admin-panel.module.css";
 import { showToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/lib/client/errors";
@@ -13,6 +14,8 @@ export default function AdminSettingsPage() {
   const [message, setMessage] = useState("");
   const [shippingFee, setShippingFee] = useState("30000");
   const [freeShippingThreshold, setFreeShippingThreshold] = useState("200000");
+  const [faqs, setFaqs] = useState<Item[]>([]);
+  const [whyChooseUs, setWhyChooseUs] = useState<Item[]>([]);
 
   useEffect(() => {
     fetch("/api/settings")
@@ -21,10 +24,16 @@ export default function AdminSettingsPage() {
         if (body.data) {
           setShippingFee(String(body.data.shippingFee));
           setFreeShippingThreshold(String(body.data.freeShippingThreshold));
+          setFaqs(body.data.faqs ?? []);
+          setWhyChooseUs(body.data.whyChooseUs ?? []);
         }
       })
       .finally(() => setLoading(false));
   }, []);
+
+  function updateItem(list: Item[], setList: (next: Item[]) => void, index: number, patch: Partial<Item>) {
+    setList(list.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)));
+  }
 
   async function save() {
     setSaving(true);
@@ -36,14 +45,18 @@ export default function AdminSettingsPage() {
         body: JSON.stringify({
           shippingFee: Number(shippingFee),
           freeShippingThreshold: Number(freeShippingThreshold),
+          faqs,
+          whyChooseUs,
         }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(extractApiError(body, "Lưu thất bại"));
       setShippingFee(String(body.data.shippingFee));
       setFreeShippingThreshold(String(body.data.freeShippingThreshold));
-      setMessage("Đã lưu cấu hình phí vận chuyển.");
-      showToast("Đã lưu cấu hình phí vận chuyển.", "success");
+      setFaqs(body.data.faqs ?? []);
+      setWhyChooseUs(body.data.whyChooseUs ?? []);
+      setMessage("Đã lưu cấu hình.");
+      showToast("Đã lưu cấu hình.", "success");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Lưu thất bại";
       setMessage(errorMessage);
@@ -68,6 +81,7 @@ export default function AdminSettingsPage() {
       {loading ? (
         <p className={panel.empty}>Đang tải cấu hình...</p>
       ) : (
+        <>
         <div className={panel.panel}>
           <div className={panel.panelPad}>
             <div
@@ -136,22 +150,117 @@ export default function AdminSettingsPage() {
               phí ship. Ngoài ra khách vẫn có thể dùng mã giảm giá (VD:
               FREESHIP) để được miễn phí ship dù chưa đạt ngưỡng.
             </p>
-            <button
-              className={panel.saveButton}
-              disabled={saving}
-              onClick={() => void save()}
-              style={{ marginTop: 14 }}
-            >
-              {saving ? (
-                "Đang lưu..."
-              ) : (
-                <>
-                  <Save size={14} /> Lưu cấu hình
-                </>
-              )}
-            </button>
           </div>
         </div>
+
+        <div className={panel.panel} style={{ marginTop: 20 }}>
+          <div className={panel.panelPad}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                marginBottom: 14,
+              }}
+            >
+              <HelpCircle size={18} />
+              <div>
+                <b style={{ display: "block", fontSize: 14 }}>
+                  Câu hỏi thường gặp (FAQ)
+                </b>
+                <span style={{ fontSize: 12, color: "var(--admin-muted, #667085)" }}>
+                  Hiện giống nhau ở mọi trang chi tiết sản phẩm, phía dưới phần đánh giá.
+                </span>
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: faqs.length ? 14 : 0 }}>
+              <button
+                type="button"
+                className={panel.secondaryButton}
+                onClick={() => setFaqs([...faqs, emptyItem()])}
+              >
+                <Plus size={14} /> Thêm câu hỏi
+              </button>
+            </div>
+            {faqs.map((item, index) => (
+              <ItemEditor
+                key={index}
+                item={item}
+                heading={`Câu hỏi ${index + 1}`}
+                onChange={(patch) => updateItem(faqs, setFaqs, index, patch)}
+                onRemove={() => setFaqs(faqs.filter((_, itemIndex) => itemIndex !== index))}
+              />
+            ))}
+            {!faqs.length && (
+              <p className={panel.empty} style={{ padding: "20px 0" }}>
+                Chưa có câu hỏi nào. Bấm &quot;Thêm câu hỏi&quot; để bắt đầu (dùng ô Tiêu đề
+                cho câu hỏi, ô Mô tả cho câu trả lời).
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className={panel.panel} style={{ marginTop: 20 }}>
+          <div className={panel.panelPad}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                marginBottom: 14,
+              }}
+            >
+              <ShieldCheck size={18} />
+              <div>
+                <b style={{ display: "block", fontSize: 14 }}>
+                  Tại sao nên chọn CareWise
+                </b>
+                <span style={{ fontSize: 12, color: "var(--admin-muted, #667085)" }}>
+                  3 lý do / điểm mạnh, hiện giống nhau ở mọi trang chi tiết sản phẩm.
+                </span>
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: whyChooseUs.length ? 14 : 0 }}>
+              <button
+                type="button"
+                className={panel.secondaryButton}
+                onClick={() => setWhyChooseUs([...whyChooseUs, emptyItem()])}
+              >
+                <Plus size={14} /> Thêm lý do
+              </button>
+            </div>
+            {whyChooseUs.map((item, index) => (
+              <ItemEditor
+                key={index}
+                item={item}
+                heading={`Lý do ${index + 1}`}
+                onChange={(patch) => updateItem(whyChooseUs, setWhyChooseUs, index, patch)}
+                onRemove={() => setWhyChooseUs(whyChooseUs.filter((_, itemIndex) => itemIndex !== index))}
+              />
+            ))}
+            {!whyChooseUs.length && (
+              <p className={panel.empty} style={{ padding: "20px 0" }}>
+                Chưa có lý do nào. Bấm &quot;Thêm lý do&quot; để bắt đầu.
+              </p>
+            )}
+          </div>
+        </div>
+
+        <button
+          className={panel.saveButton}
+          disabled={saving}
+          onClick={() => void save()}
+          style={{ marginTop: 20 }}
+        >
+          {saving ? (
+            "Đang lưu..."
+          ) : (
+            <>
+              <Save size={14} /> Lưu cấu hình
+            </>
+          )}
+        </button>
+      </>
       )}
     </AdminShell>
   );

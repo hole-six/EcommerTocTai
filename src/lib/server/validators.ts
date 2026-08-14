@@ -77,7 +77,7 @@ export const categorySchema = z.object({
   isActive: z.boolean().default(true),
   sortOrder: z.number().int().min(0).default(0),
 });
-const imageItem = z
+export const imageItem = z
   .object({
     image: z.string().default(""),
     title: z.string().default(""),
@@ -148,8 +148,6 @@ const productBaseSchema = z.object({
     detailHighlights: z.array(imageItem).default([]),
     treatmentKit: z.array(imageItem).default([]),
     treatmentJourney: z.array(imageItem).default([]),
-    faqs: z.array(imageItem).default([]),
-    whyChooseUs: z.array(imageItem).default([]),
     additionalInfo: z.array(imageItem).default([]),
     status: z.enum(["draft", "active", "archived"]).default("draft"),
     translations: z

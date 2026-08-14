@@ -3,11 +3,14 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/server/auth";
 import { connectDb } from "@/lib/server/db";
 import { apiError } from "@/lib/server/http";
+import { imageItem } from "@/lib/server/validators";
 import { Settings } from "@/models/Settings";
 
 const settingsSchema = z.object({
   shippingFee: z.number().int().min(0).max(1000000),
   freeShippingThreshold: z.number().int().min(0).max(100000000),
+  faqs: z.array(imageItem).max(50),
+  whyChooseUs: z.array(imageItem).max(20),
 });
 
 export async function GET() {
@@ -22,6 +25,8 @@ export async function GET() {
       data: {
         shippingFee: settings.shippingFee,
         freeShippingThreshold: settings.freeShippingThreshold,
+        faqs: settings.faqs ?? [],
+        whyChooseUs: settings.whyChooseUs ?? [],
       },
     });
   } catch (error) {
@@ -43,6 +48,8 @@ export async function PATCH(request: Request) {
       data: {
         shippingFee: settings.shippingFee,
         freeShippingThreshold: settings.freeShippingThreshold,
+        faqs: settings.faqs ?? [],
+        whyChooseUs: settings.whyChooseUs ?? [],
       },
     });
   } catch (error) {

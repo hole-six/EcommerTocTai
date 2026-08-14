@@ -18,7 +18,7 @@ const RECENTLY_VIEWED_KEY = "toctai_recently_viewed";
 type Item = { targetProductId?: string; targetProductSlug?: string; title?: string; label?: string; period?: string; name?: string; value?: string; description?: string; image?: string };
 type Option = { id: string; targetProductSlug?: string; targetProductId?: string; label?: string; value?: string; image?: string; priceAdjustment?: number };
 type OptionGroup = { id: string; title: string; code: string; displayType?: string; required?: boolean; options: Option[] };
-type Product = { _id?: string; id?: string; name: string; slug: string; price: number; salePrice?: number; compareAtPrice?: number; rating?: number; images: string[]; shortDescription: string; description: string; specifications?: Record<string, string | number | boolean>; specificationRows?: Item[]; category?: { name: string; slug: string }; variantGroup?: string; variantLabel?: string; optionGroups?: OptionGroup[]; stageImages?: Item[]; howToUse?: Item; rootCauses?: Item[]; detailHighlights?: Item[]; treatmentKit?: Item[]; treatmentJourney?: Item[]; contentBlocks?: Item[]; faqs?: Item[]; whyChooseUs?: Item[]; additionalInfo?: Item[]; translations?: { en?: { name?: string; shortDescription?: string; description?: string; howToUseDescription?: string } } };
+type Product = { _id?: string; id?: string; name: string; slug: string; price: number; salePrice?: number; compareAtPrice?: number; rating?: number; images: string[]; shortDescription: string; description: string; specifications?: Record<string, string | number | boolean>; specificationRows?: Item[]; category?: { name: string; slug: string }; variantGroup?: string; variantLabel?: string; optionGroups?: OptionGroup[]; stageImages?: Item[]; howToUse?: Item; rootCauses?: Item[]; detailHighlights?: Item[]; treatmentKit?: Item[]; treatmentJourney?: Item[]; contentBlocks?: Item[]; additionalInfo?: Item[]; translations?: { en?: { name?: string; shortDescription?: string; description?: string; howToUseDescription?: string } } };
 type Review = { _id: string; rating: number; title: string; body: string; createdAt: string; user?: { fullName: string }; guestName?: string };
 const money = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 });
 function splitOptionLabel(label: string) { const match = label.match(/^(.*?)\s*(\(.*\))\s*$/); return match ? { main: match[1].trim(), sub: match[2].trim() } : { main: label, sub: "" }; }
@@ -31,7 +31,10 @@ export function ProductDetailClient({ slug }: { slug: string }) {
   const [stickyVisible, setStickyVisible] = useState(false); const actionsRef = useRef<HTMLDivElement>(null);
   const [locationChecking, setLocationChecking] = useState(false); const [deliveryEstimate, setDeliveryEstimate] = useState(""); const [locationError, setLocationError] = useState("");
   const [lang, setLang] = useState<"vi" | "en">("vi");
+  const [siteFaqs, setSiteFaqs] = useState<Item[]>([]);
+  const [siteWhyChooseUs, setSiteWhyChooseUs] = useState<Item[]>([]);
   useEffect(() => { fetch(`/api/commerce/products/${slug}`).then((response) => response.json()).then((body) => body.data ? setProduct(body.data) : setFailed(true)).finally(() => setLoading(false)); }, [slug]);
+  useEffect(() => { fetch("/api/settings").then((response) => response.json()).then((body) => { setSiteFaqs(body.data?.faqs ?? []); setSiteWhyChooseUs(body.data?.whyChooseUs ?? []); }).catch(() => undefined); }, []);
   useEffect(() => { if (!product) return; fetch(`/api/reviews?productId=${product._id}`).then((response) => response.json()).then((body) => setReviews(body.data ?? [])); fetch("/api/auth/me").then((response) => response.json()).then((body) => setLoggedIn(Boolean(body.data))); }, [product]);
   useEffect(() => {
     if (!product) return;
@@ -273,10 +276,11 @@ export function ProductDetailClient({ slug }: { slug: string }) {
           </div>
         </section>
 
-        <FaqSection items={(product.faqs ?? []).filter((item) => !isBlank(item))} />
-        <WhyChooseUsSection items={(product.whyChooseUs ?? []).filter((item) => !isBlank(item))} />
+        <FaqSection items={siteFaqs.filter((item) => !isBlank(item))} />
+        <WhyChooseUsSection items={siteWhyChooseUs.filter((item) => !isBlank(item))} />
         <AdditionalInfoSection items={(product.additionalInfo ?? []).filter((item) => !isBlank(item))} />
         <RecentlyViewedSection currentId={productId} />
+        <RelatedProductsSection currentId={productId} categorySlug={product.category?.slug} />
       </main>
       <SiteFooter />
 
@@ -515,6 +519,31 @@ function AdditionalInfoSection({ items }: { items: Item[] }) {
   );
 }
 
+function RecommendedProductCard({ item }: { item: Product }) {
+  const itemPrice = item.salePrice ?? item.price;
+  return (
+    <Link href={`/san-pham/${item.slug}`} className={styles.recentCard}>
+      <div className={styles.recentImage}>
+        {item.images?.[0] && (
+          <Image
+            src={item.images[0]}
+            alt={item.name}
+            fill
+            sizes="200px"
+            style={{ objectFit: "cover" }}
+            unoptimized={item.images[0].startsWith("/uploads/")}
+          />
+        )}
+      </div>
+      <b>{item.name}</b>
+      <span className={styles.recentPrice}>
+        {money.format(itemPrice)}
+        {item.salePrice && <del>{money.format(item.price)}</del>}
+      </span>
+    </Link>
+  );
+}
+
 function RecentlyViewedSection({ currentId }: { currentId: string }) {
   const [items, setItems] = useState<Product[]>([]);
 
@@ -550,31 +579,42 @@ function RecentlyViewedSection({ currentId }: { currentId: string }) {
     <section className={styles.contentSection}>
       <h2>Đã xem gần đây</h2>
       <ScrollRow>
-        {items.map((item) => {
-          const itemId = item._id ?? item.id ?? "";
-          const itemPrice = item.salePrice ?? item.price;
-          return (
-            <Link href={`/san-pham/${item.slug}`} className={styles.recentCard} key={itemId}>
-              <div className={styles.recentImage}>
-                {item.images?.[0] && (
-                  <Image
-                    src={item.images[0]}
-                    alt={item.name}
-                    fill
-                    sizes="200px"
-                    style={{ objectFit: "cover" }}
-                    unoptimized={item.images[0].startsWith("/uploads/")}
-                  />
-                )}
-              </div>
-              <b>{item.name}</b>
-              <span className={styles.recentPrice}>
-                {money.format(itemPrice)}
-                {item.salePrice && <del>{money.format(item.price)}</del>}
-              </span>
-            </Link>
-          );
-        })}
+        {items.map((item) => (
+          <RecommendedProductCard item={item} key={item._id ?? item.id} />
+        ))}
+      </ScrollRow>
+    </section>
+  );
+}
+
+function RelatedProductsSection({ currentId, categorySlug }: { currentId: string; categorySlug?: string }) {
+  const [items, setItems] = useState<Product[]>([]);
+
+  useEffect(() => {
+    if (!categorySlug) return;
+    let cancelled = false;
+    fetch(`/api/commerce/products?categorySlug=${encodeURIComponent(categorySlug)}`)
+      .then((response) => response.json())
+      .then((body) => {
+        if (cancelled) return;
+        const list = ((body.data ?? []) as Product[]).filter((item) => (item._id ?? item.id) !== currentId).slice(0, 8);
+        setItems(list);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [currentId, categorySlug]);
+
+  if (!items.length) return null;
+
+  return (
+    <section className={styles.contentSection}>
+      <h2>Sản phẩm liên quan</h2>
+      <ScrollRow>
+        {items.map((item) => (
+          <RecommendedProductCard item={item} key={item._id ?? item.id} />
+        ))}
       </ScrollRow>
     </section>
   );
