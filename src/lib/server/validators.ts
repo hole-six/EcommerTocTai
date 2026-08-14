@@ -47,13 +47,14 @@ export const resetPasswordSchema = z.object({
 });
 export const loginSchema = z
   .object({
+    username: z.string().min(3).max(50).optional(),
     phone: z.string().min(3).max(100).optional(),
     email: z.string().email().optional(),
     password: z.string().min(8),
   })
   .refine(
-    (value) => value.phone || value.email,
-    "Cần số điện thoại hoặc email",
+    (value) => value.username || value.phone || value.email,
+    "Cần tên đăng nhập, số điện thoại hoặc email",
   );
 export const categorySchema = z.object({
   parent: z.string().length(24).nullable().optional(),

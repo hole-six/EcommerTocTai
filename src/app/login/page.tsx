@@ -20,13 +20,16 @@ export default function LoginPage() {
     event.preventDefault();
     setError("");
     setLoading(true);
-    const isEmail = identifier.includes("@");
+    const normalizedIdentifier = identifier.trim();
+    const isAdminUsername = normalizedIdentifier.toLowerCase() === "admin";
+    const isEmail = normalizedIdentifier.includes("@");
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          [isEmail ? "email" : "phone"]: identifier,
+          [isAdminUsername ? "username" : isEmail ? "email" : "phone"]:
+            normalizedIdentifier,
           password,
         }),
       });
@@ -93,10 +96,10 @@ export default function LoginPage() {
             </p>
             <form onSubmit={submit} className={styles.form}>
               <label className={styles.field}>
-                Số điện thoại hoặc email
+                Tên đăng nhập, số điện thoại hoặc email
                 <input
                   required
-                  placeholder="Nhập số điện thoại hoặc email"
+                  placeholder="Nhập tên đăng nhập, số điện thoại hoặc email"
                   value={identifier}
                   onChange={(event) => setIdentifier(event.target.value)}
                   className={styles.input}

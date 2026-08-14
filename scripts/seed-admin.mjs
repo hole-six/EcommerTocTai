@@ -18,6 +18,7 @@ const email =
   process.env.ADMIN_EMAILS?.split(",")[0]?.trim() ??
   "admin@carewise.local";
 const phone = process.env.ADMIN_PHONE ?? "0900000000";
+const username = process.env.ADMIN_USERNAME ?? "admin";
 const password = process.env.ADMIN_PASSWORD ?? "admin123456";
 
 if (!process.env.MONGODB_URI)
@@ -39,6 +40,7 @@ const address = new Schema(
 const schema = new Schema(
   {
     fullName: String,
+    username: { type: String, lowercase: true, unique: true, sparse: true },
     email: { type: String, lowercase: true, unique: true, sparse: true },
     phone: { type: String, unique: true },
     passwordHash: String,
@@ -57,9 +59,10 @@ await mongoose.connect(process.env.MONGODB_URI, {
 });
 
 const user = await User.findOneAndUpdate(
-  { $or: [{ email: email.toLowerCase() }, { phone }] },
+  { $or: [{ username }, { email: email.toLowerCase() }, { phone }] },
   {
     fullName: process.env.ADMIN_NAME ?? "Quan tri vien CareWise",
+    username,
     email: email.toLowerCase(),
     phone,
     passwordHash: await bcrypt.hash(password, 12),
@@ -71,5 +74,5 @@ const user = await User.findOneAndUpdate(
 
 await mongoose.disconnect();
 
-console.log(`Admin ready: ${user.email} (${user.phone})`);
+console.log(`Admin ready: ${user.username}`);
 console.log(`Password: ${password}`);
