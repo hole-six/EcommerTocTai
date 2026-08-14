@@ -1,0 +1,35 @@
+.stack {
+  position: fixed;
+  right: 22px;
+  bottom: calc(22px + 54px + 14px);
+  z-index: 59;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 12px;
+  font-family: var(--font-lexend), ui-sans-serif, system-ui, sans-serif;
+}
+.button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #143461;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 10px 26px rgba(20, 52, 97, 0.24);
+  text-decoration: none;
+}
+.button:hover {
+  background: #1c4a86;
+}
+@media (max-width: 560px) {
+  .stack {
+    right: 12px;
+    bottom: calc(88px + env(safe-area-inset-bottom) + 50px + 12px);
+    gap: 10px;
+  }
+  .button {
+    width: 40px;
+    height: 40px;
+  }
+}

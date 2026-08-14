@@ -3,6 +3,7 @@ import { Lexend } from "next/font/google";
 import { CartProvider } from "@/contexts/CartContext";
 import { CartToastHost } from "@/components/cart/CartToast";
 import { PwaRegister } from "@/components/PwaRegister";
+import { ContactButtons } from "@/components/support/ContactButtons";
 import { SupportChatWidget } from "@/components/support/SupportChatWidget";
 import "./globals.css";
 
@@ -126,6 +127,7 @@ export default function RootLayout({
         <CartProvider>
           {children}
           <CartToastHost />
+          <ContactButtons />
           <SupportChatWidget />
           <PwaRegister />
         </CartProvider>
