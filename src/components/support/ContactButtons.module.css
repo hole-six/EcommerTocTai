@@ -1,45 +1,101 @@
 .stack {
   position: fixed;
   right: 22px;
-  bottom: calc(22px + 54px + 14px);
-  z-index: 59;
+  bottom: calc(22px + 54px + 16px);
+  z-index: 61;
   display: flex;
   flex-direction: column-reverse;
-  gap: 12px;
+  gap: 11px;
   font-family: var(--font-lexend), ui-sans-serif, system-ui, sans-serif;
 }
+
 .button {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: #fff;
+  position: relative;
   display: grid;
+  width: 48px;
+  height: 48px;
   place-items: center;
-  box-shadow: 0 10px 26px rgba(20, 52, 97, 0.24);
+  border: 3px solid rgba(255, 255, 255, 0.96);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(20, 52, 97, 0.25);
   text-decoration: none;
-  transition: transform 0.15s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  isolation: isolate;
 }
+
+.button::after {
+  position: absolute;
+  inset: -5px;
+  z-index: -1;
+  border: 1px solid rgba(26, 91, 170, 0.16);
+  border-radius: 19px;
+  content: "";
+}
+
 .button:hover {
-  transform: scale(1.06);
+  box-shadow: 0 16px 38px rgba(20, 52, 97, 0.33);
+  transform: translateY(-3px) scale(1.035);
 }
+
 .button img {
   display: block;
-  width: 26px;
-  height: 26px;
-  object-fit: contain;
+  width: 34px;
+  height: 34px;
 }
+
+.tooltip {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 12px);
+  width: max-content;
+  border-radius: 8px;
+  background: #102f58;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 750;
+  opacity: 0;
+  padding: 7px 10px;
+  pointer-events: none;
+  transform: translate(6px, -50%);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.tooltip::after {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  border: 5px solid transparent;
+  border-left-color: #102f58;
+  content: "";
+  transform: translateY(-50%);
+}
+
+.button:hover .tooltip,
+.button:focus-visible .tooltip {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
 @media (max-width: 560px) {
   .stack {
-    right: 12px;
-    bottom: calc(88px + env(safe-area-inset-bottom) + 50px + 12px);
-    gap: 10px;
+    right: 13px;
+    bottom: calc(88px + env(safe-area-inset-bottom) + 52px + 14px);
+    gap: 9px;
   }
+
   .button {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
+    border-radius: 15px;
   }
+
   .button img {
-    width: 22px;
-    height: 22px;
+    width: 31px;
+    height: 31px;
+  }
+
+  .tooltip {
+    display: none;
   }
 }

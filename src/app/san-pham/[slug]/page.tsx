@@ -6,8 +6,7 @@ import { CatalogProduct } from "@/models/CatalogProduct";
 import { Product } from "@/models/Product";
 import { Review } from "@/models/Review";
 import { ProductDetailClient } from "./ProductDetailClient";
-
-const siteUrl = "https://thuocmoctocchinhhang.com";
+import { SITE_URL, canonical, absImage, buildSocialMeta, breadcrumbJsonLd, productJsonLd } from "@/lib/seo.config";
 
 async function getProduct(slug: string) {
   await connectDb();
@@ -48,19 +47,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: product.name,
     description,
-    alternates: { canonical: `${siteUrl}/san-pham/${product.slug}` },
-    openGraph: {
+    alternates: { canonical: canonical(`/san-pham/${product.slug}`) },
+    ...buildSocialMeta({
       title: product.name,
       description,
-      url: `${siteUrl}/san-pham/${product.slug}`,
-      images: image ? [{ url: image }] : undefined,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: product.name,
-      description,
-      images: image ? [image] : undefined,
-    },
+      url: canonical(`/san-pham/${product.slug}`),
+      image: image ? absImage(image) : undefined,
+    }),
   };
 }
 
@@ -74,40 +67,35 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     : [];
   const avgRating = reviews.length ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0;
 
-  const productJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
+  const productLd = productJsonLd({
     name: product.name,
     description: product.shortDescription || product.description || undefined,
-    image: (product.images ?? []).map((image: string) => (image.startsWith("http") ? image : `${siteUrl}${image}`)),
+    images: product.images ?? [],
     sku: product.sku,
     category: product.category?.name,
-    offers: {
-      "@type": "Offer",
-      url: `${siteUrl}/san-pham/${product.slug}`,
-      priceCurrency: "VND",
-      price: product.salePrice ?? product.price,
-      availability:
-        product.inventory > 0
-          ? "https://schema.org/InStock"
-          : "https://schema.org/OutOfStock",
-    },
-    ...(reviews.length
-      ? {
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: avgRating.toFixed(1),
-            reviewCount: reviews.length,
-          },
-        }
-      : {}),
-  };
+    slug: product.slug,
+    price: product.price,
+    salePrice: product.salePrice,
+    inventory: product.inventory,
+    avgRating: avgRating || undefined,
+    reviewCount: reviews.length || undefined,
+  });
+
+  const bcLd = breadcrumbJsonLd([
+    { name: "Trang chủ", url: SITE_URL },
+    { name: product.category?.name || "Sản phẩm", url: canonical(`/shop/${product.category?.slug || "all"}`) },
+    { name: product.name, url: canonical(`/san-pham/${product.slug}`) },
+  ]);
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(bcLd) }}
       />
       <ProductDetailClient slug={slug} />
     </>

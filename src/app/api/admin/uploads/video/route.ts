@@ -1,4 +1,4 @@
-import { mkdir, unlink, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
@@ -8,21 +8,11 @@ export const runtime = "nodejs";
 const allowed = new Set(["video/mp4", "video/webm", "video/ogg", "video/quicktime"]);
 const extensions: Record<string, string> = { "video/mp4": "mp4", "video/webm": "webm", "video/ogg": "ogv", "video/quicktime": "mov" };
 
-async function deleteIfLocal(url: string | null) {
-  if (!url || !url.startsWith("/uploads/videos/")) return;
-  try {
-    await unlink(path.join(process.cwd(), "public", url));
-  } catch {
-    // file already gone / never existed locally - safe to ignore
-  }
-}
-
 export async function POST(request: Request) {
   try {
     await requireAdmin();
     const form = await request.formData();
     const file = form.get("file");
-    const previousUrl = form.get("previousUrl");
     if (!(file instanceof File) || !allowed.has(file.type)) {
       return NextResponse.json({ error: "Vui lòng chọn file video hợp lệ (mp4, webm, mov)" }, { status: 400 });
     }
@@ -34,7 +24,6 @@ export async function POST(request: Request) {
     const filename = `${randomUUID()}.${extensions[file.type]}`;
     await writeFile(path.join(folder, filename), Buffer.from(await file.arrayBuffer()));
     const url = `/uploads/videos/${filename}`;
-    await deleteIfLocal(typeof previousUrl === "string" ? previousUrl : null);
     return NextResponse.json({ data: { url } }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Upload video thất bại" }, { status: 500 });

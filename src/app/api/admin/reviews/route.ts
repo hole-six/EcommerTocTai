@@ -1,10 +1,22 @@
 import { NextResponse } from "next/server";
-import type { PipelineStage } from "mongoose";
+import { isValidObjectId, Types, type PipelineStage } from "mongoose";
+import { z } from "zod";
 import { Review } from "@/models/Review";
+import { Product } from "@/models/Product";
+import { User } from "@/models/User";
 import { requireAdmin } from "@/lib/server/auth";
 import { connectDb } from "@/lib/server/db";
 import { apiError } from "@/lib/server/http";
 import { escapeRegex, paginationMeta, parsePagination } from "@/lib/server/pagination";
+
+const createReviewSchema = z.object({
+  userId: z.string().refine(isValidObjectId, "Người dùng không hợp lệ."),
+  productId: z.string().refine(isValidObjectId, "Sản phẩm không hợp lệ."),
+  rating: z.coerce.number().int().min(1).max(5),
+  title: z.string().trim().max(120).default(""),
+  body: z.string().trim().min(3, "Nội dung đánh giá cần ít nhất 3 ký tự.").max(2000),
+  isPublished: z.boolean().default(true),
+});
 
 export async function GET(request: Request) {
   try {
@@ -49,6 +61,7 @@ export async function GET(request: Request) {
           title: 1,
           rating: 1,
           isPublished: 1,
+          source: 1,
           createdAt: 1,
           guestName: 1,
           guestPhone: 1,
@@ -66,4 +79,62 @@ export async function GET(request: Request) {
       pagination: paginationMeta(page, limit, result?.totalCount?.[0]?.count ?? 0),
     });
   } catch (error) { return apiError(error); }
+}
+
+export async function POST(request: Request) {
+  try {
+    const admin = await requireAdmin();
+    const data = createReviewSchema.parse(await request.json());
+    await connectDb();
+
+    const [user, product] = await Promise.all([
+      User.findOne({ _id: data.userId, role: "customer", isActive: true })
+        .select("_id fullName")
+        .lean(),
+      Product.findOne({ _id: data.productId, status: { $ne: "archived" } })
+        .select("_id name")
+        .lean(),
+    ]);
+    if (!user) {
+      return NextResponse.json(
+        { error: "Không tìm thấy khách hàng đang hoạt động." },
+        { status: 422 },
+      );
+    }
+    if (!product) {
+      return NextResponse.json(
+        { error: "Không tìm thấy sản phẩm có thể đánh giá." },
+        { status: 422 },
+      );
+    }
+
+    const existing = await Review.exists({
+      product: product._id,
+      user: user._id,
+    });
+    if (existing) {
+      return NextResponse.json(
+        { error: "Người dùng này đã đánh giá sản phẩm đã chọn." },
+        { status: 409 },
+      );
+    }
+
+    const review = await Review.create({
+      product: product._id,
+      user: user._id,
+      // Giữ tương thích với cấu trúc đánh giá cũ mà không tạo đơn hàng giả.
+      // ObjectId riêng này chỉ đóng vai trò khóa duy nhất cho đánh giá do admin tạo.
+      order: new Types.ObjectId(),
+      rating: data.rating,
+      title: data.title,
+      body: data.body,
+      isPublished: data.isPublished,
+      source: "admin",
+      createdBy: admin.id,
+    });
+
+    return NextResponse.json({ data: review }, { status: 201 });
+  } catch (error) {
+    return apiError(error);
+  }
 }

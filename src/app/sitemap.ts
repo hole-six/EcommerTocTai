@@ -2,21 +2,22 @@ import type { MetadataRoute } from "next";
 import { connectDb } from "@/lib/server/db";
 import { Category } from "@/models/Category";
 import { Product } from "@/models/Product";
-
-const siteUrl = "https://thuocmoctocchinhhang.com";
+import { SITE_URL, canonical } from "@/lib/seo.config";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const now = new Date();
+
   const staticRoutes: MetadataRoute.Sitemap = [
-    { url: `${siteUrl}/`, changeFrequency: "daily", priority: 1 },
-    { url: `${siteUrl}/shop/all`, changeFrequency: "daily", priority: 0.9 },
-    { url: `${siteUrl}/pages/hair-form-assessment`, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${siteUrl}/chinh-sach-bao-mat`, changeFrequency: "yearly", priority: 0.4 },
-    { url: `${siteUrl}/dieu-khoan-dich-vu`, changeFrequency: "yearly", priority: 0.4 },
-    { url: `${siteUrl}/chinh-sach-doi-tra`, changeFrequency: "yearly", priority: 0.4 },
-    { url: `${siteUrl}/chinh-sach-giao-hang`, changeFrequency: "yearly", priority: 0.4 },
-    { url: `${siteUrl}/kham-pha/nguyen-nhan-hoi-dau`, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${siteUrl}/kham-pha/cach-chua-hoi-dau-chu-m`, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${siteUrl}/kham-pha/giai-phap-moc-toc-nhanh`, changeFrequency: "monthly", priority: 0.8 },
+    { url: canonical("/"), lastModified: now, changeFrequency: "daily", priority: 1 },
+    { url: canonical("/shop/all"), lastModified: now, changeFrequency: "daily", priority: 0.9 },
+    { url: canonical("/pages/hair-form-assessment"), lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: canonical("/chinh-sach-bao-mat"), lastModified: now, changeFrequency: "yearly", priority: 0.4 },
+    { url: canonical("/dieu-khoan-dich-vu"), lastModified: now, changeFrequency: "yearly", priority: 0.4 },
+    { url: canonical("/chinh-sach-doi-tra"), lastModified: now, changeFrequency: "yearly", priority: 0.4 },
+    { url: canonical("/chinh-sach-giao-hang"), lastModified: now, changeFrequency: "yearly", priority: 0.4 },
+    { url: canonical("/kham-pha/nguyen-nhan-hoi-dau"), lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: canonical("/kham-pha/cach-chua-hoi-dau-chu-m"), lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: canonical("/kham-pha/giai-phap-moc-toc-nhanh"), lastModified: now, changeFrequency: "monthly", priority: 0.8 },
   ];
 
   try {
@@ -27,14 +28,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ]);
 
     const categoryRoutes: MetadataRoute.Sitemap = categories.map((category) => ({
-      url: `${siteUrl}/shop/${category.slug}`,
+      url: `${SITE_URL}/shop/${category.slug}`,
       lastModified: category.updatedAt,
       changeFrequency: "weekly",
       priority: 0.7,
     }));
 
     const productRoutes: MetadataRoute.Sitemap = products.map((product) => ({
-      url: `${siteUrl}/san-pham/${product.slug}`,
+      url: `${SITE_URL}/san-pham/${product.slug}`,
       lastModified: product.updatedAt,
       changeFrequency: "weekly",
       priority: 0.8,
@@ -45,3 +46,4 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return staticRoutes;
   }
 }
+
