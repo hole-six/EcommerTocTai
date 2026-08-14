@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { SiteHeader } from "../shared/SiteHeader";
 import styles from "./HairAssessment.module.css";
 import Image from "next/image";
+import { extractApiError } from "@/lib/client/errors";
 
 type SessionUser = { _id: string; fullName: string; phone: string } | null;
 
@@ -137,7 +138,7 @@ export function HairAssessment({ embedded = false }: { embedded?: boolean }) {
         }),
       });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? "Không thể gửi thông tin, vui lòng thử lại.");
+      if (!response.ok) throw new Error(extractApiError(body, "Không thể gửi thông tin, vui lòng thử lại."));
       setLeadStatus("done");
     } catch (error) {
       setLeadStatus("error");

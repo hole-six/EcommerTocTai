@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { extractApiError } from "@/lib/client/errors";
 import styles from "../auth.module.css";
 
 const heroImage = "/anhdesginlogin.png";
@@ -30,7 +31,7 @@ export default function LoginPage() {
         }),
       });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? "Đăng nhập thất bại");
+      if (!response.ok) throw new Error(extractApiError(body, "Đăng nhập thất bại"));
       router.push(body.data.role === "admin" ? "/admin" : "/account");
       router.refresh();
     } catch (submitError) {

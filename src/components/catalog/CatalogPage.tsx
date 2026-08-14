@@ -107,6 +107,9 @@ export function CatalogPage({
   const chooseCategory = (slug: string) => {
     setSelected(slug);
     setSelectedSubcategory(null);
+    router.push(slug === "all" ? "/shop/all" : `/shop/${slug}`, {
+      scroll: false,
+    });
   };
   const shownProducts = useMemo(() => {
     if (selected === "all") return products;

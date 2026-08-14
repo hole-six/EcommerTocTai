@@ -29,6 +29,7 @@ import { useRouter } from "next/navigation";
 import { MediaLibraryModal } from "@/components/admin/MediaLibraryModal";
 import panel from "@/components/admin/admin-panel.module.css";
 import styles from "@/components/admin/product-form.module.css";
+import { extractApiError } from "@/lib/client/errors";
 import {
   emptyQuizTags,
   QUIZ_DURATIONS,
@@ -695,7 +696,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
         },
       );
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? "Lưu sản phẩm thất bại");
+      if (!response.ok) throw new Error(extractApiError(body, "Lưu sản phẩm thất bại"));
       setMessage(productId ? "Đã cập nhật sản phẩm." : "Đã tạo sản phẩm mới.");
       if (!productId) router.push(`/admin/products/${body.data._id}`);
     } catch (error) {

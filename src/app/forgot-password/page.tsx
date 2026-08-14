@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
+import { extractApiError } from "@/lib/client/errors";
 import styles from "../auth.module.css";
 
 export default function ForgotPasswordPage() {
@@ -22,7 +23,7 @@ export default function ForgotPasswordPage() {
         body: JSON.stringify({ email }),
       });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? "Gửi yêu cầu thất bại");
+      if (!response.ok) throw new Error(extractApiError(body, "Gửi yêu cầu thất bại"));
       setMessage(body.data.message);
     } catch (submitError) {
       setError(

@@ -17,6 +17,7 @@ import {
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminPagination } from "@/components/admin/AdminTableTools";
 import panel from "@/components/admin/admin-panel.module.css";
+import { extractApiError } from "@/lib/client/errors";
 import drawer from "../coupons/coupons.module.css";
 import styles from "./customers.module.css";
 
@@ -189,7 +190,7 @@ export default function AdminCustomersPage() {
         body: JSON.stringify({ ...draft, email: draft.email || null }),
       });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? "Không thể cập nhật khách hàng");
+      if (!response.ok) throw new Error(extractApiError(body, "Không thể cập nhật khách hàng"));
       setRegistered((current) =>
         current.map((customer) => (customer.id === selected.id ? { ...customer, ...draft, email: draft.email || undefined } : customer)),
       );
@@ -211,7 +212,7 @@ export default function AdminCustomersPage() {
         body: JSON.stringify({ ...draft, email: draft.email || undefined, password: createPassword || undefined }),
       });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? "Không thể tạo khách hàng");
+      if (!response.ok) throw new Error(extractApiError(body, "Không thể tạo khách hàng"));
       setTab("registered");
       setPage(1);
       load({ tab: "registered", page: 1 });
@@ -245,7 +246,7 @@ export default function AdminCustomersPage() {
         body: JSON.stringify({ password: nextPassword }),
       });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? "Không thể đặt lại mật khẩu");
+      if (!response.ok) throw new Error(extractApiError(body, "Không thể đặt lại mật khẩu"));
       setRevealedPassword(nextPassword);
       setResetOpen(false);
       setResetPassword("");
@@ -264,7 +265,7 @@ export default function AdminCustomersPage() {
     try {
       const response = await fetch(`/api/admin/customers/${selected.id}`, { method: "DELETE" });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? "Không thể xóa khách hàng");
+      if (!response.ok) throw new Error(extractApiError(body, "Không thể xóa khách hàng"));
       if (registered.length === 1 && page > 1) setPage((value) => value - 1);
       else load();
       closeDrawer();

@@ -8,6 +8,7 @@ import {
   AdminTableToolbar,
 } from "@/components/admin/AdminTableTools";
 import panel from "@/components/admin/admin-panel.module.css";
+import { extractApiError } from "@/lib/client/errors";
 
 type Review = {
   _id: string;
@@ -67,7 +68,7 @@ export default function AdminReviewsPage() {
     });
     if (!response.ok) {
       const body = await response.json();
-      setMessage(body.error ?? "Không thể cập nhật đánh giá.");
+      setMessage(extractApiError(body, "Không thể cập nhật đánh giá."));
       return;
     }
     setReviews((current) =>
@@ -87,7 +88,7 @@ export default function AdminReviewsPage() {
     });
     if (!response.ok) {
       const body = await response.json();
-      setMessage(body.error ?? "Không thể xóa đánh giá.");
+      setMessage(extractApiError(body, "Không thể xóa đánh giá."));
       return;
     }
     if (reviews.length === 1 && page > 1) setPage((value) => value - 1);

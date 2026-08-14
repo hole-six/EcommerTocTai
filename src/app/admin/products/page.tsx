@@ -15,6 +15,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminPagination } from "@/components/admin/AdminTableTools";
 import panel from "@/components/admin/admin-panel.module.css";
+import { extractApiError } from "@/lib/client/errors";
 import styles from "./products.module.css";
 
 type Product = {
@@ -116,7 +117,7 @@ export default function AdminProductsPage() {
       );
       const body = await response.json();
       if (!response.ok)
-        throw new Error(body.error ?? "Không tải được sản phẩm");
+        throw new Error(extractApiError(body, "Không tải được sản phẩm"));
       setProducts(body.data ?? []);
       setTotal(body.pagination?.total ?? (body.data ?? []).length);
       setPageCount(body.pagination?.pages ?? 1);
@@ -155,7 +156,7 @@ export default function AdminProductsPage() {
       });
       const body = await response.json();
       if (!response.ok)
-        throw new Error(body.error ?? "Không thể cập nhật tồn kho");
+        throw new Error(extractApiError(body, "Không thể cập nhật tồn kho"));
       setProducts((current) =>
         current.map((item) =>
           item._id === product._id ? { ...item, inventory } : item,
@@ -183,7 +184,7 @@ export default function AdminProductsPage() {
     });
     const body = await response.json();
     if (!response.ok) {
-      setMessage(body.error ?? "Không thể xóa sản phẩm");
+      setMessage(extractApiError(body, "Không thể xóa sản phẩm"));
       return;
     }
     setProducts((current) =>
@@ -202,7 +203,7 @@ export default function AdminProductsPage() {
     });
     const body = await response.json();
     if (!response.ok) {
-      setMessage(body.error ?? "Không thể khôi phục sản phẩm");
+      setMessage(extractApiError(body, "Không thể khôi phục sản phẩm"));
       return;
     }
     setProducts((current) =>

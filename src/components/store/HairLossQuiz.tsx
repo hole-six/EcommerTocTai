@@ -17,6 +17,7 @@ import {
   type QuizOption,
   type QuizTags,
 } from "@/lib/hairQuiz";
+import { extractApiError } from "@/lib/client/errors";
 import styles from "./hair-loss-quiz.module.css";
 
 type Answers = QuizAnswers & { noticed?: string; triedBefore?: string; triedResult?: string };
@@ -187,7 +188,7 @@ export function HairLossQuiz() {
         }),
       });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? "Không thể gửi thông tin, vui lòng thử lại.");
+      if (!response.ok) throw new Error(extractApiError(body, "Không thể gửi thông tin, vui lòng thử lại."));
       setLeadStatus("done");
     } catch (error) {
       setLeadStatus("error");

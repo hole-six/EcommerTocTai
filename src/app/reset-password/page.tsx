@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type FormEvent } from "react";
+import { extractApiError } from "@/lib/client/errors";
 import styles from "../auth.module.css";
 
 function ResetPasswordForm() {
@@ -30,7 +31,7 @@ function ResetPasswordForm() {
         body: JSON.stringify({ token, password }),
       });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? "Đặt lại mật khẩu thất bại");
+      if (!response.ok) throw new Error(extractApiError(body, "Đặt lại mật khẩu thất bại"));
       setDone(true);
       window.setTimeout(() => router.push("/login"), 2000);
     } catch (submitError) {

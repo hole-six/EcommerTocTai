@@ -8,6 +8,7 @@ import {
   AdminTableToolbar,
 } from "@/components/admin/AdminTableTools";
 import panel from "@/components/admin/admin-panel.module.css";
+import { extractApiError } from "@/lib/client/errors";
 import styles from "./coupons.module.css";
 
 type Coupon = {
@@ -144,7 +145,7 @@ export default function AdminCouponsPage() {
       );
       const body = await response.json();
       if (!response.ok)
-        throw new Error(body.error ?? "Lưu mã giảm giá thất bại");
+        throw new Error(extractApiError(body, "Lưu mã giảm giá thất bại"));
       setMessage(
         editingId ? "Đã cập nhật mã giảm giá." : "Đã tạo mã giảm giá mới.",
       );

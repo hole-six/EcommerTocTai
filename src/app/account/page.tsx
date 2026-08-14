@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/sites/manmatters-com-61d14dee/shared/SiteHeader";
 import { SiteFooter } from "@/components/sites/manmatters-com-61d14dee/shared/SiteFooter";
 import { providerLabel, statusLabel, trackingUrl, type OrderStatus, type ShippingProvider } from "@/lib/orderLabels";
+import { extractApiError } from "@/lib/client/errors";
 
 type Address = { _id: string; recipientName: string; phone: string; province: string; district: string; ward: string; addressLine: string; isDefault?: boolean };
 type Profile = { fullName: string; email?: string; phone: string; addresses: Address[] };
@@ -53,7 +54,11 @@ export default function AccountPage() {
     setMessage("");
     const response = await fetch("/api/account", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(profileForm) });
     const body = await response.json();
-    setMessage(response.ok ? "Đã lưu thông tin cá nhân." : body.error);
+    setMessage(
+      response.ok
+        ? "Đã lưu thông tin cá nhân."
+        : extractApiError(body, "Lưu thông tin cá nhân thất bại"),
+    );
     if (response.ok) setProfile(body.data);
   }
 
@@ -67,7 +72,7 @@ export default function AccountPage() {
         body: JSON.stringify(phoneForm),
       });
       const body = await response.json();
-      if (!response.ok) { setMessage(body.error ?? "Đổi số điện thoại thất bại"); return; }
+      if (!response.ok) { setMessage(extractApiError(body, "Đổi số điện thoại thất bại")); return; }
       setProfile(body.data);
       setShowPhoneChange(false);
       setPhoneForm({ phone: "", currentPassword: "" });
@@ -81,19 +86,23 @@ export default function AccountPage() {
     setMessage("");
     const response = await fetch("/api/account/addresses", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(addressForm) });
     const body = await response.json();
-    if (response.ok) { setProfile(body.data); setAddressForm(emptyAddress); setShowAddAddress(false); setMessage("Đã thêm địa chỉ mới."); } else setMessage(body.error);
+    if (response.ok) { setProfile(body.data); setAddressForm(emptyAddress); setShowAddAddress(false); setMessage("Đã thêm địa chỉ mới."); } else setMessage(extractApiError(body, "Thêm địa chỉ thất bại"));
   }
 
   async function setDefaultAddress(addressId: string) {
+    setMessage("");
     const response = await fetch(`/api/account/addresses/${addressId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isDefault: true }) });
     const body = await response.json();
     if (response.ok) setProfile(body.data);
+    else setMessage(extractApiError(body, "Đặt địa chỉ mặc định thất bại"));
   }
 
   async function deleteAddress(addressId: string) {
+    setMessage("");
     const response = await fetch(`/api/account/addresses/${addressId}`, { method: "DELETE" });
     const body = await response.json();
     if (response.ok) setProfile(body.data);
+    else setMessage(extractApiError(body, "Xoá địa chỉ thất bại"));
   }
 
   if (loading) return <div className="min-h-screen bg-white"><SiteHeader compact /><p className="p-10 text-center text-sm text-brand-muted">Đang tải…</p></div>;

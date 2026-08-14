@@ -23,6 +23,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { SiteHeader } from "@/components/sites/manmatters-com-61d14dee/shared/SiteHeader";
 import { useCart } from "@/contexts/CartContext";
+import { extractApiError } from "@/lib/client/errors";
 
 type Address = {
   _id: string;
@@ -560,19 +561,8 @@ export default function CheckoutPage() {
         }),
       });
       const body = await response.json();
-      if (!response.ok) {
-        const fieldErrors = body.details?.fieldErrors as
-          | Record<string, string[]>
-          | undefined;
-        const detail = fieldErrors
-          ? [...new Set(Object.values(fieldErrors).flat())].join("; ")
-          : "";
-        throw new Error(
-          detail
-            ? `${body.error ?? "Đặt hàng thất bại"}: ${detail}`
-            : (body.error ?? "Đặt hàng thất bại"),
-        );
-      }
+      if (!response.ok)
+        throw new Error(extractApiError(body, "Đặt hàng thất bại"));
       // Only clear the cart once the order is actually finalized. COD orders
       // are done at this point; bank-transfer orders aren't paid yet — if the
       // customer backs out of SePay's page before paying, we want their cart

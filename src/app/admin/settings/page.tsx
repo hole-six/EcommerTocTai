@@ -4,6 +4,7 @@ import { Save, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import panel from "@/components/admin/admin-panel.module.css";
+import { extractApiError } from "@/lib/client/errors";
 
 export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(true);
@@ -37,7 +38,7 @@ export default function AdminSettingsPage() {
         }),
       });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? "Lưu thất bại");
+      if (!response.ok) throw new Error(extractApiError(body, "Lưu thất bại"));
       setShippingFee(String(body.data.shippingFee));
       setFreeShippingThreshold(String(body.data.freeShippingThreshold));
       setMessage("Đã lưu cấu hình phí vận chuyển.");
