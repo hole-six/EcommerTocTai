@@ -1,0 +1,20 @@
+.createPanel{margin-bottom:18px;border-color:#c8dcff;box-shadow:0 8px 24px rgba(21,91,173,.08)}
+.formHeading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px}
+.formHeading p{margin:5px 0 0;color:var(--admin-muted,#667085);font-size:12px}
+.formHeading>span,.seedBadge{display:inline-flex;align-items:center;border-radius:999px;background:#eaf2ff;color:#175cd3;font-size:9px;font-weight:800;letter-spacing:.06em;padding:5px 8px;white-space:nowrap}
+.formGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.formGrid label,.fullField{display:grid;gap:7px;color:var(--admin-ink,#101828);font-size:11px;font-weight:700}
+.formGrid b,.fullField b{color:#d92d20}
+.ratingField{border:0;margin:18px 0;padding:0}
+.ratingField legend{margin-bottom:6px;font-size:11px;font-weight:700}
+.stars{display:flex;align-items:center;gap:2px}
+.stars button{border:0;background:transparent;color:#d0d5dd;cursor:pointer;font-size:27px;line-height:1;padding:2px}
+.stars button:hover,.stars .activeStar,.tableStars{color:#f5a623}
+.stars strong{margin-left:8px;color:var(--admin-muted,#667085);font-size:11px}
+.fullField{margin-top:14px}
+.fullField textarea{min-height:108px;resize:vertical}
+.formFooter{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:18px}
+.checkLabel{display:flex;align-items:center;gap:8px;color:var(--admin-muted,#667085);cursor:pointer;font-size:11px;font-weight:600}
+.checkLabel input{width:15px;height:15px}
+.seedBadge{margin-top:5px;width:max-content}
+@media(max-width:720px){.formGrid{grid-template-columns:1fr}.formHeading,.formFooter{align-items:stretch;flex-direction:column}}

@@ -9,6 +9,7 @@ import panel from "@/components/admin/admin-panel.module.css";
 
 const SITE_BAR_SLOT_KEY = "site-announcement-bar";
 const MEN_VIDEO_SLOT_PREFIX = "men-video-";
+const ASSESSMENT_VIDEO_SLOT_PREFIX = "assessment-video-";
 const CONCERN_SLOT_PREFIX = "concern-";
 const CONCERN_LABELS = ["Tóc", "Râu", "Da", "Dinh dưỡng"];
 const CONTACT_SLOTS = [
@@ -22,12 +23,36 @@ const DEFAULT_MEN_VIDEOS = [
   "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a5f1dd8a151fd521855d7f5/main.mp4",
   "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a5f1dd8eda64ba028b64bc9/main.mp4",
 ];
+const DEFAULT_ASSESSMENT_VIDEOS = [
+  "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a06c398649c9137d0ba3c14/main.mp4",
+  "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a06c398649c9137d0ba3c18/main.mp4",
+  "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a06c452749a2a229b7e00f6/main.mp4",
+  "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a06c4529981f11df328a048/main.mp4",
+];
+const HOME_VIDEO_MANAGER: VideoManager = {
+  title: "Video \"Đàn ông đích thực\"",
+  description: "4 video nằm ngang ở trang chủ. Có thể thay video và gắn sản phẩm.",
+  prefix: MEN_VIDEO_SLOT_PREFIX,
+  placement: "home_men_videos",
+  pageKey: "home",
+  altPrefix: "Video Đàn ông đích thực",
+  defaults: DEFAULT_MEN_VIDEOS,
+};
+const ASSESSMENT_VIDEO_MANAGER: VideoManager = {
+  title: "Video khách hàng · Trang kiểm tra tóc",
+  description: "4 video trong mục khách hàng chia sẻ. Ngoài website video tự phát lặp, không thể tua hoặc dừng.",
+  prefix: ASSESSMENT_VIDEO_SLOT_PREFIX,
+  placement: "hair_assessment_videos",
+  pageKey: "hair-assessment",
+  altPrefix: "Video khách hàng theo lộ trình cá nhân hóa",
+  defaults: DEFAULT_ASSESSMENT_VIDEOS,
+};
 
 type Banner = {
   _id: string;
   pageKey: string;
   slotKey: string;
-  placement: "home_hero" | "home_promo" | "all_products" | "category" | "site_bar" | "home_men_videos" | "home_concerns" | "site_contact_buttons";
+  placement: "home_hero" | "home_promo" | "all_products" | "category" | "site_bar" | "home_men_videos" | "hair_assessment_videos" | "home_concerns" | "site_contact_buttons";
   categorySlug: string;
   image: string;
   mobileImage: string;
@@ -40,6 +65,16 @@ type Banner = {
   sortOrder: number;
 };
 type ProductOption = { id: string; slug: string; name: string };
+type VideoPlacement = "home_men_videos" | "hair_assessment_videos";
+type VideoManager = {
+  title: string;
+  description: string;
+  prefix: string;
+  placement: VideoPlacement;
+  pageKey: string;
+  altPrefix: string;
+  defaults: string[];
+};
 function slugFromCtaHref(href?: string) {
   return href?.match(/^\/san-pham\/(.+)$/)?.[1] ?? "";
 }
@@ -88,11 +123,11 @@ export default function AdminBannersPage() {
   const [barCtaLabel, setBarCtaLabel] = useState("");
   const [barCtaHref, setBarCtaHref] = useState("");
   const [barSaving, setBarSaving] = useState(false);
-  const [videoUploading, setVideoUploading] = useState<number | null>(null);
+  const [videoUploading, setVideoUploading] = useState<string | null>(null);
   const [productOptions, setProductOptions] = useState<ProductOption[]>([]);
   const [contactHrefs, setContactHrefs] = useState<Record<string, string>>({});
   const [contactSaving, setContactSaving] = useState(false);
-  const fileInputs = useRef<Record<number, HTMLInputElement | null>>({});
+  const fileInputs = useRef<Record<string, HTMLInputElement | null>>({});
 
   async function load() {
     setLoading(true);
@@ -171,10 +206,10 @@ export default function AdminBannersPage() {
     setContactSaving(true);
     setMessage("");
     try {
-      await Promise.all(
+      const responses = await Promise.all(
         CONTACT_SLOTS.map(({ key, label }) => {
           const current = banners.find((banner) => banner.slotKey === key);
-          const ctaHref = contactHrefs[key] ?? "";
+          const ctaHref = contactHrefs[key]?.trim() ?? "";
           const payload = current
             ? { ctaHref }
             : {
@@ -193,6 +228,11 @@ export default function AdminBannersPage() {
           });
         }),
       );
+      const failed = responses.find((response) => !response.ok);
+      if (failed) {
+        const body = await failed.json().catch(() => ({}));
+        throw new Error(body.error ?? "Không thể lưu nút liên hệ");
+      }
       setMessage("Đã lưu các nút liên hệ.");
       await load();
     } catch {
@@ -202,15 +242,16 @@ export default function AdminBannersPage() {
     }
   }
 
-  function menVideoBanner(index: number) {
-    return banners.find((banner) => banner.slotKey === `${MEN_VIDEO_SLOT_PREFIX}${index + 1}`);
+  function videoBanner(prefix: string, index: number) {
+    return banners.find((banner) => banner.slotKey === `${prefix}${index + 1}`);
   }
 
-  async function uploadMenVideo(index: number, file: File) {
-    setVideoUploading(index);
+  async function uploadManagedVideo(config: VideoManager, index: number, file: File) {
+    const inputKey = `${config.prefix}${index}`;
+    setVideoUploading(inputKey);
     setMessage("");
     try {
-      const current = menVideoBanner(index);
+      const current = videoBanner(config.prefix, index);
       const previousUrl = current?.videoUrl ?? "";
       const form = new FormData();
       form.append("file", file);
@@ -219,12 +260,12 @@ export default function AdminBannersPage() {
       const uploadBody = await uploadResponse.json();
       if (!uploadResponse.ok) throw new Error(uploadBody.error ?? "Upload video thất bại");
       const payload = {
-        pageKey: "home",
-        slotKey: `${MEN_VIDEO_SLOT_PREFIX}${index + 1}`,
-        placement: "home_men_videos" as const,
+        pageKey: config.pageKey,
+        slotKey: `${config.prefix}${index + 1}`,
+        placement: config.placement,
         mediaType: "video" as const,
         videoUrl: uploadBody.data.url,
-        alt: `Video Đàn ông đích thực ${index + 1}`,
+        alt: `${config.altPrefix} ${index + 1}`,
         isActive: true,
         sortOrder: index,
       };
@@ -246,20 +287,20 @@ export default function AdminBannersPage() {
     }
   }
 
-  async function saveMenVideoLink(index: number, productSlug: string) {
+  async function saveManagedVideoLink(config: VideoManager, index: number, productSlug: string) {
     setMessage("");
-    const current = menVideoBanner(index);
+    const current = videoBanner(config.prefix, index);
     const ctaHref = productSlug ? `/san-pham/${productSlug}` : "";
     const payload = current
       ? { ctaHref }
       : {
-          pageKey: "home",
-          slotKey: `${MEN_VIDEO_SLOT_PREFIX}${index + 1}`,
-          placement: "home_men_videos" as const,
+          pageKey: config.pageKey,
+          slotKey: `${config.prefix}${index + 1}`,
+          placement: config.placement,
           mediaType: "video" as const,
           videoUrl: "",
           ctaHref,
-          alt: `Video Đàn ông đích thực ${index + 1}`,
+          alt: `${config.altPrefix} ${index + 1}`,
           isActive: true,
           sortOrder: index,
         };
@@ -359,6 +400,78 @@ export default function AdminBannersPage() {
     if (!current || !window.confirm(`Ẩn ${slot.label}?`)) return;
     await fetch(`/api/banners/${current._id}`, { method: "DELETE" });
     await load();
+  }
+
+  function renderVideoManager(config: VideoManager) {
+    return (
+      <div className={panel.panel} style={{ marginBottom: 16 }}>
+        <div className={panel.panelPad}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+            <Film size={18} />
+            <div>
+              <b style={{ display: "block", fontSize: 14 }}>{config.title}</b>
+              <span style={{ fontSize: 12, color: "var(--admin-muted, #667085)" }}>
+                {config.description}
+              </span>
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 14 }}>
+            {[0, 1, 2, 3].map((index) => {
+              const banner = videoBanner(config.prefix, index);
+              const videoUrl = banner?.videoUrl || config.defaults[index];
+              const isCustom = Boolean(banner?.videoUrl);
+              const inputKey = `${config.prefix}${index}`;
+              return (
+                <div key={inputKey} style={{ border: "1px solid var(--admin-border, #eaecf0)", borderRadius: 12, padding: 10 }}>
+                  <video src={videoUrl} controls muted style={{ width: "100%", aspectRatio: "9/16", borderRadius: 8, background: "#000", objectFit: "cover" }} />
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
+                    <b style={{ fontSize: 12.5 }}>Video {index + 1}</b>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: isCustom ? "#12805c" : "var(--admin-faint, #98a2b3)" }}>
+                      {isCustom ? "Đã tùy chỉnh" : "Mặc định"}
+                    </span>
+                  </div>
+                  <label style={{ display: "block", marginTop: 8, fontSize: 11, fontWeight: 700, color: "var(--admin-muted, #667085)" }}>
+                    Gắn sản phẩm khi bấm video
+                    <select
+                      value={slugFromCtaHref(banner?.ctaHref)}
+                      onChange={(event) => void saveManagedVideoLink(config, index, event.target.value)}
+                      style={{ width: "100%", marginTop: 4, fontWeight: 500 }}
+                    >
+                      <option value="">— Không gắn sản phẩm —</option>
+                      {productOptions.map((product) => (
+                        <option key={product.id} value={product.slug}>
+                          {product.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <input
+                    ref={(element) => { fileInputs.current[inputKey] = element; }}
+                    type="file"
+                    accept="video/mp4,video/webm,video/quicktime"
+                    style={{ display: "none" }}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) void uploadManagedVideo(config, index, file);
+                      event.target.value = "";
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className={panel.secondaryButton}
+                    disabled={videoUploading === inputKey}
+                    onClick={() => fileInputs.current[inputKey]?.click()}
+                    style={{ width: "100%", marginTop: 8 }}
+                  >
+                    {videoUploading === inputKey ? "Đang tải lên..." : (<><Upload size={13} /> Thay video</>)}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   function renderSection(title: string, list: Slot[]) {
@@ -508,9 +621,10 @@ export default function AdminBannersPage() {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 14 }}>
                 {[0, 1, 2, 3].map((index) => {
-                  const banner = menVideoBanner(index);
+                  const banner = videoBanner(MEN_VIDEO_SLOT_PREFIX, index);
                   const videoUrl = banner?.videoUrl || DEFAULT_MEN_VIDEOS[index];
                   const isCustom = Boolean(banner?.videoUrl);
+                  const inputKey = `${MEN_VIDEO_SLOT_PREFIX}${index}`;
                   return (
                     <div key={index} style={{ border: "1px solid var(--admin-border, #eaecf0)", borderRadius: 12, padding: 10 }}>
                       <video src={videoUrl} controls muted style={{ width: "100%", aspectRatio: "9/16", borderRadius: 8, background: "#000", objectFit: "cover" }} />
@@ -524,7 +638,7 @@ export default function AdminBannersPage() {
                         Gắn sản phẩm khi bấm video
                         <select
                           value={slugFromCtaHref(banner?.ctaHref)}
-                          onChange={(event) => void saveMenVideoLink(index, event.target.value)}
+                          onChange={(event) => void saveManagedVideoLink(HOME_VIDEO_MANAGER, index, event.target.value)}
                           style={{ width: "100%", marginTop: 4, fontWeight: 500 }}
                         >
                           <option value="">— Không gắn sản phẩm —</option>
@@ -536,24 +650,24 @@ export default function AdminBannersPage() {
                         </select>
                       </label>
                       <input
-                        ref={(element) => { fileInputs.current[index] = element; }}
+                        ref={(element) => { fileInputs.current[inputKey] = element; }}
                         type="file"
                         accept="video/mp4,video/webm,video/quicktime"
                         style={{ display: "none" }}
                         onChange={(event) => {
                           const file = event.target.files?.[0];
-                          if (file) void uploadMenVideo(index, file);
+                          if (file) void uploadManagedVideo(HOME_VIDEO_MANAGER, index, file);
                           event.target.value = "";
                         }}
                       />
                       <button
                         type="button"
                         className={panel.secondaryButton}
-                        disabled={videoUploading === index}
-                        onClick={() => fileInputs.current[index]?.click()}
+                        disabled={videoUploading === inputKey}
+                        onClick={() => fileInputs.current[inputKey]?.click()}
                         style={{ width: "100%", marginTop: 8 }}
                       >
-                        {videoUploading === index ? "Đang tải lên..." : (<><Upload size={13} /> Thay video</>)}
+                        {videoUploading === inputKey ? "Đang tải lên..." : (<><Upload size={13} /> Thay video</>)}
                       </button>
                     </div>
                   );
@@ -561,6 +675,8 @@ export default function AdminBannersPage() {
               </div>
             </div>
           </div>
+
+          {renderVideoManager(ASSESSMENT_VIDEO_MANAGER)}
 
           <div className={panel.panel} style={{ marginBottom: 16 }}>
             <div className={panel.panelPad}>

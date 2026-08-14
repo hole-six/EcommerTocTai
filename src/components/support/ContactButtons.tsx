@@ -4,17 +4,17 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import styles from "./ContactButtons.module.css";
 
-const ICONS = {
-  "contact-call": "https://img.icons8.com/color/48/whatsapp--v1.png",
-  "contact-zalo": "https://img.icons8.com/color/48/zalo.png",
-  "contact-fanpage": "https://img.icons8.com/color/48/facebook-new.png",
-} as const;
-
 const SLOTS = [
-  { key: "contact-zalo", label: "Nhắn Zalo" },
-  { key: "contact-call", label: "Gọi điện" },
-  { key: "contact-fanpage", label: "Fanpage" },
+  { key: "contact-zalo", label: "Nhắn Zalo", kind: "zalo" },
+  { key: "contact-call", label: "Gọi điện", kind: "call" },
+  { key: "contact-fanpage", label: "Fanpage", kind: "facebook" },
 ] as const;
+
+const ICONS = {
+  zalo: "https://img.icons8.com/color/96/zalo.png",
+  call: "https://img.icons8.com/color/96/phone.png",
+  facebook: "https://img.icons8.com/color/96/facebook-new.png",
+} as const;
 
 export function ContactButtons() {
   const pathname = usePathname();
@@ -26,17 +26,31 @@ export function ContactButtons() {
 
   useEffect(() => {
     if (hidden) return;
-    fetch("/api/banners?placement=site_contact_buttons")
+    const controller = new AbortController();
+    fetch("/api/banners?placement=site_contact_buttons", {
+      cache: "no-store",
+      signal: controller.signal,
+    })
       .then((response) => (response.ok ? response.json() : { data: [] }))
       .then((body) => {
-        const list = (body.data ?? []) as Array<{ slotKey: string; ctaHref: string }>;
+        const list = (body.data ?? []) as Array<{
+          slotKey: string;
+          ctaHref: string;
+          isActive?: boolean;
+        }>;
         setHrefs(
           Object.fromEntries(
-            list.map((item) => [item.slotKey, item.ctaHref]).filter(([, href]) => href),
+            list
+              .filter((item) => item.isActive !== false && item.ctaHref?.trim())
+              .map((item) => [item.slotKey, item.ctaHref.trim()]),
           ),
         );
       })
-      .catch(() => undefined);
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setHrefs({});
+      });
+    return () => controller.abort();
   }, [hidden]);
 
   if (hidden) return null;
@@ -44,19 +58,24 @@ export function ContactButtons() {
   if (!visible.length) return null;
 
   return (
-    <div className={styles.stack}>
-      {visible.map(({ key, label }) => (
-        <a
-          key={key}
-          href={hrefs[key]}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={label}
-          className={styles.button}
-        >
-          <img src={ICONS[key]} alt="" width={26} height={26} />
-        </a>
-      ))}
-    </div>
+    <aside className={styles.stack} aria-label="Liên hệ nhanh">
+      {visible.map(({ key, label, kind }) => {
+        const external = !hrefs[key].startsWith("tel:");
+        return (
+          <a
+            key={key}
+            href={hrefs[key]}
+            target={external ? "_blank" : undefined}
+            rel={external ? "noreferrer" : undefined}
+            aria-label={label}
+            className={styles.button}
+            data-kind={kind}
+          >
+            <span className={styles.tooltip}>{label}</span>
+            <img src={ICONS[kind]} alt="" width={34} height={34} />
+          </a>
+        );
+      })}
+    </aside>
   );
 }

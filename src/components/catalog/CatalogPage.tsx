@@ -214,7 +214,8 @@ export function CatalogPage({
                   }
                   width={900}
                   height={360}
-                  priority
+                  preload
+                  unoptimized={bannerImage.startsWith("/uploads/")}
                 />
               </a>
             </div>

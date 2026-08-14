@@ -21,6 +21,19 @@ import { showCartToast } from "@/components/cart/CartToast";
 import styles from "./ManMattersHome.module.css";
 
 const asset = "/sites/manmatters-com-61d14dee/root-8a5edab2/";
+const isRuntimeUpload = (src: string) => src.startsWith("/uploads/");
+const preloadImages = (sources: string[]) =>
+  Promise.all(
+    sources.filter(Boolean).map(
+      (src) =>
+        new Promise<void>((resolve) => {
+          const image = new window.Image();
+          image.onload = () => resolve();
+          image.onerror = () => resolve();
+          image.src = src;
+        }),
+    ),
+  );
 
 const defaultMenVideos = [
   "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a5f1dd8e4e7b5ab468e85ba/main.mp4",
@@ -143,7 +156,7 @@ export function ManMattersHome({
     defaultMenVideos.map((src) => ({ src, href: "" })),
   );
   const [concernSlots, setConcernSlots] = useState(
-    concerns.map((c) => ({ ...c, image: `${asset}${c.image}` })),
+    concerns.map((fallback) => ({ ...fallback, image: `${asset}${fallback.image}` })),
   );
   const { addItem } = useCart();
   const router = useRouter();
@@ -171,24 +184,24 @@ export function ManMattersHome({
   useEffect(() => {
     fetch("/api/banners?placement=home_concerns")
       .then((response) => (response.ok ? response.json() : { data: [] }))
-      .then((body) => {
+      .then(async (body) => {
         const list = (body.data ?? []) as Array<{
           slotKey: string;
           image: string;
           alt: string;
           ctaHref: string;
         }>;
-        setConcernSlots(
-          concerns.map((fallback, index) => {
-            const match = list.find((item) => item.slotKey === `concern-${index + 1}`);
-            return {
-              name: fallback.name,
-              alt: match?.alt || fallback.alt,
-              image: match?.image || `${asset}${fallback.image}`,
-              href: match?.ctaHref || fallback.href,
-            };
-          }),
-        );
+        const next = concerns.map((fallback, index) => {
+          const match = list.find((item) => item.slotKey === `concern-${index + 1}`);
+          return {
+            name: fallback.name,
+            alt: match?.alt || fallback.alt,
+            image: match?.image || `${asset}${fallback.image}`,
+            href: match?.ctaHref || fallback.href,
+          };
+        });
+        await preloadImages(next.map((item) => item.image));
+        setConcernSlots(next);
       })
       .catch(() => undefined);
   }, []);
@@ -204,37 +217,30 @@ export function ManMattersHome({
         response.ok ? response.json() : { data: [] },
       ),
     ])
-      .then(([bannerPayload, promoPayload, categoryPayload]) => {
-        setBanners(
-          (bannerPayload.data ?? []).map(
-            (banner: {
-              image: string;
-              alt: string;
-              ctaLabel: string;
-              ctaHref: string;
-            }) => ({
-              image: banner.image,
-              alt: banner.alt,
-              cta: banner.ctaLabel,
-              href: banner.ctaHref || "/shop/all",
-            }),
-          ),
+      .then(async ([bannerPayload, promoPayload, categoryPayload]) => {
+        const nextBanners: PromoBanner[] = (bannerPayload.data ?? []).map(
+          (banner: { image: string; alt: string; ctaLabel: string; ctaHref: string }) => ({
+            image: banner.image,
+            alt: banner.alt,
+            cta: banner.ctaLabel,
+            href: banner.ctaHref || "/shop/all",
+          }),
         );
-        setPromoBanners(
-          (promoPayload.data ?? []).map(
-            (banner: {
-              image: string;
-              alt: string;
-              ctaLabel: string;
-              ctaHref: string;
-            }) => ({
-              image: banner.image,
-              alt: banner.alt,
-              cta: banner.ctaLabel,
-              href: banner.ctaHref || "/shop/all",
-            }),
-          ),
+        const nextPromos: PromoBanner[] = (promoPayload.data ?? []).map(
+          (banner: { image: string; alt: string; ctaLabel: string; ctaHref: string }) => ({
+            image: banner.image,
+            alt: banner.alt,
+            cta: banner.ctaLabel,
+            href: banner.ctaHref || "/shop/all",
+          }),
         );
+        await preloadImages([
+          ...nextBanners.map((item) => item.image),
+          ...nextPromos.map((item) => item.image),
+        ]);
+        setSlide(0);
+        setBanners(nextBanners);
+        setPromoBanners(nextPromos);
         const nextCategories = (categoryPayload.data ?? []) as ParentCategory[];
         setParentCategories(nextCategories);
         if (nextCategories.length) setActiveCategory(nextCategories[0].slug);
@@ -291,7 +297,8 @@ export function ManMattersHome({
               alt={s.alt}
               width={1440}
               height={692}
-              priority={index === 0}
+              loading="eager"
+              unoptimized={isRuntimeUpload(s.image)}
             />
           ))}
           <Link
@@ -324,6 +331,7 @@ export function ManMattersHome({
                 alt={banner.alt}
                 width={1440}
                 height={360}
+                unoptimized={isRuntimeUpload(banner.image)}
               />
             </a>
           ))}
@@ -354,6 +362,7 @@ export function ManMattersHome({
                 alt={c.alt}
                 width={640}
                 height={800}
+                unoptimized={isRuntimeUpload(c.image)}
               />
               <span className={styles.concernLabel}>
                 <ChevronRight size={20} />

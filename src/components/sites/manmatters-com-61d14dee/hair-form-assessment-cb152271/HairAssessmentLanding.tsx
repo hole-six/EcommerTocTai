@@ -1,15 +1,15 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { HairLossQuiz } from "@/components/store/HairLossQuiz";
 import { SiteFooter } from "../shared/SiteFooter";
 import { SiteHeader } from "../shared/SiteHeader";
 import styles from "./HairAssessmentLanding.module.css";
-import { useState } from "react";
 
 const stageResults = [1, 2, 3, 4, 5].map((n) => `/images/anhstage${n}.png`);
 
-const videos = [
+const defaultVideos = [
   "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a06c398649c9137d0ba3c14/main.mp4",
   "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a06c398649c9137d0ba3c18/main.mp4",
   "https://video.gumlet.io/6453a8cc56ecc7951d7ae765/6a06c452749a2a229b7e00f6/main.mp4",
@@ -18,6 +18,33 @@ const videos = [
 
 export function HairAssessmentLanding() {
   const [quizStarted, setQuizStarted] = useState(false);
+  const [videos, setVideos] = useState(
+    defaultVideos.map((src) => ({ src, href: "" })),
+  );
+
+  useEffect(() => {
+    fetch("/api/banners?placement=hair_assessment_videos")
+      .then((response) => (response.ok ? response.json() : { data: [] }))
+      .then((body) => {
+        const list = (body.data ?? []) as Array<{
+          slotKey: string;
+          videoUrl: string;
+          ctaHref: string;
+        }>;
+        setVideos(
+          defaultVideos.map((fallback, index) => {
+            const match = list.find(
+              (item) => item.slotKey === `assessment-video-${index + 1}`,
+            );
+            return {
+              src: match?.videoUrl || fallback,
+              href: match?.ctaHref || "",
+            };
+          }),
+        );
+      })
+      .catch(() => undefined);
+  }, []);
 
   function startQuiz() {
     setQuizStarted(true);
@@ -65,11 +92,37 @@ export function HairAssessmentLanding() {
       <section className={styles.videoSection}>
         <h2>Khách hàng chia sẻ sau khi theo lộ trình cá nhân hóa</h2>
         <div className={styles.videoGrid}>
-          {videos.map((src) => (
-            <video key={src} className={styles.video} controls preload="metadata" playsInline>
-              <source src={src} type="video/mp4" />
-            </video>
-          ))}
+          {videos.map((video, index) => {
+            const player = (
+              <video
+                className={styles.video}
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                disablePictureInPicture
+                controlsList="nodownload noplaybackrate nofullscreen"
+                onContextMenu={(event) => event.preventDefault()}
+              >
+                <source src={video.src} type="video/mp4" />
+              </video>
+            );
+            return video.href ? (
+              <a
+                key={video.src + index}
+                className={styles.videoLink}
+                href={video.href}
+                aria-label={`Xem sản phẩm trong video ${index + 1}`}
+              >
+                {player}
+              </a>
+            ) : (
+              <div key={video.src + index} className={styles.videoLink}>
+                {player}
+              </div>
+            );
+          })}
         </div>
       </section>
 
