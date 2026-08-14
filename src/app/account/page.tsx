@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/sites/manmatters-com-61d14dee/shared/SiteHeader";
 import { SiteFooter } from "@/components/sites/manmatters-com-61d14dee/shared/SiteFooter";
@@ -405,7 +406,7 @@ export default function AccountPage() {
                     <PackageCheck size={38} />
                     <h3>Bạn chưa có đơn hàng nào</h3>
                     <p>Khám phá sản phẩm phù hợp với lộ trình chăm sóc của bạn.</p>
-                    <a href="/shop/all">Khám phá cửa hàng <ChevronRight size={16} /></a>
+                    <Link href="/shop/all">Khám phá cửa hàng <ChevronRight size={16} /></Link>
                   </div>
                 ) : (
                   <div className={styles.orderList}>
