@@ -15,9 +15,14 @@ export function onlyProvidedFields<T extends Record<string, unknown>>(
 
 const phone = z
   .string()
-  .regex(
-    /^(0|\+84)(3|5|7|8|9)[0-9]{8}$/,
-    "Số điện thoại Việt Nam không hợp lệ",
+  .transform((value) => value.replace(/\s/g, ""))
+  .pipe(
+    z
+      .string()
+      .regex(
+        /^(0|\+84)(3|5|7|8|9)[0-9]{8}$/,
+        "Số điện thoại Việt Nam không hợp lệ",
+      ),
   );
 export const addressSchema = z.object({
   recipientName: z.string().min(2).max(80),
@@ -228,6 +233,10 @@ export const couponSchema = z.object({
 export const profileSchema = z.object({
   fullName: z.string().min(2).max(80).optional(),
   email: z.string().email().optional(),
+});
+export const updatePhoneSchema = z.object({
+  phone,
+  currentPassword: z.string().min(1),
 });
 export const accountAddressSchema = addressSchema.extend({
   isDefault: z.boolean().default(false),

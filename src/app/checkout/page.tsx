@@ -556,7 +556,19 @@ export default function CheckoutPage() {
         }),
       });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? "Đặt hàng thất bại");
+      if (!response.ok) {
+        const fieldErrors = body.details?.fieldErrors as
+          | Record<string, string[]>
+          | undefined;
+        const detail = fieldErrors
+          ? [...new Set(Object.values(fieldErrors).flat())].join("; ")
+          : "";
+        throw new Error(
+          detail
+            ? `${body.error ?? "Đặt hàng thất bại"}: ${detail}`
+            : (body.error ?? "Đặt hàng thất bại"),
+        );
+      }
       // Only clear the cart once the order is actually finalized. COD orders
       // are done at this point; bank-transfer orders aren't paid yet — if the
       // customer backs out of SePay's page before paying, we want their cart
@@ -880,7 +892,7 @@ export default function CheckoutPage() {
                   onChange={(event) =>
                     setContact((current) => ({
                       ...current,
-                      phone: event.target.value,
+                      phone: event.target.value.replace(/\s/g, ""),
                     }))
                   }
                   placeholder="Số điện thoại"
@@ -982,7 +994,7 @@ export default function CheckoutPage() {
                         placeholder="Số điện thoại người nhận"
                         value={addressForm.phone}
                         onChange={(event) =>
-                          changeAddress("phone", event.target.value)
+                          changeAddress("phone", event.target.value.replace(/\s/g, ""))
                         }
                       />
                     </>

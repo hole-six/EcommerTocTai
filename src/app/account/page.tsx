@@ -29,6 +29,9 @@ export default function AccountPage() {
   const [profileForm, setProfileForm] = useState({ fullName: "", email: "" });
   const [showAddAddress, setShowAddAddress] = useState(false);
   const [addressForm, setAddressForm] = useState<AddressForm>(emptyAddress);
+  const [showPhoneChange, setShowPhoneChange] = useState(false);
+  const [phoneForm, setPhoneForm] = useState({ phone: "", currentPassword: "" });
+  const [phoneSaving, setPhoneSaving] = useState(false);
 
   useEffect(() => {
     fetch("/api/account")
@@ -52,6 +55,26 @@ export default function AccountPage() {
     const body = await response.json();
     setMessage(response.ok ? "Đã lưu thông tin cá nhân." : body.error);
     if (response.ok) setProfile(body.data);
+  }
+
+  async function savePhone() {
+    setMessage("");
+    setPhoneSaving(true);
+    try {
+      const response = await fetch("/api/account", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(phoneForm),
+      });
+      const body = await response.json();
+      if (!response.ok) { setMessage(body.error ?? "Đổi số điện thoại thất bại"); return; }
+      setProfile(body.data);
+      setShowPhoneChange(false);
+      setPhoneForm({ phone: "", currentPassword: "" });
+      setMessage("Đã đổi số điện thoại.");
+    } finally {
+      setPhoneSaving(false);
+    }
   }
 
   async function addAddress() {
@@ -179,6 +202,54 @@ export default function AccountPage() {
               <input value={profile.phone} disabled className={`${inputClass} bg-neutral-100 text-brand-muted`} />
             </label>
             <button onClick={saveProfile} className="rounded-md bg-brand-navy px-4 py-2 text-sm font-bold text-white hover:bg-brand-blue">Lưu thay đổi</button>
+
+            <div className="mt-6 border-t border-neutral-200 pt-4">
+              {!showPhoneChange && (
+                <button
+                  onClick={() => { setShowPhoneChange(true); setPhoneForm({ phone: profile.phone, currentPassword: "" }); }}
+                  className="text-sm font-semibold text-brand-link hover:underline"
+                >
+                  Đổi số điện thoại
+                </button>
+              )}
+              {showPhoneChange && (
+                <div className="space-y-3">
+                  <label className="block text-sm">
+                    <span className="mb-1 block text-brand-muted">Số điện thoại mới</span>
+                    <input
+                      value={phoneForm.phone}
+                      onChange={(event) => setPhoneForm((current) => ({ ...current, phone: event.target.value }))}
+                      className={inputClass}
+                      placeholder="Ví dụ: 0901 234 567"
+                    />
+                  </label>
+                  <label className="block text-sm">
+                    <span className="mb-1 block text-brand-muted">Mật khẩu hiện tại (để xác nhận)</span>
+                    <input
+                      type="password"
+                      value={phoneForm.currentPassword}
+                      onChange={(event) => setPhoneForm((current) => ({ ...current, currentPassword: event.target.value }))}
+                      className={inputClass}
+                    />
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={savePhone}
+                      disabled={phoneSaving || !phoneForm.phone || !phoneForm.currentPassword}
+                      className="rounded-md bg-brand-navy px-4 py-2 text-sm font-bold text-white hover:bg-brand-blue disabled:opacity-50"
+                    >
+                      {phoneSaving ? "Đang lưu..." : "Xác nhận đổi"}
+                    </button>
+                    <button
+                      onClick={() => { setShowPhoneChange(false); setPhoneForm({ phone: "", currentPassword: "" }); }}
+                      className="rounded-md px-4 py-2 text-sm text-brand-muted hover:text-brand-ink"
+                    >
+                      Hủy
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </main>
