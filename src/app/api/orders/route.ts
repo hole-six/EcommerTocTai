@@ -202,7 +202,9 @@ export async function POST(request: Request) {
       (sum, item) => sum + item.unitPrice * item.quantity,
       0,
     );
-    const { shippingFee } = await getShippingSettings();
+    const { shippingFee: baseShippingFee, freeShippingThreshold } =
+      await getShippingSettings();
+    const shippingFee = subtotal >= freeShippingThreshold ? 0 : baseShippingFee;
     let discount = 0;
     if (data.couponCode) {
       const result = await resolveCoupon(data.couponCode, subtotal, shippingFee);

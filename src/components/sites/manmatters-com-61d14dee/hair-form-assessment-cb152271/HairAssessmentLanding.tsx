@@ -51,7 +51,7 @@ export function HairAssessmentLanding() {
         id="quiz"
         className={`${styles.quizSection} ${quizStarted ? styles.quizStarted : ""}`}
       >
-        <HairLossQuiz />
+        {quizStarted && <HairLossQuiz />}
       </div>
 
       <section className={styles.stageSection}>
