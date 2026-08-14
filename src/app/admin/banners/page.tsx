@@ -111,6 +111,17 @@ function normalize(value: string) {
   return value.toLocaleLowerCase("vi-VN");
 }
 
+function normalizeContactHref(key: string, value: string) {
+  const href = value.trim();
+  if (!href) return "";
+  if (key === "contact-call" && /^[+\d\s().-]+$/.test(href)) {
+    return `tel:${href.replace(/[^+\d]/g, "")}`;
+  }
+  if (/^[a-z][a-z\d+.-]*:/i.test(href)) return href;
+  if (href.startsWith("//")) return `https:${href}`;
+  return `https://${href.replace(/^\/+/, "")}`;
+}
+
 export default function AdminBannersPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -209,7 +220,7 @@ export default function AdminBannersPage() {
       const responses = await Promise.all(
         CONTACT_SLOTS.map(({ key, label }) => {
           const current = banners.find((banner) => banner.slotKey === key);
-          const ctaHref = contactHrefs[key]?.trim() ?? "";
+          const ctaHref = normalizeContactHref(key, contactHrefs[key] ?? "");
           const payload = current
             ? { ctaHref }
             : {

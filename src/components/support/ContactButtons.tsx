@@ -16,9 +16,21 @@ const ICONS = {
   facebook: "/icons/icons8-facebook-48.png",
 } as const;
 
+function normalizeContactHref(value: string, kind: (typeof SLOTS)[number]["kind"]) {
+  const href = value.trim();
+  if (!href) return "";
+  if (kind === "call" && /^[+\d\s().-]+$/.test(href)) {
+    return `tel:${href.replace(/[^+\d]/g, "")}`;
+  }
+  if (/^[a-z][a-z\d+.-]*:/i.test(href)) return href;
+  if (href.startsWith("//")) return `https:${href}`;
+  return `https://${href.replace(/^\/+/, "")}`;
+}
+
 export function ContactButtons() {
   const pathname = usePathname();
   const [hrefs, setHrefs] = useState<Record<string, string>>({});
+  const [callOpen, setCallOpen] = useState(false);
   const hidden =
     pathname.startsWith("/admin") ||
     pathname.startsWith("/login") ||
@@ -42,7 +54,13 @@ export function ContactButtons() {
           Object.fromEntries(
             list
               .filter((item) => item.isActive !== false && item.ctaHref?.trim())
-              .map((item) => [item.slotKey, item.ctaHref.trim()]),
+              .map((item) => {
+                const slot = SLOTS.find(({ key }) => key === item.slotKey);
+                return [
+                  item.slotKey,
+                  normalizeContactHref(item.ctaHref, slot?.kind ?? "facebook"),
+                ];
+              }),
           ),
         );
       })
@@ -62,7 +80,7 @@ export function ContactButtons() {
         const content = (
           <>
             <span className={styles.tooltip}>{label}</span>
-            <img src={ICONS[kind]} alt="" width={34} height={34} />
+            <img src={ICONS[kind]} alt="" width={40} height={40} />
           </>
         );
         if (!href) {
@@ -76,6 +94,28 @@ export function ContactButtons() {
             >
               {content}
             </span>
+          );
+        }
+        if (kind === "call") {
+          const phoneNumber = href.replace(/^tel:/i, "");
+          return (
+            <button
+              type="button"
+              key={key}
+              className={styles.button}
+              aria-label={callOpen ? "Đóng số điện thoại" : "Xem số điện thoại"}
+              aria-expanded={callOpen}
+              data-kind={kind}
+              onClick={() => setCallOpen((open) => !open)}
+            >
+              {content}
+              {callOpen && (
+                <span className={styles.callPopover} role="status">
+                  <small>HOTLINE TƯ VẤN</small>
+                  <strong>{phoneNumber}</strong>
+                </span>
+              )}
+            </button>
           );
         }
         const external = !href.startsWith("tel:");

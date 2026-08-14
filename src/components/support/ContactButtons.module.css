@@ -12,14 +12,15 @@
 .button {
   position: relative;
   display: grid;
-  width: 48px;
-  height: 48px;
+  width: 54px;
+  height: 54px;
   place-items: center;
   border: 3px solid rgba(255, 255, 255, 0.96);
   border-radius: 16px;
   background: #fff;
   box-shadow: 0 12px 32px rgba(20, 52, 97, 0.25);
   text-decoration: none;
+  cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
   isolation: isolate;
 }
@@ -49,8 +50,8 @@
 
 .button img {
   display: block;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
 }
 
 .tooltip {
@@ -80,6 +81,46 @@
   transform: translateY(-50%);
 }
 
+.callPopover {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 13px);
+  display: grid;
+  width: max-content;
+  min-width: 166px;
+  gap: 3px;
+  border: 1px solid #d8e4f0;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 16px 42px rgba(12, 39, 70, 0.22);
+  color: #143461;
+  padding: 11px 14px;
+  text-align: left;
+  transform: translateY(-50%);
+}
+
+.callPopover::after {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  border: 7px solid transparent;
+  border-left-color: #fff;
+  content: "";
+  transform: translateY(-50%);
+}
+
+.callPopover small {
+  color: #71849a;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+.callPopover strong {
+  font-size: 15px;
+  line-height: 1.25;
+}
+
 .button:hover .tooltip,
 .button:focus-visible .tooltip {
   opacity: 1;
@@ -94,14 +135,14 @@
   }
 
   .button {
-    width: 44px;
-    height: 44px;
+    width: 50px;
+    height: 50px;
     border-radius: 15px;
   }
 
   .button img {
-    width: 31px;
-    height: 31px;
+    width: 37px;
+    height: 37px;
   }
 
   .tooltip {
