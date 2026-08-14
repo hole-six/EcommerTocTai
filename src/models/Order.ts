@@ -97,7 +97,6 @@ const order = new Schema(
       unique: true,
       sparse: true,
       index: true,
-      default: "",
     },
     paymentTransactionId: { type: String, default: "", index: true },
     paymentReceivedAt: { type: Date, default: null },

@@ -238,7 +238,10 @@ export async function POST(request: Request) {
       total,
       note: data.note,
       paymentMethod: data.paymentMethod,
-      paymentCode,
+      // Omit the key entirely for COD orders instead of sending "" — the
+      // paymentCode index is unique+sparse, and sparse only exempts a
+      // truly-missing field, not one present with an empty-string value.
+      ...(paymentCode ? { paymentCode } : {}),
       inventoryState: "none",
     });
     try {
