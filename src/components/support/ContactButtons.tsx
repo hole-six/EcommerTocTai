@@ -11,9 +11,9 @@ const SLOTS = [
 ] as const;
 
 const ICONS = {
-  zalo: "https://img.icons8.com/color/96/zalo.png",
-  call: "https://img.icons8.com/color/96/phone.png",
-  facebook: "https://img.icons8.com/color/96/facebook-new.png",
+  zalo: "/icons/icons8-zalo-48.png",
+  call: "/icons/icons8-whatsapp-logo-48.png",
+  facebook: "/icons/icons8-facebook-48.png",
 } as const;
 
 export function ContactButtons() {
@@ -54,25 +54,42 @@ export function ContactButtons() {
   }, [hidden]);
 
   if (hidden) return null;
-  const visible = SLOTS.filter(({ key }) => hrefs[key]);
-  if (!visible.length) return null;
 
   return (
     <aside className={styles.stack} aria-label="Liên hệ nhanh">
-      {visible.map(({ key, label, kind }) => {
-        const external = !hrefs[key].startsWith("tel:");
+      {SLOTS.map(({ key, label, kind }) => {
+        const href = hrefs[key];
+        const content = (
+          <>
+            <span className={styles.tooltip}>{label}</span>
+            <img src={ICONS[kind]} alt="" width={34} height={34} />
+          </>
+        );
+        if (!href) {
+          return (
+            <span
+              key={key}
+              className={`${styles.button} ${styles.disabledButton}`}
+              aria-label={`${label} chưa được cấu hình`}
+              aria-disabled="true"
+              data-kind={kind}
+            >
+              {content}
+            </span>
+          );
+        }
+        const external = !href.startsWith("tel:");
         return (
           <a
             key={key}
-            href={hrefs[key]}
+            href={href}
             target={external ? "_blank" : undefined}
             rel={external ? "noreferrer" : undefined}
             aria-label={label}
             className={styles.button}
             data-kind={kind}
           >
-            <span className={styles.tooltip}>{label}</span>
-            <img src={ICONS[kind]} alt="" width={34} height={34} />
+            {content}
           </a>
         );
       })}
