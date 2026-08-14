@@ -182,6 +182,7 @@ export default function AdminBannersPage() {
   }, []);
 
   async function saveSiteBar() {
+    if (barSaving) return;
     setBarSaving(true);
     setMessage("");
     const current = banners.find((banner) => banner.slotKey === SITE_BAR_SLOT_KEY);
@@ -219,6 +220,7 @@ export default function AdminBannersPage() {
   }
 
   async function saveContactButtons() {
+    if (contactSaving) return;
     setContactSaving(true);
     setMessage("");
     try {
@@ -378,6 +380,7 @@ export default function AdminBannersPage() {
   }
 
   async function saveSlot(slot: Slot) {
+    if (saving === slot.key) return;
     const image = drafts[slot.key] ?? existing(slot)?.image ?? "";
     if (!image) {
       setMessage(`Hãy upload ảnh cho ${slot.label}.`);
@@ -490,8 +493,11 @@ export default function AdminBannersPage() {
                   <button
                     type="button"
                     className={panel.secondaryButton}
-                    disabled={videoUploading === inputKey}
-                    onClick={() => fileInputs.current[inputKey]?.click()}
+                    aria-disabled={videoUploading === inputKey}
+                    onClick={() => {
+                      if (videoUploading === inputKey) return;
+                      fileInputs.current[inputKey]?.click();
+                    }}
                     style={{ width: "100%", marginTop: 8 }}
                   >
                     {videoUploading === inputKey ? "Đang tải lên..." : (<><Upload size={13} /> Thay video</>)}
@@ -557,7 +563,7 @@ export default function AdminBannersPage() {
                 <div className="banner-slot-actions">
                   <button
                     className={panel.saveButton}
-                    disabled={saving === slot.key || !image}
+                    aria-disabled={saving === slot.key || !image}
                     onClick={() => void saveSlot(slot)}
                   >
                     {saving === slot.key ? (
@@ -633,7 +639,7 @@ export default function AdminBannersPage() {
                   <input value={barCtaHref} onChange={(event) => setBarCtaHref(event.target.value)} placeholder="/shop/all" />
                 </label>
               </div>
-              <button className={panel.saveButton} disabled={barSaving} onClick={() => void saveSiteBar()} style={{ marginTop: 12 }}>
+              <button className={panel.saveButton} aria-disabled={barSaving} onClick={() => void saveSiteBar()} style={{ marginTop: 12 }}>
                 {barSaving ? "Đang lưu..." : (<><Save size={14} /> Lưu thanh thông báo</>)}
               </button>
             </div>
@@ -696,8 +702,11 @@ export default function AdminBannersPage() {
                       <button
                         type="button"
                         className={panel.secondaryButton}
-                        disabled={videoUploading === inputKey}
-                        onClick={() => fileInputs.current[inputKey]?.click()}
+                        aria-disabled={videoUploading === inputKey}
+                        onClick={() => {
+                          if (videoUploading === inputKey) return;
+                          fileInputs.current[inputKey]?.click();
+                        }}
                         style={{ width: "100%", marginTop: 8 }}
                       >
                         {videoUploading === inputKey ? "Đang tải lên..." : (<><Upload size={13} /> Thay video</>)}
@@ -737,7 +746,7 @@ export default function AdminBannersPage() {
                   </label>
                 ))}
               </div>
-              <button className={panel.saveButton} disabled={contactSaving} onClick={() => void saveContactButtons()} style={{ marginTop: 12 }}>
+              <button className={panel.saveButton} aria-disabled={contactSaving} onClick={() => void saveContactButtons()} style={{ marginTop: 12 }}>
                 {contactSaving ? "Đang lưu..." : (<><Save size={14} /> Lưu nút liên hệ</>)}
               </button>
             </div>

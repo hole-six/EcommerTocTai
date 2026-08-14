@@ -6,6 +6,7 @@
 .primaryButton:hover{background:var(--admin-blue-dark)}
 .secondaryButton{border:1px solid var(--admin-border);border-radius:9px;background:#fff;color:var(--admin-ink);padding:10px 16px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:background .12s ease}
 .secondaryButton:hover{background:var(--admin-soft)}
+:global(button[aria-disabled="true"]){opacity:.5;cursor:default;pointer-events:none}
 .panel{background:#fff;border:1px solid var(--admin-border);border-radius:14px;overflow:hidden;margin-bottom:20px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
 .panelPad{padding:24px}
 .panelPad h2{font-size:15px;font-weight:700;margin:0 0 4px;color:var(--admin-ink)}
@@ -42,7 +43,7 @@
 .rightCell{text-align:right}
 .saveButton{border:0;border-radius:8px;background:var(--admin-blue);color:#fff;padding:9px 14px;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .12s ease}
 .saveButton:hover{background:var(--admin-blue-dark)}
-.saveButton:disabled{opacity:.45;cursor:default;background:var(--admin-blue)}
+.saveButton:disabled,.saveButton[aria-disabled="true"]{opacity:.45;cursor:default;background:var(--admin-blue);pointer-events:none}
 .ghostButton{border:0;background:transparent;color:var(--admin-blue-dark);font-size:12px;font-weight:600;cursor:pointer;padding:0}
 .ghostButton:hover{text-decoration:underline}
 .dangerButton{border:0;background:transparent;color:#b42318;font-size:12px;font-weight:600;cursor:pointer;padding:0}
