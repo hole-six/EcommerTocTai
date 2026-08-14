@@ -19,6 +19,7 @@ import {
   Route,
   SlidersHorizontal,
   Sparkles,
+  Star,
   Tag,
   Target,
   Trash2,
@@ -962,7 +963,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           id="images"
           icon={Images}
           title="Ảnh sản phẩm"
-          description="Ảnh đầu tiên sẽ là ảnh chính"
+          description="Ảnh đầu tiên là ảnh chính — bấm ★ trên ảnh khác để đặt làm ảnh chính"
           badge={images.length ? `${images.length}` : undefined}
         >
           <div
@@ -1034,7 +1035,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
                   >
                     <Trash2 size={11} />
                   </button>
-                  {index === 0 && (
+                  {index === 0 ? (
                     <span
                       style={{
                         position: "absolute",
@@ -1050,6 +1051,34 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
                     >
                       Ảnh chính
                     </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setImages([
+                          image,
+                          ...images.filter((_, itemIndex) => itemIndex !== index),
+                        ])
+                      }
+                      aria-label="Đặt làm ảnh chính"
+                      title="Đặt làm ảnh chính"
+                      style={{
+                        position: "absolute",
+                        bottom: 4,
+                        left: 4,
+                        width: 20,
+                        height: 20,
+                        borderRadius: "50%",
+                        background: "rgba(0,0,0,.6)",
+                        color: "#fff",
+                        display: "grid",
+                        placeItems: "center",
+                        border: 0,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <Star size={11} />
+                    </button>
                   )}
                 </div>
               ))}
