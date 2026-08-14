@@ -65,7 +65,7 @@ type OptionGroup = {
 type StageProductOption = { id: string; slug: string; name: string };
 export type ProductInitial = {
   _id?: string;
-  category: string | { _id: string };
+  category: (string | { _id: string })[];
   name: string;
   slug: string;
   shortDescription: string;
@@ -460,11 +460,18 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
   const [stageProducts, setStageProducts] = useState<StageProductOption[]>([]);
   const [name, setName] = useState(initial?.name ?? "");
   const [slug, setSlug] = useState(initial?.slug ?? "");
-  const [category, setCategory] = useState(
-    typeof initial?.category === "string"
-      ? initial.category
-      : (initial?.category?._id ?? ""),
+  const [categoryIds, setCategoryIds] = useState<string[]>(
+    (initial?.category ?? []).map((entry) =>
+      typeof entry === "string" ? entry : entry._id,
+    ),
   );
+  function toggleCategory(id: string) {
+    setCategoryIds((current) =>
+      current.includes(id)
+        ? current.filter((value) => value !== id)
+        : [...current, id],
+    );
+  }
   const [sku, setSku] = useState(initial?.sku ?? "");
   const [skuTouched, setSkuTouched] = useState(Boolean(initial?.sku));
   const [price, setPrice] = useState(String(initial?.price ?? ""));
@@ -619,7 +626,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
     setSaving(true);
     try {
       const payload = {
-        category,
+        category: categoryIds,
         name,
         slug,
         shortDescription,
@@ -731,7 +738,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
     </Section>
   );
 
-  const canSave = Boolean(name && slug && sku && category && price);
+  const canSave = Boolean(name && slug && sku && categoryIds.length && price);
 
   return (
     <div className={styles.layout}>
@@ -1474,18 +1481,42 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           <h3>Tổ chức</h3>
           <div className={styles.saveRow}>
             <label>
-              Danh mục
-              <select
-                value={category}
-                onChange={(event) => setCategory(event.target.value)}
+              Danh mục (chọn một hoặc nhiều)
+              <div
+                style={{
+                  display: "grid",
+                  gap: 6,
+                  maxHeight: 220,
+                  overflowY: "auto",
+                  border: "1px solid var(--admin-border, #eaecf0)",
+                  borderRadius: 8,
+                  padding: 8,
+                }}
               >
-                <option value="">— Chọn danh mục —</option>
                 {categories.map((option) => (
-                  <option key={option._id} value={option._id}>
+                  <label
+                    key={option._id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: 12.5,
+                      fontWeight: 500,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={categoryIds.includes(option._id)}
+                      onChange={() => toggleCategory(option._id)}
+                    />
                     {option.label}
-                  </option>
+                  </label>
                 ))}
-              </select>
+              </div>
+              <span style={{ fontSize: 11, color: "var(--admin-faint, #98a2b3)" }}>
+                {categoryIds.length} danh mục đã chọn
+              </span>
             </label>
           </div>
         </div>

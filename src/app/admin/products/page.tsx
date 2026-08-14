@@ -29,7 +29,7 @@ type Product = {
   status: "draft" | "active" | "archived";
   images: string[];
   shortDescription?: string;
-  category?: { name: string } | string;
+  category?: ({ name: string } | string)[] | { name: string } | string;
   source?: "catalog";
 };
 type CategoryOption = { _id: string; label: string };
@@ -45,8 +45,12 @@ const statusLabel = {
   active: "Đang bán",
   archived: "Ngừng bán",
 } as const;
-const categoryName = (category?: Product["category"]) =>
-  typeof category === "string" ? category : category?.name ?? "-";
+const categoryName = (category?: Product["category"]) => {
+  const list = Array.isArray(category) ? category : category ? [category] : [];
+  return list.length
+    ? list.map((c) => (typeof c === "string" ? c : (c?.name ?? "-"))).join(", ")
+    : "-";
+};
 const PAGE_SIZE = 10;
 
 export default function AdminProductsPage() {

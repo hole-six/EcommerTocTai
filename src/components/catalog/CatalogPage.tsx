@@ -23,7 +23,7 @@ type Product = {
   _id?: string;
   name: string;
   slug: string;
-  category: { name: string; slug: string } | string;
+  category: ({ name: string; slug: string } | string)[] | { name: string; slug: string } | string;
   price: number;
   salePrice?: number;
   compareAtPrice?: number;
@@ -43,8 +43,12 @@ const formatPrice = (value: number) =>
     currency: "VND",
     maximumFractionDigits: 0,
   }).format(value);
+const categoryEntryLabel = (entry: { name: string; slug: string } | string) =>
+  typeof entry === "string" ? entry : (entry?.name ?? "");
+const categoryEntries = (category: Product["category"]) =>
+  Array.isArray(category) ? category : category ? [category] : [];
 const categoryLabel = (category: Product["category"]) =>
-  typeof category === "string" ? category : (category?.name ?? "");
+  categoryEntries(category).map(categoryEntryLabel).join(", ");
 const productHref = (product: Product) =>
   product.source === "catalog"
     ? `/dp/${product.slug}/${product.id}`
@@ -123,14 +127,13 @@ export function CatalogPage({
         .filter((value): value is string => Boolean(value))
         .map((value) => value.toLowerCase()),
     );
-    return products.filter((product) => {
-      const label = categoryLabel(product.category).toLowerCase();
-      const slug =
-        typeof product.category === "string"
-          ? ""
-          : product.category?.slug?.toLowerCase();
-      return (slug && matchSlugs.has(slug)) || matchNames.has(label);
-    });
+    return products.filter((product) =>
+      categoryEntries(product.category).some((entry) => {
+        const label = categoryEntryLabel(entry).toLowerCase();
+        const slug = typeof entry === "string" ? "" : entry?.slug?.toLowerCase();
+        return (slug && matchSlugs.has(slug)) || matchNames.has(label);
+      }),
+    );
   }, [current, products, selected, selectedSubcategory]);
   const bannerImage =
     categoryBanner?.image ||

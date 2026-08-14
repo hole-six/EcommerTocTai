@@ -108,8 +108,11 @@ export async function POST(request: Request) {
     await requireAdmin();
     const data = productSchema.parse(await request.json());
     await connectDb();
-    const category = await Category.findOne({ _id: data.category, isActive: true }).select("_id").lean();
-    if (!category) return NextResponse.json({ error: "Danh mục sản phẩm không tồn tại hoặc đang ẩn." }, { status: 422 });
+    const categoryIds = Array.from(new Set(data.category));
+    const matched = await Category.find({ _id: { $in: categoryIds }, isActive: true }).select("_id").lean();
+    if (matched.length !== categoryIds.length)
+      return NextResponse.json({ error: "Một hoặc nhiều danh mục sản phẩm không tồn tại hoặc đang ẩn." }, { status: 422 });
+    data.category = categoryIds;
     return NextResponse.json(
       { data: await Product.create(data) },
       { status: 201 },

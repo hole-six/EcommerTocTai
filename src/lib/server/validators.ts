@@ -109,7 +109,7 @@ const quizTags = z
   })
   .default(() => ({ goals: [], stages: [], durations: [], formats: [], priorities: [] }));
 const productBaseSchema = z.object({
-    category: z.string().length(24),
+    category: z.array(z.string().length(24)).min(1),
     name: z.string().min(2).max(180),
     slug: z.string().regex(/^[a-z0-9-]+$/),
     shortDescription: z.string().max(300).default(""),
