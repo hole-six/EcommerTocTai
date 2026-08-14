@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { CheckCircle2, Loader2, MapPin, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Loader2, MapPin, X } from "lucide-react";
+import { Children, useEffect, useRef, useState, type ReactNode } from "react";
 import { notFound, useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/sites/manmatters-com-61d14dee/shared/SiteHeader";
 import { SiteFooter } from "@/components/sites/manmatters-com-61d14dee/shared/SiteFooter";
@@ -331,11 +331,99 @@ export function ProductDetailClient({ slug }: { slug: string }) {
 
 const contentImageSizes = "(max-width: 640px) 100vw, (max-width: 1180px) 45vw, 500px";
 
+function ScrollRow({ children }: { children: ReactNode }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScroll, setCanScroll] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const count = Children.count(children);
+
+  useEffect(() => {
+    const node = scrollRef.current;
+    if (!node) return;
+    function measure() {
+      if (!node) return;
+      setCanScroll(node.scrollWidth > node.clientWidth + 4);
+    }
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [count]);
+
+  useEffect(() => {
+    const node = scrollRef.current;
+    if (!node || !canScroll) return;
+    function onScroll() {
+      if (!node) return;
+      const items = Array.from(node.children) as HTMLElement[];
+      let closest = 0;
+      let closestDist = Infinity;
+      items.forEach((item, index) => {
+        const dist = Math.abs(item.offsetLeft - node.scrollLeft);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closest = index;
+        }
+      });
+      setActiveIndex(closest);
+    }
+    node.addEventListener("scroll", onScroll, { passive: true });
+    return () => node.removeEventListener("scroll", onScroll);
+  }, [canScroll]);
+
+  function go(direction: number) {
+    const node = scrollRef.current;
+    if (!node) return;
+    const items = Array.from(node.children) as HTMLElement[];
+    const nextIndex = Math.min(Math.max(activeIndex + direction, 0), items.length - 1);
+    items[nextIndex]?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+  }
+
+  return (
+    <div className={styles.scrollRowWrap}>
+      <div className={styles.contentGrid} ref={scrollRef}>
+        {children}
+      </div>
+      {canScroll && (
+        <div className={styles.scrollNav}>
+          <button
+            type="button"
+            onClick={() => go(-1)}
+            disabled={activeIndex === 0}
+            aria-label="Xem mục trước"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <div className={styles.scrollDots}>
+            {Array.from({ length: count }).map((_, index) => (
+              <span
+                key={index}
+                className={index === activeIndex ? styles.scrollDotActive : styles.scrollDot}
+              />
+            ))}
+          </div>
+          <span className={styles.scrollCount}>
+            {activeIndex + 1}/{count}
+          </span>
+          <button
+            type="button"
+            onClick={() => go(1)}
+            disabled={activeIndex === count - 1}
+            aria-label="Xem mục tiếp theo"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ProductContent({ product }: { product: Product }) {
   const specRows = (product.specificationRows ?? []).filter((item) => !isBlank(item));
   const groups: Array<[string, Item[]]> = [["Mô tả nguyên nhân", product.rootCauses], ["Bộ điều trị", product.treatmentKit], ["Lộ trình điều trị", product.treatmentJourney], ["Nội dung bổ sung", product.contentBlocks]].map(([title, items]) => [title as string, (items as Item[] | undefined ?? []).filter((item) => !isBlank(item))]);
   return <div className={styles.contentBlocks}>
-    {specRows.length ? <section className={styles.contentSection}><h2>Thông số sản phẩm</h2><div className={styles.contentGrid}>{specRows.map((item, index) => <article className={styles.contentCard} key={index}>{item.image && <div className={styles.contentCardImage}><Image src={item.image} alt="" fill sizes={contentImageSizes} style={{ objectFit: "contain" }} quality={92} /></div>}{item.name && <h3>{item.name}</h3>}{item.value && <p>{item.value}</p>}</article>)}</div></section> : null}
-    {groups.map(([title, items]) => items.length ? <section className={styles.contentSection} key={title}><h2>{title}</h2><div className={styles.contentGrid}>{items.map((item, index) => { const titleText = item.title || item.name || item.period; const card = <>{item.image && <div className={styles.contentCardImage}><Image src={item.image} alt="" fill sizes={contentImageSizes} style={{ objectFit: "contain" }} quality={92} /></div>}{titleText && <h3>{titleText}</h3>}{item.description && <p>{item.description}</p>}</>; return item.targetProductSlug ? <Link href={`/san-pham/${item.targetProductSlug}`} className={styles.contentCard} key={index}>{card}</Link> : <article className={styles.contentCard} key={index}>{card}</article>; })}</div></section> : null)}
+    {specRows.length ? <section className={styles.contentSection}><h2>Thông số sản phẩm</h2><ScrollRow>{specRows.map((item, index) => <article className={styles.contentCard} key={index}>{item.image && <div className={styles.contentCardImage}><Image src={item.image} alt="" fill sizes={contentImageSizes} style={{ objectFit: "contain" }} quality={92} /></div>}{item.name && <h3>{item.name}</h3>}{item.value && <p>{item.value}</p>}</article>)}</ScrollRow></section> : null}
+    {groups.map(([title, items]) => items.length ? <section className={styles.contentSection} key={title}><h2>{title}</h2><ScrollRow>{items.map((item, index) => { const titleText = item.title || item.name || item.period; const card = <>{item.image && <div className={styles.contentCardImage}><Image src={item.image} alt="" fill sizes={contentImageSizes} style={{ objectFit: "contain" }} quality={92} /></div>}{titleText && <h3>{titleText}</h3>}{item.description && <p>{item.description}</p>}</>; return item.targetProductSlug ? <Link href={`/san-pham/${item.targetProductSlug}`} className={styles.contentCard} key={index}>{card}</Link> : <article className={styles.contentCard} key={index}>{card}</article>; })}</ScrollRow></section> : null)}
   </div>;
 }
