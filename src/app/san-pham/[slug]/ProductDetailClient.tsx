@@ -17,7 +17,7 @@ const RECENTLY_VIEWED_KEY = "toctai_recently_viewed";
 
 type Item = { targetProductId?: string; targetProductSlug?: string; title?: string; label?: string; period?: string; name?: string; value?: string; description?: string; image?: string };
 type Option = { id: string; targetProductSlug?: string; targetProductId?: string; label?: string; value?: string; image?: string; priceAdjustment?: number };
-type OptionGroup = { id: string; title: string; code: string; displayType?: string; required?: boolean; options: Option[] };
+type OptionGroup = { id: string; title: string; code: string; displayType?: string; required?: boolean; pricingMode?: "replace" | "addon"; options: Option[] };
 type Product = { _id?: string; id?: string; name: string; slug: string; price: number; salePrice?: number; compareAtPrice?: number; rating?: number; images: string[]; shortDescription: string; description: string; specifications?: Record<string, string | number | boolean>; specificationRows?: Item[]; category?: { name: string; slug: string }; variantGroup?: string; variantLabel?: string; optionGroups?: OptionGroup[]; stageImages?: Item[]; howToUse?: Item; rootCauses?: Item[]; detailHighlights?: Item[]; treatmentKit?: Item[]; treatmentJourney?: Item[]; contentBlocks?: Item[]; additionalInfo?: Item[]; translations?: { en?: { name?: string; shortDescription?: string; description?: string; howToUseDescription?: string } } };
 type Review = { _id: string; rating: number; title: string; body: string; createdAt: string; user?: { fullName: string }; guestName?: string };
 const money = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 });
@@ -118,16 +118,23 @@ export function ProductDetailClient({ slug }: { slug: string }) {
               const { main, sub } = splitOptionLabel(option.label ?? "");
               return (
                 <button type="button" key={option.id} className={`${styles.imageOption} ${isSelected ? styles.selected : ""}`} onClick={() => choose(group, option)}>
-                  <span className={styles.imageOptionImg}><Image src={option.image} alt="" fill sizes="82px" style={{ objectFit: "contain" }} quality={92} /></span>
+                  {isSelected && <CheckCircle2 size={16} className={styles.imageOptionCheck} />}
+                  <span className={styles.imageOptionImg}><Image src={option.image} alt="" fill sizes="64px" style={{ objectFit: "contain" }} quality={92} unoptimized={option.image.startsWith("/uploads/")} /></span>
                   <span className={styles.imageOptionMain}>{main}</span>
                   {sub && <span className={styles.imageOptionSub}>{sub}</span>}
                 </button>
               );
             }
+            const isAddon = group.pricingMode === "addon";
             const absolutePrice = (currentProduct.salePrice ?? currentProduct.price) + (option.priceAdjustment ?? 0);
+            const priceLabel = option.priceAdjustment
+              ? isAddon
+                ? ` – +${money.format(option.priceAdjustment)}`
+                : ` – ${money.format(absolutePrice)}`
+              : "";
             return (
               <button type="button" key={option.id} className={`${styles.option} ${isSelected ? styles.selected : ""}`} onClick={() => choose(group, option)}>
-                {option.label}{option.priceAdjustment ? ` – ${money.format(absolutePrice)}` : ""}
+                {option.label}{priceLabel}
               </button>
             );
           })}

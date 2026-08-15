@@ -64,6 +64,7 @@ type OptionGroup = {
   code: string;
   required: boolean;
   displayType: "card" | "button" | "radio" | "dropdown";
+  pricingMode?: "replace" | "addon";
   options: Option[];
 };
 type StageProductOption = { id: string; slug: string; name: string };
@@ -1059,7 +1060,34 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
                     <option value="dropdown">Danh sách thả xuống</option>
                   </select>
                 </label>
+                <label>
+                  Kiểu tính giá
+                  <select
+                    value={group.pricingMode ?? "replace"}
+                    onChange={(event) =>
+                      setGroups(
+                        groups.map((item, index) =>
+                          index === groupIndex
+                            ? {
+                                ...item,
+                                pricingMode: event.target
+                                  .value as OptionGroup["pricingMode"],
+                              }
+                            : item,
+                        ),
+                      )
+                    }
+                  >
+                    <option value="replace">Thay giá gốc (gói/gói cước)</option>
+                    <option value="addon">Cộng thêm giá gốc (phụ kiện/topping)</option>
+                  </select>
+                </label>
               </div>
+              <p className={styles.fieldHint} style={{ marginTop: -6 }}>
+                {(group.pricingMode ?? "replace") === "addon"
+                  ? "Chọn lựa chọn trong nhóm này sẽ CỘNG thêm giá của nó vào tổng, giữ nguyên giá gốc — dùng cho phụ kiện/bổ sung thêm."
+                  : "Chọn lựa chọn trong nhóm này sẽ THAY giá gốc bằng giá riêng của lựa chọn đó — dùng cho gói/thời hạn sử dụng."}
+              </p>
               <label className={panel["admin-checkbox"]}>
                 <input
                   type="checkbox"
@@ -1077,9 +1105,9 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
                 Bắt buộc chọn
               </label>
               <p className={styles.fieldHint}>
-                Nhập giá riêng (đ) cho từng lựa chọn nếu lựa chọn đó có giá khác giá gốc — ví dụ chai
-                100ml giữ nguyên, chai 500ml nhập giá riêng cao hơn. Để trống ô giá nếu lựa chọn đó
-                dùng đúng giá gốc, hệ thống sẽ không ép bạn phải điền.
+                {(group.pricingMode ?? "replace") === "addon"
+                  ? "Nhập số tiền (đ) sẽ được CỘNG THÊM vào giá gốc khi khách chọn lựa chọn đó. Để trống hoặc 0 nếu lựa chọn đó không cộng thêm gì (VD: \"Không có\")."
+                  : "Nhập giá riêng (đ) cho từng lựa chọn nếu lựa chọn đó có giá khác giá gốc — ví dụ chai 100ml giữ nguyên, chai 500ml nhập giá riêng cao hơn. Để trống ô giá nếu lựa chọn đó dùng đúng giá gốc, hệ thống sẽ không ép bạn phải điền."}
               </p>
               {group.options.map((option, optionIndex) => (
                 <div className={panel["admin-option-row"]} key={option.id}>
@@ -1111,17 +1139,31 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
                   />
                   <input
                     type="number"
-                    placeholder="Giá riêng"
-                    title="Giá riêng cho lựa chọn này — để trống nếu dùng đúng giá gốc phía trên"
+                    placeholder={
+                      (group.pricingMode ?? "replace") === "addon"
+                        ? "Giá cộng thêm"
+                        : "Giá riêng"
+                    }
+                    title={
+                      (group.pricingMode ?? "replace") === "addon"
+                        ? "Số tiền cộng thêm vào giá gốc khi chọn lựa chọn này — để trống nếu không cộng thêm"
+                        : "Giá riêng cho lựa chọn này — để trống nếu dùng đúng giá gốc phía trên"
+                    }
                     value={
-                      option.priceAdjustment
-                        ? Math.round(Number(price || 0) + option.priceAdjustment)
-                        : ""
+                      (group.pricingMode ?? "replace") === "addon"
+                        ? option.priceAdjustment || ""
+                        : option.priceAdjustment
+                          ? Math.round(Number(price || 0) + option.priceAdjustment)
+                          : ""
                     }
                     onChange={(event) => {
                       const raw = event.target.value;
-                      const nextAdjustment =
-                        raw === "" ? 0 : Number(raw) - Number(price || 0);
+                      const addonMode = (group.pricingMode ?? "replace") === "addon";
+                      const nextAdjustment = raw === ""
+                        ? 0
+                        : addonMode
+                          ? Number(raw)
+                          : Number(raw) - Number(price || 0);
                       setGroups(
                         groups.map((item, index) =>
                           index === groupIndex

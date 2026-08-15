@@ -97,6 +97,7 @@ const optionGroup = z
     displayType: z
       .enum(["card", "button", "radio", "dropdown"])
       .default("card"),
+    pricingMode: z.enum(["replace", "addon"]).default("replace"),
     options: z
       .array(
         imageItem.extend({
