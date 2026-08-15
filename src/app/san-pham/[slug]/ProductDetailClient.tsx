@@ -70,7 +70,17 @@ export function ProductDetailClient({ slug }: { slug: string }) {
   const displayShortDescription = (lang === "en" && en?.shortDescription) || product.shortDescription;
   const displayDescription = (lang === "en" && en?.description) || product.description;
   const displayHowToUseDescription = (lang === "en" && en?.howToUseDescription) || product.howToUse?.description;
-  function choose(group: OptionGroup, option: Option) { if (option.targetProductSlug) { router.push(`/san-pham/${option.targetProductSlug}`); return; } setSelected((current) => ({ ...current, [group.code]: option.value ?? option.label ?? "" })); }
+  function choose(group: OptionGroup, option: Option) {
+    if (option.targetProductSlug) {
+      if (option.targetProductSlug === slug) {
+        window.location.reload();
+      } else {
+        router.push(`/san-pham/${option.targetProductSlug}`);
+      }
+      return;
+    }
+    setSelected((current) => ({ ...current, [group.code]: option.value ?? option.label ?? "" }));
+  }
   function addToCart(buyNow: boolean) {
     const missing = groups.find((group) => group.required && !selected[group.code]);
     if (missing) { setVariantModalBuyNow(buyNow); setVariantModalOpen(true); return; }
