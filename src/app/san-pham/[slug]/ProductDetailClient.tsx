@@ -40,6 +40,19 @@ export function ProductDetailClient({ slug }: { slug: string }) {
   useEffect(() => { if (!product) return; fetch(`/api/reviews?productId=${product._id}`).then((response) => response.json()).then((body) => setReviews(body.data ?? [])); fetch("/api/auth/me").then((response) => response.json()).then((body) => setLoggedIn(Boolean(body.data))); }, [product]);
   useEffect(() => {
     if (!product) return;
+    const stages = (product.stageImages ?? []).filter((item) => !isBlank(item));
+    const stageGroup = stages.length ? [{ code: "stage", options: stages.map((item, index) => ({ value: item.label || item.title || `stage-${index}`, label: item.label || item.title, targetProductSlug: item.targetProductSlug })) }] : [];
+    const optionGroups = (product.optionGroups ?? []).map((group) => ({ code: group.code, options: (group.options ?? []).map((option) => ({ value: option.value ?? option.label ?? "", label: option.label, targetProductSlug: option.targetProductSlug })) }));
+    const initial: Record<string, string> = {};
+    [...stageGroup, ...optionGroups].forEach((group) => {
+      if (!group.code) return;
+      const selfOption = group.options.find((option) => option.targetProductSlug === slug);
+      if (selfOption) initial[group.code] = selfOption.value;
+    });
+    if (Object.keys(initial).length) setSelected((current) => ({ ...initial, ...current }));
+  }, [product, slug]);
+  useEffect(() => {
+    if (!product) return;
     const id = product._id ?? product.id ?? "";
     if (!id) return;
     try {
@@ -71,12 +84,8 @@ export function ProductDetailClient({ slug }: { slug: string }) {
   const displayDescription = (lang === "en" && en?.description) || product.description;
   const displayHowToUseDescription = (lang === "en" && en?.howToUseDescription) || product.howToUse?.description;
   function choose(group: OptionGroup, option: Option) {
-    if (option.targetProductSlug) {
-      if (option.targetProductSlug === slug) {
-        window.location.reload();
-      } else {
-        router.push(`/san-pham/${option.targetProductSlug}`);
-      }
+    if (option.targetProductSlug && option.targetProductSlug !== slug) {
+      router.push(`/san-pham/${option.targetProductSlug}`);
       return;
     }
     setSelected((current) => ({ ...current, [group.code]: option.value ?? option.label ?? "" }));
