@@ -68,6 +68,8 @@ type OptionGroup = {
   options: Option[];
 };
 type StageProductOption = { id: string; slug: string; name: string };
+type AdditionalInfoRow = { name: string; value: string };
+type AdditionalInfoGroup = { title: string; rows: AdditionalInfoRow[] };
 export type ProductInitial = {
   _id?: string;
   category: (string | { _id: string })[];
@@ -90,7 +92,7 @@ export type ProductInitial = {
   detailHighlights?: Item[];
   treatmentKit?: Item[];
   treatmentJourney?: Item[];
-  additionalInfo?: Item[];
+  additionalInfo?: AdditionalInfoGroup[];
   status: "draft" | "active" | "archived";
   variantGroup?: string;
   variantLabel?: string;
@@ -550,7 +552,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
   const [journey, setJourney] = useState<Item[]>(
     initial?.treatmentJourney ?? [],
   );
-  const [additionalInfo, setAdditionalInfo] = useState<Item[]>(
+  const [additionalInfo, setAdditionalInfo] = useState<AdditionalInfoGroup[]>(
     initial?.additionalInfo ?? [],
   );
   const [howToUse, setHowToUse] = useState<Item>(
@@ -1502,15 +1504,156 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           setBlocks,
           "Khối",
         )}
-        {repeat(
-          "additionalInfo",
-          Info,
-          "Thông tin bổ sung",
-          "Bảng thông tin dạng nhãn/giá trị (VD: Xuất xứ, Nhà sản xuất...), hiện phía dưới phần đánh giá",
-          additionalInfo,
-          setAdditionalInfo,
-          "Dòng",
-        )}
+        <Section
+          id="additionalInfo"
+          icon={Info}
+          title="Thông tin bổ sung"
+          description="Nhiều danh mục, mỗi danh mục có bảng nhãn/giá trị riêng — khách bấm chọn danh mục để xem, hiện phía dưới phần đánh giá"
+          badge={additionalInfo.length ? `${additionalInfo.length}` : undefined}
+          defaultOpen={!productId}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              marginBottom: additionalInfo.length ? 14 : 0,
+            }}
+          >
+            <button
+              type="button"
+              className={panel.secondaryButton}
+              onClick={() =>
+                setAdditionalInfo([...additionalInfo, { title: "", rows: [] }])
+              }
+            >
+              <Plus size={14} /> Thêm danh mục
+            </button>
+          </div>
+          {additionalInfo.map((group, groupIndex) => (
+            <div className={panel["admin-repeat-card"]} key={groupIndex}>
+              <div className={panel["admin-repeat-head"]}>
+                <b>Danh mục {groupIndex + 1}</b>
+                <button
+                  type="button"
+                  className={panel.dangerButton}
+                  onClick={() =>
+                    setAdditionalInfo(
+                      additionalInfo.filter((_, index) => index !== groupIndex),
+                    )
+                  }
+                >
+                  <Trash2 size={14} /> Xóa danh mục
+                </button>
+              </div>
+              <label>
+                Tên danh mục (VD: Kẹo dẻo Biotin cho tóc (30 viên))
+                <input
+                  value={group.title}
+                  onChange={(event) =>
+                    setAdditionalInfo(
+                      additionalInfo.map((item, index) =>
+                        index === groupIndex
+                          ? { ...item, title: event.target.value }
+                          : item,
+                      ),
+                    )
+                  }
+                />
+              </label>
+              {group.rows.map((row, rowIndex) => (
+                <div
+                  key={rowIndex}
+                  style={{ display: "flex", gap: 8, marginTop: 8 }}
+                >
+                  <input
+                    placeholder="Nhãn (VD: Khối lượng tịnh)"
+                    style={{ flex: 1 }}
+                    value={row.name}
+                    onChange={(event) =>
+                      setAdditionalInfo(
+                        additionalInfo.map((item, index) =>
+                          index === groupIndex
+                            ? {
+                                ...item,
+                                rows: item.rows.map((current, rowChildIndex) =>
+                                  rowChildIndex === rowIndex
+                                    ? { ...current, name: event.target.value }
+                                    : current,
+                                ),
+                              }
+                            : item,
+                        ),
+                      )
+                    }
+                  />
+                  <input
+                    placeholder="Giá trị (VD: 60 ml)"
+                    style={{ flex: 1 }}
+                    value={row.value}
+                    onChange={(event) =>
+                      setAdditionalInfo(
+                        additionalInfo.map((item, index) =>
+                          index === groupIndex
+                            ? {
+                                ...item,
+                                rows: item.rows.map((current, rowChildIndex) =>
+                                  rowChildIndex === rowIndex
+                                    ? { ...current, value: event.target.value }
+                                    : current,
+                                ),
+                              }
+                            : item,
+                        ),
+                      )
+                    }
+                  />
+                  <button
+                    type="button"
+                    className={panel.dangerButton}
+                    onClick={() =>
+                      setAdditionalInfo(
+                        additionalInfo.map((item, index) =>
+                          index === groupIndex
+                            ? {
+                                ...item,
+                                rows: item.rows.filter(
+                                  (_, rowChildIndex) => rowChildIndex !== rowIndex,
+                                ),
+                              }
+                            : item,
+                        ),
+                      )
+                    }
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                className={panel.ghostButton}
+                style={{ marginTop: 10 }}
+                onClick={() =>
+                  setAdditionalInfo(
+                    additionalInfo.map((item, index) =>
+                      index === groupIndex
+                        ? { ...item, rows: [...item.rows, { name: "", value: "" }] }
+                        : item,
+                    ),
+                  )
+                }
+              >
+                <Plus size={14} /> Thêm dòng
+              </button>
+            </div>
+          ))}
+          {!additionalInfo.length && (
+            <p className={panel.empty} style={{ padding: "20px 0" }}>
+              Chưa có danh mục nào. Bấm &quot;Thêm danh mục&quot; để bắt đầu — mỗi danh
+              mục là 1 tab, khách bấm chọn để xem bảng thông tin riêng.
+            </p>
+          )}
+        </Section>
 
         <Section
           id="quiz"

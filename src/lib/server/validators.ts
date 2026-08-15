@@ -88,6 +88,14 @@ export const imageItem = z
     value: z.string().default(""),
   })
   .passthrough();
+const additionalInfoRow = z.object({
+  name: z.string().default(""),
+  value: z.string().default(""),
+});
+const additionalInfoGroup = z.object({
+  title: z.string().default(""),
+  rows: z.array(additionalInfoRow).default([]),
+});
 const optionGroup = z
   .object({
     id: z.string(),
@@ -149,7 +157,7 @@ const productBaseSchema = z.object({
     detailHighlights: z.array(imageItem).default([]),
     treatmentKit: z.array(imageItem).default([]),
     treatmentJourney: z.array(imageItem).default([]),
-    additionalInfo: z.array(imageItem).default([]),
+    additionalInfo: z.array(additionalInfoGroup).default([]),
     status: z.enum(["draft", "active", "archived"]).default("draft"),
     translations: z
       .object({
