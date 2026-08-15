@@ -149,9 +149,10 @@ const statusLabel = {
 const navItems = [
   ["basic", Info, "Thông tin cơ bản"],
   ["pricing", Tag, "Giá & tồn kho"],
+  ["stages", Layers, "Ảnh giai đoạn"],
+  ["variants", SlidersHorizontal, "Biến thể"],
   ["description", FileText, "Mô tả"],
   ["images", Images, "Ảnh sản phẩm"],
-  ["stages", Layers, "Ảnh giai đoạn"],
   ["causes", CircleAlert, "Nguyên nhân"],
   ["howto", BookOpen, "Hướng dẫn dùng"],
   ["kit", Package, "Chi tiết: Thành phần bộ"],
@@ -159,7 +160,7 @@ const navItems = [
   ["specs", ListChecks, "Thông số"],
   ["blocks", LayoutGrid, "Nội dung tùy biến"],
   ["additionalInfo", Info, "Thông tin bổ sung"],
-  ["variants", SlidersHorizontal, "Biến thể"],
+  ["quiz", Target, "Gắn thẻ bài test tóc"],
   ["quiz", Target, "Gắn thẻ bài test tóc"],
 ] as const;
 
@@ -735,7 +736,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
       title={title}
       description={hint}
       badge={list.length ? `${list.length}` : undefined}
-      defaultOpen={list.length > 0}
+      defaultOpen={!productId}
     >
       <div
         style={{
@@ -917,196 +918,12 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
         </Section>
 
         <Section
-          id="description"
-          icon={FileText}
-          title="Mô tả sản phẩm"
-          description="Hiện trên thẻ sản phẩm và trang chi tiết"
-        >
-          <div className={panel.grid2}>
-            <label style={{ gridColumn: "1 / -1" }}>
-              Mô tả ngắn
-              <input
-                value={shortDescription}
-                onChange={(event) => setShortDescription(event.target.value)}
-              />
-            </label>
-            <label style={{ gridColumn: "1 / -1" }}>
-              Mô tả chi tiết
-              <textarea
-                rows={6}
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-              />
-            </label>
-          </div>
-        </Section>
-
-        <Section
-          id="translation"
-          icon={Languages}
-          title="Bản tiếng Anh (English)"
-          description="Tuỳ chọn — khách sẽ chuyển được VI / EN ở trang chi tiết sản phẩm. Để trống thì tự dùng bản tiếng Việt."
-          badge={enName || enShortDescription || enDescription ? "Đã có" : undefined}
-          defaultOpen={Boolean(enName || enShortDescription || enDescription || enHowToUse)}
-        >
-          <div className={panel.grid2}>
-            <label style={{ gridColumn: "1 / -1" }}>
-              Tên sản phẩm (EN)
-              <input value={enName} onChange={(event) => setEnName(event.target.value)} placeholder={name || "Product name in English"} />
-            </label>
-            <label style={{ gridColumn: "1 / -1" }}>
-              Mô tả ngắn (EN)
-              <input value={enShortDescription} onChange={(event) => setEnShortDescription(event.target.value)} placeholder={shortDescription || "Short description in English"} />
-            </label>
-            <label style={{ gridColumn: "1 / -1" }}>
-              Mô tả chi tiết (EN)
-              <textarea rows={6} value={enDescription} onChange={(event) => setEnDescription(event.target.value)} placeholder="Detailed description in English" />
-            </label>
-            <label style={{ gridColumn: "1 / -1" }}>
-              Hướng dẫn sử dụng (EN)
-              <textarea rows={3} value={enHowToUse} onChange={(event) => setEnHowToUse(event.target.value)} placeholder="How to use, in English" />
-            </label>
-          </div>
-        </Section>
-
-        <Section
-          id="images"
-          icon={Images}
-          title="Ảnh sản phẩm"
-          description="Ảnh đầu tiên là ảnh chính — bấm ★ trên ảnh khác để đặt làm ảnh chính"
-          badge={images.length ? `${images.length}` : undefined}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              marginBottom: images.length ? 14 : 0,
-            }}
-          >
-            <button
-              type="button"
-              className={panel.secondaryButton}
-              onClick={() => setGalleryOpen(true)}
-            >
-              <Images size={14} /> Chọn ảnh từ thư viện
-            </button>
-          </div>
-          {images.length > 0 ? (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill,minmax(84px,1fr))",
-                gap: 10,
-              }}
-            >
-              {images.map((image, index) => (
-                <div
-                  key={image + index}
-                  style={{
-                    position: "relative",
-                    aspectRatio: "1",
-                    borderRadius: 9,
-                    overflow: "hidden",
-                    border: "1px solid var(--admin-border)",
-                    background: "var(--admin-soft)",
-                  }}
-                >
-                  <img
-                    src={image}
-                    alt=""
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setImages(
-                        images.filter((_, itemIndex) => itemIndex !== index),
-                      )
-                    }
-                    aria-label="Xóa ảnh"
-                    style={{
-                      position: "absolute",
-                      top: 4,
-                      right: 4,
-                      width: 20,
-                      height: 20,
-                      borderRadius: "50%",
-                      background: "rgba(0,0,0,.6)",
-                      color: "#fff",
-                      display: "grid",
-                      placeItems: "center",
-                      border: 0,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <Trash2 size={11} />
-                  </button>
-                  {index === 0 ? (
-                    <span
-                      style={{
-                        position: "absolute",
-                        bottom: 4,
-                        left: 4,
-                        background: "var(--admin-blue)",
-                        color: "#fff",
-                        fontSize: 9,
-                        fontWeight: 700,
-                        padding: "2px 6px",
-                        borderRadius: 4,
-                      }}
-                    >
-                      Ảnh chính
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setImages([
-                          image,
-                          ...images.filter((_, itemIndex) => itemIndex !== index),
-                        ])
-                      }
-                      aria-label="Đặt làm ảnh chính"
-                      title="Đặt làm ảnh chính"
-                      style={{
-                        position: "absolute",
-                        bottom: 4,
-                        left: 4,
-                        width: 20,
-                        height: 20,
-                        borderRadius: "50%",
-                        background: "rgba(0,0,0,.6)",
-                        color: "#fff",
-                        display: "grid",
-                        placeItems: "center",
-                        border: 0,
-                        cursor: "pointer",
-                      }}
-                    >
-                      <Star size={11} />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className={panel.empty} style={{ padding: "20px 0" }}>
-              Chưa có ảnh nào. Bấm &quot;Chọn ảnh từ thư viện&quot; để thêm.
-            </p>
-          )}
-        </Section>
-
-        <Section
           id="stages"
           icon={Layers}
           title="Giai đoạn sản phẩm"
           description="Ảnh + tên giai đoạn — bấm vào sẽ chuyển thẳng sang đúng sản phẩm của giai đoạn đó"
           badge={stageImages.length ? `${stageImages.length}` : undefined}
-          defaultOpen={stageImages.length > 0}
+          defaultOpen={!productId}
         >
           <div
             style={{
@@ -1149,87 +966,6 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
             </p>
           )}
         </Section>
-        {repeat(
-          "causes",
-          CircleAlert,
-          "Nguyên nhân",
-          "Giải thích nguyên nhân của vấn đề",
-          rootCauses,
-          setRootCauses,
-          "Nguyên nhân",
-        )}
-        {repeat(
-          "detailHighlights",
-          Sparkles,
-          "Điểm nổi bật (icon)",
-          "Dãy icon + chú thích ngắn hiện ở cuối tab Chi tiết (VD: Không tác dụng phụ, Công thức khoa học...)",
-          detailHighlights,
-          setDetailHighlights,
-          "Điểm nổi bật",
-        )}
-
-        <Section
-          id="howto"
-          icon={BookOpen}
-          title="Hướng dẫn sử dụng"
-          description="Cách dùng sản phẩm"
-          defaultOpen={Boolean(
-            howToUse.title || howToUse.description || howToUse.image,
-          )}
-        >
-          <ItemEditor
-            item={howToUse}
-            onChange={(patch) => setHowToUse({ ...howToUse, ...patch })}
-            onRemove={() => setHowToUse(emptyItem())}
-            heading="Hướng dẫn"
-          />
-        </Section>
-
-        {repeat(
-          "kit",
-          Package,
-          "Thành phần bộ sản phẩm (hiện trong tab Chi tiết)",
-          "Danh sách sản phẩm trong bộ — hiện ở tab \"Chi tiết\" trên trang sản phẩm (VD: Sản phẩm chính, Dưỡng chất hỗ trợ)",
-          treatmentKit,
-          setTreatmentKit,
-          "Thành phần",
-        )}
-        {repeat(
-          "journey",
-          Route,
-          "Lộ trình điều trị",
-          "Các giai đoạn sử dụng theo thời gian",
-          journey,
-          setJourney,
-          "Giai đoạn",
-        )}
-        {repeat(
-          "specs",
-          ListChecks,
-          "Thông số sản phẩm",
-          "Thông số kỹ thuật mở rộng",
-          specs,
-          setSpecs,
-          "Thông số",
-        )}
-        {repeat(
-          "blocks",
-          LayoutGrid,
-          "Nội dung tùy biến",
-          "Khối nội dung tự do khác",
-          blocks,
-          setBlocks,
-          "Khối",
-        )}
-        {repeat(
-          "additionalInfo",
-          Info,
-          "Thông tin bổ sung",
-          "Bảng thông tin dạng nhãn/giá trị (VD: Xuất xứ, Nhà sản xuất...), hiện phía dưới phần đánh giá",
-          additionalInfo,
-          setAdditionalInfo,
-          "Dòng",
-        )}
 
         <Section
           id="variants"
@@ -1237,7 +973,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           title="Biến thể / các bước lựa chọn"
           description="Ví dụ giai đoạn, độ tuổi, thời gian, quy cách gói"
           badge={groups.length ? `${groups.length}` : undefined}
-          defaultOpen={groups.length > 0}
+          defaultOpen={!productId}
         >
           <div
             style={{
@@ -1469,6 +1205,270 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
             </p>
           )}
         </Section>
+
+        <Section
+          id="description"
+          icon={FileText}
+          title="Mô tả sản phẩm"
+          description="Hiện trên thẻ sản phẩm và trang chi tiết"
+        >
+          <div className={panel.grid2}>
+            <label style={{ gridColumn: "1 / -1" }}>
+              Mô tả ngắn
+              <input
+                value={shortDescription}
+                onChange={(event) => setShortDescription(event.target.value)}
+              />
+            </label>
+            <label style={{ gridColumn: "1 / -1" }}>
+              Mô tả chi tiết
+              <textarea
+                rows={6}
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+              />
+            </label>
+          </div>
+        </Section>
+
+        <Section
+          id="translation"
+          icon={Languages}
+          title="Bản tiếng Anh (English)"
+          description="Tuỳ chọn — khách sẽ chuyển được VI / EN ở trang chi tiết sản phẩm. Để trống thì tự dùng bản tiếng Việt."
+          badge={enName || enShortDescription || enDescription ? "Đã có" : undefined}
+          defaultOpen={!productId}
+        >
+          <div className={panel.grid2}>
+            <label style={{ gridColumn: "1 / -1" }}>
+              Tên sản phẩm (EN)
+              <input value={enName} onChange={(event) => setEnName(event.target.value)} placeholder={name || "Product name in English"} />
+            </label>
+            <label style={{ gridColumn: "1 / -1" }}>
+              Mô tả ngắn (EN)
+              <input value={enShortDescription} onChange={(event) => setEnShortDescription(event.target.value)} placeholder={shortDescription || "Short description in English"} />
+            </label>
+            <label style={{ gridColumn: "1 / -1" }}>
+              Mô tả chi tiết (EN)
+              <textarea rows={6} value={enDescription} onChange={(event) => setEnDescription(event.target.value)} placeholder="Detailed description in English" />
+            </label>
+            <label style={{ gridColumn: "1 / -1" }}>
+              Hướng dẫn sử dụng (EN)
+              <textarea rows={3} value={enHowToUse} onChange={(event) => setEnHowToUse(event.target.value)} placeholder="How to use, in English" />
+            </label>
+          </div>
+        </Section>
+
+        <Section
+          id="images"
+          icon={Images}
+          title="Ảnh sản phẩm"
+          description="Ảnh đầu tiên là ảnh chính — bấm ★ trên ảnh khác để đặt làm ảnh chính"
+          badge={images.length ? `${images.length}` : undefined}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              marginBottom: images.length ? 14 : 0,
+            }}
+          >
+            <button
+              type="button"
+              className={panel.secondaryButton}
+              onClick={() => setGalleryOpen(true)}
+            >
+              <Images size={14} /> Chọn ảnh từ thư viện
+            </button>
+          </div>
+          {images.length > 0 ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill,minmax(84px,1fr))",
+                gap: 10,
+              }}
+            >
+              {images.map((image, index) => (
+                <div
+                  key={image + index}
+                  style={{
+                    position: "relative",
+                    aspectRatio: "1",
+                    borderRadius: 9,
+                    overflow: "hidden",
+                    border: "1px solid var(--admin-border)",
+                    background: "var(--admin-soft)",
+                  }}
+                >
+                  <img
+                    src={image}
+                    alt=""
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setImages(
+                        images.filter((_, itemIndex) => itemIndex !== index),
+                      )
+                    }
+                    aria-label="Xóa ảnh"
+                    style={{
+                      position: "absolute",
+                      top: 4,
+                      right: 4,
+                      width: 20,
+                      height: 20,
+                      borderRadius: "50%",
+                      background: "rgba(0,0,0,.6)",
+                      color: "#fff",
+                      display: "grid",
+                      placeItems: "center",
+                      border: 0,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <Trash2 size={11} />
+                  </button>
+                  {index === 0 ? (
+                    <span
+                      style={{
+                        position: "absolute",
+                        bottom: 4,
+                        left: 4,
+                        background: "var(--admin-blue)",
+                        color: "#fff",
+                        fontSize: 9,
+                        fontWeight: 700,
+                        padding: "2px 6px",
+                        borderRadius: 4,
+                      }}
+                    >
+                      Ảnh chính
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setImages([
+                          image,
+                          ...images.filter((_, itemIndex) => itemIndex !== index),
+                        ])
+                      }
+                      aria-label="Đặt làm ảnh chính"
+                      title="Đặt làm ảnh chính"
+                      style={{
+                        position: "absolute",
+                        bottom: 4,
+                        left: 4,
+                        width: 20,
+                        height: 20,
+                        borderRadius: "50%",
+                        background: "rgba(0,0,0,.6)",
+                        color: "#fff",
+                        display: "grid",
+                        placeItems: "center",
+                        border: 0,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <Star size={11} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className={panel.empty} style={{ padding: "20px 0" }}>
+              Chưa có ảnh nào. Bấm &quot;Chọn ảnh từ thư viện&quot; để thêm.
+            </p>
+          )}
+        </Section>
+
+        {repeat(
+          "causes",
+          CircleAlert,
+          "Nguyên nhân",
+          "Giải thích nguyên nhân của vấn đề",
+          rootCauses,
+          setRootCauses,
+          "Nguyên nhân",
+        )}
+        {repeat(
+          "detailHighlights",
+          Sparkles,
+          "Điểm nổi bật (icon)",
+          "Dãy icon + chú thích ngắn hiện ở cuối tab Chi tiết (VD: Không tác dụng phụ, Công thức khoa học...)",
+          detailHighlights,
+          setDetailHighlights,
+          "Điểm nổi bật",
+        )}
+
+        <Section
+          id="howto"
+          icon={BookOpen}
+          title="Hướng dẫn sử dụng"
+          description="Cách dùng sản phẩm"
+          defaultOpen={!productId}
+        >
+          <ItemEditor
+            item={howToUse}
+            onChange={(patch) => setHowToUse({ ...howToUse, ...patch })}
+            onRemove={() => setHowToUse(emptyItem())}
+            heading="Hướng dẫn"
+          />
+        </Section>
+
+        {repeat(
+          "kit",
+          Package,
+          "Thành phần bộ sản phẩm (hiện trong tab Chi tiết)",
+          "Danh sách sản phẩm trong bộ — hiện ở tab \"Chi tiết\" trên trang sản phẩm (VD: Sản phẩm chính, Dưỡng chất hỗ trợ)",
+          treatmentKit,
+          setTreatmentKit,
+          "Thành phần",
+        )}
+        {repeat(
+          "journey",
+          Route,
+          "Lộ trình điều trị",
+          "Các giai đoạn sử dụng theo thời gian",
+          journey,
+          setJourney,
+          "Giai đoạn",
+        )}
+        {repeat(
+          "specs",
+          ListChecks,
+          "Thông số sản phẩm",
+          "Thông số kỹ thuật mở rộng",
+          specs,
+          setSpecs,
+          "Thông số",
+        )}
+        {repeat(
+          "blocks",
+          LayoutGrid,
+          "Nội dung tùy biến",
+          "Khối nội dung tự do khác",
+          blocks,
+          setBlocks,
+          "Khối",
+        )}
+        {repeat(
+          "additionalInfo",
+          Info,
+          "Thông tin bổ sung",
+          "Bảng thông tin dạng nhãn/giá trị (VD: Xuất xứ, Nhà sản xuất...), hiện phía dưới phần đánh giá",
+          additionalInfo,
+          setAdditionalInfo,
+          "Dòng",
+        )}
 
         <Section
           id="quiz"
