@@ -17,20 +17,17 @@ function ensureConfigured() {
 
 export type PushPayload = { title: string; body?: string; href?: string };
 
-export async function sendPushToAdmins(payload: PushPayload) {
-  if (!ensureConfigured()) return;
-  await connectDb();
-  const subscriptions = await PushSubscription.find({ role: "admin" }).lean();
+async function sendToSubscriptions(
+  subscriptions: { endpoint: string; keys: { p256dh: string; auth: string } }[],
+  payload: PushPayload,
+) {
   if (!subscriptions.length) return;
   const message = JSON.stringify(payload);
   await Promise.all(
     subscriptions.map(async (subscription) => {
       try {
         await webpush.sendNotification(
-          {
-            endpoint: subscription.endpoint,
-            keys: subscription.keys,
-          },
+          { endpoint: subscription.endpoint, keys: subscription.keys },
           message,
         );
       } catch (error) {
@@ -40,4 +37,18 @@ export async function sendPushToAdmins(payload: PushPayload) {
       }
     }),
   );
+}
+
+export async function sendPushToAdmins(payload: PushPayload) {
+  if (!ensureConfigured()) return;
+  await connectDb();
+  const subscriptions = await PushSubscription.find({ role: "admin" }).lean();
+  await sendToSubscriptions(subscriptions, payload);
+}
+
+export async function sendPushToUser(userId: string, payload: PushPayload) {
+  if (!ensureConfigured()) return;
+  await connectDb();
+  const subscriptions = await PushSubscription.find({ user: userId, role: "customer" }).lean();
+  await sendToSubscriptions(subscriptions, payload);
 }

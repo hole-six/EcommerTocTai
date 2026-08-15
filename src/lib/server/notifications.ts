@@ -1,6 +1,6 @@
 import type { Types } from "mongoose";
 import { Notification } from "@/models/Notification";
-import { sendPushToAdmins } from "@/lib/server/push";
+import { sendPushToAdmins, sendPushToUser } from "@/lib/server/push";
 
 export type NotificationRecipient =
   | { recipientRole: "admin"; user?: null }
@@ -20,6 +20,8 @@ export async function notify(
   });
   if (recipient.recipientRole === "admin") {
     void sendPushToAdmins({ title: data.title, body: data.body, href: data.href }).catch(() => {});
+  } else {
+    void sendPushToUser(String(recipient.user), { title: data.title, body: data.body, href: data.href }).catch(() => {});
   }
   return created;
 }

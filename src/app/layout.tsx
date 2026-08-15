@@ -3,6 +3,7 @@ import { Lexend } from "next/font/google";
 import { CartProvider } from "@/contexts/CartContext";
 import { ToastHost } from "@/components/ui/Toast";
 import { PwaRegister } from "@/components/PwaRegister";
+import { PwaPrompt } from "@/components/store/PwaPrompt";
 import { ContactButtons } from "@/components/support/ContactButtons";
 import { SupportChatWidget } from "@/components/support/SupportChatWidget";
 import { SITE_URL, SITE_NAME, DEFAULT_DESCRIPTION, DEFAULT_OG_IMAGE, PUBLISHER } from "@/lib/seo.config";
@@ -128,6 +129,7 @@ export default function RootLayout({
           <ContactButtons />
           <SupportChatWidget />
           <PwaRegister />
+          <PwaPrompt />
         </CartProvider>
       </body>
     </html>

@@ -2,43 +2,17 @@
 
 import { Bell, X } from "lucide-react";
 import { useEffect, useState } from "react";
-
-function urlBase64ToUint8Array(base64String: string) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const rawData = atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; i++) outputArray[i] = rawData.charCodeAt(i);
-  return outputArray;
-}
-
-async function subscribeAndSave() {
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  if (!publicKey) return;
-  const registration = await navigator.serviceWorker.ready;
-  let subscription = await registration.pushManager.getSubscription();
-  if (!subscription) {
-    subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(publicKey),
-    });
-  }
-  await fetch("/api/admin/push-subscriptions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(subscription.toJSON()),
-  }).catch(() => undefined);
-}
+import { pushSupported, subscribeToPush } from "@/lib/client/push";
 
 export function PushSubscribe() {
   const [visible, setVisible] = useState(false);
   const [requesting, setRequesting] = useState(false);
 
   useEffect(() => {
-    if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    if (!pushSupported()) return;
     if (localStorage.getItem("toctai_push_dismissed")) return;
     if (Notification.permission === "granted") {
-      void subscribeAndSave();
+      void subscribeToPush();
       return;
     }
     if (Notification.permission === "default") setVisible(true);
@@ -48,7 +22,7 @@ export function PushSubscribe() {
     setRequesting(true);
     try {
       const permission = await Notification.requestPermission();
-      if (permission === "granted") await subscribeAndSave();
+      if (permission === "granted") await subscribeToPush();
     } finally {
       setRequesting(false);
       setVisible(false);

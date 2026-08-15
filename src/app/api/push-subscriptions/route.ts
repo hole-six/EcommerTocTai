@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { requireAdmin } from "@/lib/server/auth";
+import { requireUser } from "@/lib/server/auth";
 import { connectDb } from "@/lib/server/db";
 import { apiError } from "@/lib/server/http";
 import { PushSubscription } from "@/models/PushSubscription";
@@ -15,7 +15,7 @@ const subscriptionSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const session = await requireAdmin();
+    const session = await requireUser();
     const data = subscriptionSchema.parse(await request.json());
     await connectDb();
     await PushSubscription.findOneAndUpdate(
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       {
         $set: {
           user: session.id,
-          role: "admin",
+          role: session.role,
           keys: data.keys,
           userAgent: request.headers.get("user-agent") ?? "",
         },
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    await requireAdmin();
+    await requireUser();
     const data = z.object({ endpoint: z.string().min(1) }).parse(await request.json());
     await connectDb();
     await PushSubscription.deleteOne({ endpoint: data.endpoint });
