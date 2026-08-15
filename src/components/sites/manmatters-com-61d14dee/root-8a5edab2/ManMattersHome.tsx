@@ -105,10 +105,18 @@ type HomeProduct = {
   slug: string;
   shortDescription?: string;
   price: number;
+  salePrice?: number;
   compareAtPrice?: number;
   rating?: number;
   images: string[];
 };
+
+const formatPrice = (value: number) =>
+  new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  }).format(value);
 
 const faqs = [
   {
@@ -410,82 +418,73 @@ export function ManMattersHome({
           ))}
         </div>
         <div className={styles.productGrid}>
-          {products.map((p) => (
-            <article className={styles.product} key={p._id}>
-              <Link
-                href={`/san-pham/${p.slug}`}
-                className={styles.productImage}
-              >
-                {p.images[0] && (
-                  <Image
-                    src={p.images[0]}
-                    alt={p.name}
-                    width={800}
-                    height={800}
-                  />
-                )}
-              </Link>
-              <div className={styles.productBody}>
-                <p>{p.shortDescription}</p>
+          {products.map((p) => {
+            const displayPrice = p.salePrice ?? p.price;
+            const originalPrice =
+              p.compareAtPrice ?? (p.salePrice ? p.price : undefined);
+            return (
+              <article className={styles.product} key={p._id}>
                 <Link
                   href={`/san-pham/${p.slug}`}
-                  className={styles.productTitleLink}
+                  className={styles.productImage}
                 >
-                  <h3>{p.name}</h3>
-                </Link>
-                <div className={styles.priceRow}>
-                  <strong>
-                    {new Intl.NumberFormat("vi-VN", {
-                      style: "currency",
-                      currency: "VND",
-                      maximumFractionDigits: 0,
-                    }).format(p.price)}
-                  </strong>
-                  {p.compareAtPrice && (
-                    <del>
-                      {new Intl.NumberFormat("vi-VN", {
-                        style: "currency",
-                        currency: "VND",
-                        maximumFractionDigits: 0,
-                      }).format(p.compareAtPrice)}
-                    </del>
+                  {p.images[0] && (
+                    <Image
+                      src={p.images[0]}
+                      alt={p.name}
+                      width={800}
+                      height={800}
+                    />
                   )}
-                  <em>★ {p.rating ?? "-"}</em>
-                </div>
-                <div className={styles.productActions}>
-                  <button
-                    className={styles.addBtn}
-                    onClick={() => {
-                      addItem({
-                        productId: p._id ?? p.id ?? "",
-                        name: p.name,
-                        price: p.price,
-                        image: p.images[0] ?? "",
-                      });
-                      showCartToast(`Đã thêm "${p.name}" vào giỏ hàng`);
-                    }}
+                </Link>
+                <div className={styles.productBody}>
+                  <p>{p.shortDescription}</p>
+                  <Link
+                    href={`/san-pham/${p.slug}`}
+                    className={styles.productTitleLink}
                   >
-                    <Plus size={16} /> Thêm
-                  </button>
-                  <button
-                    className={styles.buyBtn}
-                    onClick={() => {
-                      addItem({
-                        productId: p._id ?? p.id ?? "",
-                        name: p.name,
-                        price: p.price,
-                        image: p.images[0] ?? "",
-                      });
-                      showCartToast(`Đã thêm "${p.name}" · đang chuyển đến giỏ hàng`);
-                      router.push("/checkout");
-                    }}
-                  >
-                    <Zap size={16} /> Mua ngay
-                  </button>
+                    <h3>{p.name}</h3>
+                  </Link>
+                  <div className={styles.priceRow}>
+                    <strong>{formatPrice(displayPrice)}</strong>
+                    {originalPrice && <del>{formatPrice(originalPrice)}</del>}
+                    <em>★ {p.rating ?? "-"}</em>
+                  </div>
+                  <div className={styles.productActions}>
+                    <button
+                      className={styles.addBtn}
+                      onClick={() => {
+                        addItem({
+                          productId: p._id ?? p.id ?? "",
+                          name: p.name,
+                          price: displayPrice,
+                          image: p.images[0] ?? "",
+                        });
+                        showCartToast(`Đã thêm "${p.name}" vào giỏ hàng`);
+                      }}
+                    >
+                      <Plus size={16} /> Thêm
+                    </button>
+                    <button
+                      className={styles.buyBtn}
+                      onClick={() => {
+                        addItem({
+                          productId: p._id ?? p.id ?? "",
+                          name: p.name,
+                          price: displayPrice,
+                          image: p.images[0] ?? "",
+                        });
+                        showCartToast(`Đã thêm "${p.name}" · đang chuyển đến giỏ hàng`);
+                        router.push("/checkout");
+                      }}
+                    >
+                      <Zap size={16} /> Mua ngay
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
       </section>
 
