@@ -8,6 +8,11 @@ import { SiteHeader } from "@/components/sites/manmatters-com-61d14dee/shared/Si
 import { SiteFooter } from "@/components/sites/manmatters-com-61d14dee/shared/SiteFooter";
 import { useCart } from "@/contexts/CartContext";
 import { showCartToast } from "@/components/cart/CartToast";
+import {
+  formatProductPrice,
+  getProductOriginalPrice,
+  getProductSalePrice,
+} from "@/lib/product-pricing";
 import styles from "./CatalogPage.module.css";
 
 type Category = {
@@ -37,12 +42,6 @@ type CategoryBanner = {
   alt: string;
   ctaHref?: string;
 };
-const formatPrice = (value: number) =>
-  new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(value);
 const categoryEntryLabel = (entry: { name: string; slug: string } | string) =>
   typeof entry === "string" ? entry : (entry?.name ?? "");
 const categoryEntries = (category: Product["category"]) =>
@@ -225,8 +224,11 @@ export function CatalogPage({
             {!loading && shownProducts.length === 0 && (
               <p>Chưa có sản phẩm trong danh mục này.</p>
             )}
-            {shownProducts.map((product) => (
-              <article key={product._id ?? product.id} className={styles.product}>
+            {shownProducts.map((product) => {
+              const salePrice = getProductSalePrice(product);
+              const originalPrice = getProductOriginalPrice(product);
+              return (
+                <article key={product._id ?? product.id} className={styles.product}>
                 <Link
                   href={productHref(product)}
                   className={styles.productImage}
@@ -249,13 +251,9 @@ export function CatalogPage({
                     {product.rating ?? "-"}
                   </span>
                   <div>
-                    <strong>
-                      {formatPrice(product.salePrice ?? product.price)}
-                    </strong>
-                    {(product.compareAtPrice || product.salePrice) && (
-                      <del>
-                        {formatPrice(product.compareAtPrice ?? product.price)}
-                      </del>
+                    <strong>{formatProductPrice(salePrice)}</strong>
+                    {originalPrice && (
+                      <del>{formatProductPrice(originalPrice)}</del>
                     )}
                   </div>
                   <div className={styles.actions}>
@@ -265,7 +263,7 @@ export function CatalogPage({
                         addItem({
                           productId: product._id ?? product.id,
                           name: product.name,
-                          price: product.salePrice ?? product.price,
+                          price: salePrice,
                           image: product.images[0] ?? "",
                         });
                         showCartToast(`Đã thêm "${product.name}" vào giỏ hàng`);
@@ -278,7 +276,7 @@ export function CatalogPage({
                         addItem({
                           productId: product._id ?? product.id,
                           name: product.name,
-                          price: product.salePrice ?? product.price,
+                          price: salePrice,
                           image: product.images[0] ?? "",
                         });
                         showCartToast(`Đã thêm "${product.name}" · đang chuyển đến giỏ hàng`);
@@ -289,8 +287,9 @@ export function CatalogPage({
                     </button>
                   </div>
                 </div>
-              </article>
-            ))}
+                </article>
+              );
+            })}
           </div>
         </section>
       </div>

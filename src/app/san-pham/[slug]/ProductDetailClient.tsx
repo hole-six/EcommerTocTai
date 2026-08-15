@@ -10,6 +10,11 @@ import { SiteFooter } from "@/components/sites/manmatters-com-61d14dee/shared/Si
 import { ReviewModal } from "@/components/store/ReviewModal";
 import { showCartToast } from "@/components/cart/CartToast";
 import { useCart } from "@/contexts/CartContext";
+import {
+  getProductDiscountPercent,
+  getProductOriginalPrice,
+  getProductSalePrice,
+} from "@/lib/product-pricing";
 import styles from "./product-detail.module.css";
 
 const MAX_VISIBLE_REVIEWS = 5;
@@ -73,7 +78,10 @@ export function ProductDetailClient({ slug }: { slug: string }) {
   }, [product]);
   if (failed) notFound(); if (loading || !product) return <><SiteHeader compact /><p style={{ padding: 80, textAlign: "center" }}>Đang tải sản phẩm...</p></>;
   const selectedOptions = (product.optionGroups ?? []).map((group) => { const option = group.options.find((entry) => (entry.value ?? entry.label ?? "") === selected[group.code]); return option ? { groupCode: group.code, groupTitle: group.title, optionValue: option.value ?? option.label ?? "", optionLabel: option.label ?? option.value ?? "", priceAdjustment: option.priceAdjustment ?? 0 } : null; }).filter(Boolean) as { groupCode: string; groupTitle: string; optionValue: string; optionLabel: string; priceAdjustment: number }[];
-  const price = (product.salePrice ?? product.price) + selectedOptions.reduce((total, option) => total + option.priceAdjustment, 0);
+  const baseSalePrice = getProductSalePrice(product);
+  const originalPrice = getProductOriginalPrice(product);
+  const discountPercent = getProductDiscountPercent(product);
+  const price = baseSalePrice + selectedOptions.reduce((total, option) => total + option.priceAdjustment, 0);
   const currentProduct = product;
   const productId = currentProduct._id ?? currentProduct.id ?? "";
   const avgRating = reviews.length ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0;
@@ -206,8 +214,8 @@ export function ProductDetailClient({ slug }: { slug: string }) {
             <h1>{displayName}</h1>
             <div className={styles.priceRow}>
               <span className={styles.price}>{money.format(price)}</span>
-              {product.salePrice && <span className={styles.compare}>{money.format(product.price)}</span>}
-              <span className={styles.discount}>{product.salePrice ? `Giảm ${Math.round((1 - product.salePrice / product.price) * 100)}%` : "Bán chạy"}</span>
+              {originalPrice && <span className={styles.compare}>{money.format(originalPrice)}</span>}
+              <span className={styles.discount}>{discountPercent ? `Giảm ${discountPercent}%` : "Bán chạy"}</span>
             </div>
             <p className={styles.tax}>Đã bao gồm thuế</p>
             <div className={styles.ratingRow}>
