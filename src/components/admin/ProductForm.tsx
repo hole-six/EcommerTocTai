@@ -785,6 +785,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           icon={Info}
           title="Thông tin cơ bản"
           description="Tên, đường dẫn và mã sản phẩm"
+          defaultOpen={!productId}
         >
           <div className={panel.grid2}>
             <label>
@@ -866,6 +867,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           icon={Tag}
           title="Giá & tồn kho"
           description="Giá gốc, giá bán thực tế và số lượng trong kho"
+          defaultOpen={!productId}
         >
           <div className={panel.grid3}>
             <label>
@@ -1255,6 +1257,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           icon={FileText}
           title="Mô tả sản phẩm"
           description="Hiện trên thẻ sản phẩm và trang chi tiết"
+          defaultOpen={!productId}
         >
           <div className={panel.grid2}>
             <label style={{ gridColumn: "1 / -1" }}>
@@ -1309,6 +1312,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           title="Ảnh sản phẩm"
           description="Ảnh đầu tiên là ảnh chính — bấm ★ trên ảnh khác để đặt làm ảnh chính"
           badge={images.length ? `${images.length}` : undefined}
+          defaultOpen={!productId}
         >
           <div
             style={{
@@ -1660,6 +1664,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           icon={Target}
           title="Gắn thẻ cho bài test tóc"
           description="Dùng để bài test tự động gợi ý đúng sản phẩm này — không bắt buộc, để trống nếu sản phẩm không liên quan đến rụng tóc"
+          defaultOpen={!productId}
         >
           <p className={styles.fieldHint} style={{ marginBottom: 16 }}>
             Chọn tất cả các trường hợp mà sản phẩm này phù hợp. Không cần chọn hết mọi ô — bỏ trống
