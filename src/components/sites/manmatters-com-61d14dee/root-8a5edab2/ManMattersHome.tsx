@@ -18,11 +18,6 @@ import { SiteFooter } from "../shared/SiteFooter";
 import { useEffect, useState } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { showCartToast } from "@/components/cart/CartToast";
-import {
-  formatProductPrice,
-  getProductOriginalPrice,
-  getProductSalePrice,
-} from "@/lib/product-pricing";
 import styles from "./ManMattersHome.module.css";
 
 const asset = "/sites/manmatters-com-61d14dee/root-8a5edab2/";
@@ -115,6 +110,13 @@ type HomeProduct = {
   rating?: number;
   images: string[];
 };
+
+const formatPrice = (value: number) =>
+  new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  }).format(value);
 
 const faqs = [
   {
@@ -417,8 +419,7 @@ export function ManMattersHome({
         </div>
         <div className={styles.productGrid}>
           {products.map((p) => {
-            const salePrice = getProductSalePrice(p);
-            const originalPrice = getProductOriginalPrice(p);
+            const price = p.salePrice ?? p.price;
             return (
               <article className={styles.product} key={p._id}>
                 <Link
@@ -443,10 +444,8 @@ export function ManMattersHome({
                     <h3>{p.name}</h3>
                   </Link>
                   <div className={styles.priceRow}>
-                    <strong>{formatProductPrice(salePrice)}</strong>
-                    {originalPrice && (
-                      <del>{formatProductPrice(originalPrice)}</del>
-                    )}
+                    <strong>{formatPrice(price)}</strong>
+                    {p.salePrice && <del>{formatPrice(p.price)}</del>}
                     <em>★ {p.rating ?? "-"}</em>
                   </div>
                   <div className={styles.productActions}>
@@ -456,7 +455,7 @@ export function ManMattersHome({
                         addItem({
                           productId: p._id ?? p.id ?? "",
                           name: p.name,
-                          price: salePrice,
+                          price,
                           image: p.images[0] ?? "",
                         });
                         showCartToast(`Đã thêm "${p.name}" vào giỏ hàng`);
@@ -470,7 +469,7 @@ export function ManMattersHome({
                         addItem({
                           productId: p._id ?? p.id ?? "",
                           name: p.name,
-                          price: salePrice,
+                          price,
                           image: p.images[0] ?? "",
                         });
                         showCartToast(`Đã thêm "${p.name}" · đang chuyển đến giỏ hàng`);
