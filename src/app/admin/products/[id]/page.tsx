@@ -25,7 +25,7 @@ export default function EditProductPage({ params }: PageProps<"/admin/products/[
         </div>
       </div>
       {notFound && <p className={panel.empty}>Không tìm thấy sản phẩm.</p>}
-      {product && <ProductForm initial={product} />}
+      {product && <ProductForm initial={product} key={product._id} />}
     </AdminShell>
   );
 }
