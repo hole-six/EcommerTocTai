@@ -24,6 +24,7 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { PushSubscribe } from "@/components/admin/PushSubscribe";
 import styles from "./admin-shell.module.css";
 
 type NotificationItem = {
@@ -295,6 +296,7 @@ export function AdminShell({
             <div className={styles.mobileUser}>AD</div>
           </div>
         </header>
+        <PushSubscribe />
         {children}
       </main>
       <nav className={styles.bottomNav} aria-label="Điều hướng admin">
