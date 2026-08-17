@@ -8,6 +8,10 @@ import { SiteHeader } from "@/components/sites/manmatters-com-61d14dee/shared/Si
 import { SiteFooter } from "@/components/sites/manmatters-com-61d14dee/shared/SiteFooter";
 import { useCart } from "@/contexts/CartContext";
 import { showCartToast } from "@/components/cart/CartToast";
+import {
+  normalizeImageSrc,
+  shouldRenderUnoptimizedImage,
+} from "@/lib/client/images";
 import styles from "./CatalogPage.module.css";
 
 type Category = {
@@ -170,7 +174,7 @@ export function CatalogPage({
               className={selected === category.slug ? styles.activeSide : ""}
             >
               {category.image && (
-                <Image src={category.image} alt="" width={62} height={62} />
+                <Image src={normalizeImageSrc(category.image)} alt="" width={62} height={62} unoptimized={shouldRenderUnoptimizedImage(category.image)} />
               )}
               <span>{category.name}</span>
             </button>
@@ -194,7 +198,7 @@ export function CatalogPage({
                   }
                 >
                   {child.image && (
-                    <Image src={child.image} alt="" width={30} height={30} />
+                    <Image src={normalizeImageSrc(child.image)} alt="" width={30} height={30} unoptimized={shouldRenderUnoptimizedImage(child.image)} />
                   )}
                   <span>{child.name}</span>
                 </button>
@@ -208,14 +212,14 @@ export function CatalogPage({
                 href={categoryBanner?.ctaHref || `/shop/${selected}`}
               >
                 <Image
-                  src={bannerImage}
+                  src={normalizeImageSrc(bannerImage)}
                   alt={
                     categoryBanner?.alt || current?.name || "Banner danh mục"
                   }
                   width={900}
                   height={360}
                   preload
-                  unoptimized={bannerImage.startsWith("/uploads/")}
+                  unoptimized={shouldRenderUnoptimizedImage(bannerImage)}
                 />
               </a>
             </div>
@@ -225,19 +229,21 @@ export function CatalogPage({
             {!loading && shownProducts.length === 0 && (
               <p>Chưa có sản phẩm trong danh mục này.</p>
             )}
-            {shownProducts.map((product) => (
+            {shownProducts.map((product) => {
+              const image = normalizeImageSrc(product.images[0]);
+              return (
               <article key={product._id ?? product.id} className={styles.product}>
                 <Link
                   href={productHref(product)}
                   className={styles.productImage}
                 >
-                  {product.images[0] && (
+                  {image && (
                     <Image
-                      src={product.images[0]}
+                      src={image}
                       alt={product.name}
                       width={480}
                       height={480}
-                      unoptimized={product.images[0].startsWith("/uploads/")}
+                      unoptimized={shouldRenderUnoptimizedImage(image)}
                     />
                   )}
                 </Link>
@@ -266,7 +272,7 @@ export function CatalogPage({
                           productId: product._id ?? product.id,
                           name: product.name,
                           price: product.salePrice ?? product.price,
-                          image: product.images[0] ?? "",
+                          image,
                         });
                         showCartToast(`Đã thêm "${product.name}" vào giỏ hàng`);
                       }}
@@ -279,7 +285,7 @@ export function CatalogPage({
                           productId: product._id ?? product.id,
                           name: product.name,
                           price: product.salePrice ?? product.price,
-                          image: product.images[0] ?? "",
+                          image,
                         });
                         showCartToast(`Đã thêm "${product.name}" · đang chuyển đến giỏ hàng`);
                         router.push("/checkout");
@@ -290,7 +296,8 @@ export function CatalogPage({
                   </div>
                 </div>
               </article>
-            ))}
+              );
+            })}
           </div>
         </section>
       </div>

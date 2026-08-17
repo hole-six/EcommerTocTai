@@ -18,13 +18,16 @@ import { SiteFooter } from "../shared/SiteFooter";
 import { useEffect, useState } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { showCartToast } from "@/components/cart/CartToast";
+import {
+  normalizeImageSrc,
+  shouldRenderUnoptimizedImage,
+} from "@/lib/client/images";
 import styles from "./ManMattersHome.module.css";
 
 const asset = "/sites/manmatters-com-61d14dee/root-8a5edab2/";
-const isRuntimeUpload = (src: string) => src.startsWith("/uploads/");
 const preloadImages = (sources: string[]) =>
   Promise.all(
-    sources.filter(Boolean).map(
+    sources.map(normalizeImageSrc).filter(Boolean).map(
       (src) =>
         new Promise<void>((resolve) => {
           const image = new window.Image();
@@ -330,12 +333,12 @@ export function ManMattersHome({
             <Image
               key={s.image}
               className={`${styles.heroImage} ${index === slide ? styles.activeSlide : ""}`}
-              src={s.image}
+              src={normalizeImageSrc(s.image)}
               alt={s.alt}
               width={1440}
               height={692}
               loading="eager"
-              unoptimized={isRuntimeUpload(s.image)}
+              unoptimized={shouldRenderUnoptimizedImage(s.image)}
             />
           ))}
           <Link
@@ -364,11 +367,11 @@ export function ManMattersHome({
           {promoBanners.map((banner) => (
             <a href={banner.href} key={banner.image}>
               <Image
-                src={banner.image}
+                src={normalizeImageSrc(banner.image)}
                 alt={banner.alt}
                 width={1440}
                 height={360}
-                unoptimized={isRuntimeUpload(banner.image)}
+                unoptimized={shouldRenderUnoptimizedImage(banner.image)}
               />
             </a>
           ))}
@@ -381,11 +384,11 @@ export function ManMattersHome({
           {concernSlots.map((c) => (
             <Link href={c.href} className={styles.concern} key={c.name}>
               <Image
-                src={c.image}
+                src={normalizeImageSrc(c.image)}
                 alt={c.alt}
                 width={640}
                 height={800}
-                unoptimized={isRuntimeUpload(c.image)}
+                unoptimized={shouldRenderUnoptimizedImage(c.image)}
               />
               <span className={styles.concernLabel}>
                 <ChevronRight size={20} />
@@ -420,18 +423,20 @@ export function ManMattersHome({
         <div className={styles.productGrid}>
           {products.map((p) => {
             const price = p.salePrice ?? p.price;
+            const image = normalizeImageSrc(p.images[0]);
             return (
               <article className={styles.product} key={p._id}>
                 <Link
                   href={`/san-pham/${p.slug}`}
                   className={styles.productImage}
                 >
-                  {p.images[0] && (
+                  {image && (
                     <Image
-                      src={p.images[0]}
+                      src={image}
                       alt={p.name}
                       width={800}
                       height={800}
+                      unoptimized={shouldRenderUnoptimizedImage(image)}
                     />
                   )}
                 </Link>
@@ -456,7 +461,7 @@ export function ManMattersHome({
                           productId: p._id ?? p.id ?? "",
                           name: p.name,
                           price,
-                          image: p.images[0] ?? "",
+                          image,
                         });
                         showCartToast(`Đã thêm "${p.name}" vào giỏ hàng`);
                       }}
@@ -470,7 +475,7 @@ export function ManMattersHome({
                           productId: p._id ?? p.id ?? "",
                           name: p.name,
                           price,
-                          image: p.images[0] ?? "",
+                          image,
                         });
                         showCartToast(`Đã thêm "${p.name}" · đang chuyển đến giỏ hàng`);
                         router.push("/checkout");

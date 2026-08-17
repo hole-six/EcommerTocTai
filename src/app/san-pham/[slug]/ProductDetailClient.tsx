@@ -10,6 +10,10 @@ import { SiteFooter } from "@/components/sites/manmatters-com-61d14dee/shared/Si
 import { ReviewModal } from "@/components/store/ReviewModal";
 import { showCartToast } from "@/components/cart/CartToast";
 import { useCart } from "@/contexts/CartContext";
+import {
+  normalizeImageSrc,
+  shouldRenderUnoptimizedImage,
+} from "@/lib/client/images";
 import styles from "./product-detail.module.css";
 
 const MAX_VISIBLE_REVIEWS = 5;
@@ -83,6 +87,9 @@ export function ProductDetailClient({ slug }: { slug: string }) {
   const displayShortDescription = (lang === "en" && en?.shortDescription) || product.shortDescription;
   const displayDescription = (lang === "en" && en?.description) || product.description;
   const displayHowToUseDescription = (lang === "en" && en?.howToUseDescription) || product.howToUse?.description;
+  const productImages = product.images.map(normalizeImageSrc).filter(Boolean);
+  const primaryImage = productImages[0] ?? "";
+  const activeProductImage = productImages[activeImage] ?? primaryImage;
   function choose(group: OptionGroup, option: Option) {
     if (option.targetProductSlug && option.targetProductSlug !== slug) {
       router.push(`/san-pham/${option.targetProductSlug}`);
@@ -94,7 +101,7 @@ export function ProductDetailClient({ slug }: { slug: string }) {
     const missing = groups.find((group) => group.required && !selected[group.code]);
     if (missing) { setVariantModalBuyNow(buyNow); setVariantModalOpen(true); return; }
     if (!productId) { setLocationError("Không xác định được mã sản phẩm. Vui lòng tải lại trang."); return; }
-    addItem({ productId, name: currentProduct.name, price, image: currentProduct.images[0] ?? "", variantTitle: selectedOptions.map((option) => option.optionLabel).join(" / "), options: selectedOptions });
+    addItem({ productId, name: currentProduct.name, price, image: primaryImage, variantTitle: selectedOptions.map((option) => option.optionLabel).join(" / "), options: selectedOptions });
     setVariantModalOpen(false);
     if (buyNow) { showCartToast(`Đã thêm "${currentProduct.name}" · đang chuyển đến giỏ hàng`); router.push("/checkout"); } else { showCartToast(`Đã thêm "${currentProduct.name}" vào giỏ hàng`); setAdded(true); setTimeout(() => setAdded(false), 1600); }
   }
@@ -135,12 +142,13 @@ export function ProductDetailClient({ slug }: { slug: string }) {
           {group.options.map((option) => {
             const value = option.value ?? option.label ?? "";
             const isSelected = selected[group.code] === value;
-            if (option.image && group.displayType === "card") {
+            const optionImage = normalizeImageSrc(option.image);
+            if (optionImage && group.displayType === "card") {
               const { main, sub } = splitOptionLabel(option.label ?? "");
               return (
                 <button type="button" key={option.id} className={`${styles.imageOption} ${isSelected ? styles.selected : ""}`} onClick={() => choose(group, option)}>
                   {isSelected && <CheckCircle2 size={16} className={styles.imageOptionCheck} />}
-                  <span className={styles.imageOptionImg}><Image src={option.image} alt="" fill sizes="64px" style={{ objectFit: "contain" }} quality={92} unoptimized={option.image.startsWith("/uploads/")} /></span>
+                  <span className={styles.imageOptionImg}><Image src={optionImage} alt="" fill sizes="64px" style={{ objectFit: "contain" }} quality={92} unoptimized={shouldRenderUnoptimizedImage(optionImage)} /></span>
                   <span className={styles.imageOptionMain}>{main}</span>
                   {sub && <span className={styles.imageOptionSub}>{sub}</span>}
                 </button>
@@ -186,16 +194,16 @@ export function ProductDetailClient({ slug }: { slug: string }) {
         <div className={styles.purchase}>
           <section className={styles.gallery}>
             <div className={styles.thumbs}>
-              {product.images.map((image, index) => (
+              {productImages.map((image, index) => (
                 <button className={`${styles.thumb} ${index === activeImage ? styles.active : ""}`} key={`${image}-${index}`} onClick={() => setActiveImage(index)} aria-label={`Ảnh sản phẩm ${index + 1}`}>
-                  <Image src={image} alt="" width={62} height={68} unoptimized={image.startsWith("/uploads/")} />
+                  <Image src={image} alt="" width={62} height={68} unoptimized={shouldRenderUnoptimizedImage(image)} />
                 </button>
               ))}
-              {product.images.length > 4 && <span className={styles.thumbMore}>↓</span>}
+              {productImages.length > 4 && <span className={styles.thumbMore}>↓</span>}
             </div>
             <div className={styles.hero}>
-              {product.images[activeImage] ? (
-                <Image src={product.images[activeImage]} alt={displayName} fill priority sizes="(max-width: 900px) 100vw, 50vw" unoptimized={product.images[activeImage].startsWith("/uploads/")} />
+              {activeProductImage ? (
+                <Image src={activeProductImage} alt={displayName} fill priority sizes="(max-width: 900px) 100vw, 50vw" unoptimized={shouldRenderUnoptimizedImage(activeProductImage)} />
               ) : (
                 <div className={styles.heroFallback}>{product.category?.name}</div>
               )}
@@ -325,9 +333,9 @@ export function ProductDetailClient({ slug }: { slug: string }) {
         </div>
         <div className={styles.stickyMainRow}>
           <div className={styles.stickyProduct}>
-            {product.images[0] && (
+            {primaryImage && (
               <div className={styles.stickyThumb}>
-                <Image src={product.images[0]} alt="" fill sizes="48px" style={{ objectFit: "cover" }} />
+                <Image src={primaryImage} alt="" fill sizes="48px" style={{ objectFit: "cover" }} unoptimized={shouldRenderUnoptimizedImage(primaryImage)} />
               </div>
             )}
             <div className={styles.stickyInfo}>
@@ -347,9 +355,9 @@ export function ProductDetailClient({ slug }: { slug: string }) {
           <div className={styles.variantModal} onClick={(event) => event.stopPropagation()}>
             <header className={styles.variantModalHeader}>
               <div className={styles.stickyProduct}>
-                {product.images[0] && (
+                {primaryImage && (
                   <div className={styles.stickyThumb}>
-                    <Image src={product.images[0]} alt="" fill sizes="48px" style={{ objectFit: "cover" }} unoptimized={product.images[0].startsWith("/uploads/")} />
+                    <Image src={primaryImage} alt="" fill sizes="48px" style={{ objectFit: "cover" }} unoptimized={shouldRenderUnoptimizedImage(primaryImage)} />
                   </div>
                 )}
                 <div className={styles.stickyInfo}>
@@ -370,7 +378,7 @@ export function ProductDetailClient({ slug }: { slug: string }) {
         <ReviewModal
           productId={productId}
           productName={displayName}
-          productImage={product.images[0]}
+          productImage={primaryImage}
           loggedIn={loggedIn}
           onClose={() => setShowReviewModal(false)}
           onSubmitted={(review) => setReviews((current) => [review, ...current])}
@@ -571,17 +579,18 @@ function AdditionalInfoSection({ groups }: { groups: AdditionalInfoGroup[] }) {
 
 function RecommendedProductCard({ item }: { item: Product }) {
   const itemPrice = item.salePrice ?? item.price;
+  const image = normalizeImageSrc(item.images?.[0]);
   return (
     <Link href={`/san-pham/${item.slug}`} className={styles.recentCard}>
       <div className={styles.recentImage}>
-        {item.images?.[0] && (
+        {image && (
           <Image
-            src={item.images[0]}
+            src={image}
             alt={item.name}
             fill
             sizes="200px"
             style={{ objectFit: "cover" }}
-            unoptimized={item.images[0].startsWith("/uploads/")}
+            unoptimized={shouldRenderUnoptimizedImage(image)}
           />
         )}
       </div>
