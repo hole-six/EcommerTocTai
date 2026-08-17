@@ -150,12 +150,12 @@ const statusLabel = {
 } as const;
 
 const navItems = [
+  ["images", Images, "Ảnh sản phẩm"],
   ["basic", Info, "Thông tin cơ bản"],
   ["pricing", Tag, "Giá & tồn kho"],
   ["stages", Layers, "Ảnh giai đoạn"],
   ["variants", SlidersHorizontal, "Biến thể"],
   ["description", FileText, "Mô tả"],
-  ["images", Images, "Ảnh sản phẩm"],
   ["causes", CircleAlert, "Nguyên nhân"],
   ["howto", BookOpen, "Hướng dẫn dùng"],
   ["kit", Package, "Chi tiết: Thành phần bộ"],
@@ -781,6 +781,138 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
     <div className={styles.layout}>
       <div className={styles.main}>
         <Section
+          id="images"
+          icon={Images}
+          title="Ảnh sản phẩm"
+          description="Ảnh đầu tiên là ảnh chính — bấm ★ trên ảnh khác để đặt làm ảnh chính"
+          badge={images.length ? `${images.length}` : undefined}
+          defaultOpen
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              marginBottom: images.length ? 14 : 0,
+            }}
+          >
+            <button
+              type="button"
+              className={panel.secondaryButton}
+              onClick={() => setGalleryOpen(true)}
+            >
+              <Images size={14} /> Chọn ảnh từ thư viện
+            </button>
+          </div>
+          {images.length > 0 ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill,minmax(84px,1fr))",
+                gap: 10,
+              }}
+            >
+              {images.map((image, index) => (
+                <div
+                  key={image + index}
+                  style={{
+                    position: "relative",
+                    aspectRatio: "1",
+                    borderRadius: 9,
+                    overflow: "hidden",
+                    border: "1px solid var(--admin-border)",
+                    background: "var(--admin-soft)",
+                  }}
+                >
+                  <img
+                    src={image}
+                    alt=""
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setImages(
+                        images.filter((_, itemIndex) => itemIndex !== index),
+                      )
+                    }
+                    aria-label="Xóa ảnh"
+                    style={{
+                      position: "absolute",
+                      top: 4,
+                      right: 4,
+                      width: 20,
+                      height: 20,
+                      borderRadius: "50%",
+                      background: "rgba(0,0,0,.6)",
+                      color: "#fff",
+                      display: "grid",
+                      placeItems: "center",
+                      border: 0,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <Trash2 size={11} />
+                  </button>
+                  {index === 0 ? (
+                    <span
+                      style={{
+                        position: "absolute",
+                        bottom: 4,
+                        left: 4,
+                        background: "var(--admin-blue)",
+                        color: "#fff",
+                        fontSize: 9,
+                        fontWeight: 700,
+                        padding: "2px 6px",
+                        borderRadius: 4,
+                      }}
+                    >
+                      Ảnh chính
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setImages([
+                          image,
+                          ...images.filter((_, itemIndex) => itemIndex !== index),
+                        ])
+                      }
+                      aria-label="Đặt làm ảnh chính"
+                      title="Đặt làm ảnh chính"
+                      style={{
+                        position: "absolute",
+                        bottom: 4,
+                        left: 4,
+                        width: 20,
+                        height: 20,
+                        borderRadius: "50%",
+                        background: "rgba(0,0,0,.6)",
+                        color: "#fff",
+                        display: "grid",
+                        placeItems: "center",
+                        border: 0,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <Star size={11} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className={panel.empty} style={{ padding: "20px 0" }}>
+              Chưa có ảnh nào. Bấm &quot;Chọn ảnh từ thư viện&quot; để thêm.
+            </p>
+          )}
+        </Section>
+
+        <Section
           id="basic"
           icon={Info}
           title="Thông tin cơ bản"
@@ -1304,138 +1436,6 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
               <textarea rows={3} value={enHowToUse} onChange={(event) => setEnHowToUse(event.target.value)} placeholder="How to use, in English" />
             </label>
           </div>
-        </Section>
-
-        <Section
-          id="images"
-          icon={Images}
-          title="Ảnh sản phẩm"
-          description="Ảnh đầu tiên là ảnh chính — bấm ★ trên ảnh khác để đặt làm ảnh chính"
-          badge={images.length ? `${images.length}` : undefined}
-          defaultOpen={!productId}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              marginBottom: images.length ? 14 : 0,
-            }}
-          >
-            <button
-              type="button"
-              className={panel.secondaryButton}
-              onClick={() => setGalleryOpen(true)}
-            >
-              <Images size={14} /> Chọn ảnh từ thư viện
-            </button>
-          </div>
-          {images.length > 0 ? (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill,minmax(84px,1fr))",
-                gap: 10,
-              }}
-            >
-              {images.map((image, index) => (
-                <div
-                  key={image + index}
-                  style={{
-                    position: "relative",
-                    aspectRatio: "1",
-                    borderRadius: 9,
-                    overflow: "hidden",
-                    border: "1px solid var(--admin-border)",
-                    background: "var(--admin-soft)",
-                  }}
-                >
-                  <img
-                    src={image}
-                    alt=""
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setImages(
-                        images.filter((_, itemIndex) => itemIndex !== index),
-                      )
-                    }
-                    aria-label="Xóa ảnh"
-                    style={{
-                      position: "absolute",
-                      top: 4,
-                      right: 4,
-                      width: 20,
-                      height: 20,
-                      borderRadius: "50%",
-                      background: "rgba(0,0,0,.6)",
-                      color: "#fff",
-                      display: "grid",
-                      placeItems: "center",
-                      border: 0,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <Trash2 size={11} />
-                  </button>
-                  {index === 0 ? (
-                    <span
-                      style={{
-                        position: "absolute",
-                        bottom: 4,
-                        left: 4,
-                        background: "var(--admin-blue)",
-                        color: "#fff",
-                        fontSize: 9,
-                        fontWeight: 700,
-                        padding: "2px 6px",
-                        borderRadius: 4,
-                      }}
-                    >
-                      Ảnh chính
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setImages([
-                          image,
-                          ...images.filter((_, itemIndex) => itemIndex !== index),
-                        ])
-                      }
-                      aria-label="Đặt làm ảnh chính"
-                      title="Đặt làm ảnh chính"
-                      style={{
-                        position: "absolute",
-                        bottom: 4,
-                        left: 4,
-                        width: 20,
-                        height: 20,
-                        borderRadius: "50%",
-                        background: "rgba(0,0,0,.6)",
-                        color: "#fff",
-                        display: "grid",
-                        placeItems: "center",
-                        border: 0,
-                        cursor: "pointer",
-                      }}
-                    >
-                      <Star size={11} />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className={panel.empty} style={{ padding: "20px 0" }}>
-              Chưa có ảnh nào. Bấm &quot;Chọn ảnh từ thư viện&quot; để thêm.
-            </p>
-          )}
         </Section>
 
         {repeat(
