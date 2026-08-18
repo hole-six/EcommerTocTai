@@ -4,6 +4,7 @@ import {
   BookOpen,
   ChevronDown,
   CircleAlert,
+  Copy,
   ExternalLink,
   FileText,
   Images,
@@ -68,6 +69,11 @@ type OptionGroup = {
   options: Option[];
 };
 type StageProductOption = { id: string; slug: string; name: string };
+type CopySourceProduct = ProductInitial & {
+  _id?: string;
+  id?: string;
+  sku?: string;
+};
 type AdditionalInfoRow = { name: string; value: string };
 type AdditionalInfoGroup = { title: string; rows: AdditionalInfoRow[] };
 export type ProductInitial = {
@@ -123,6 +129,27 @@ const emptyGroup = (): OptionGroup => ({
   displayType: "card",
   options: [emptyOption()],
 });
+const copyId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random()}`;
+const withoutImages = <T extends { image?: string }>(items?: T[]) =>
+  (items ?? []).map((item) => ({ ...item, image: "" }));
+const cloneAdditionalInfo = (groups?: AdditionalInfoGroup[]) =>
+  (groups ?? []).map((group) => ({
+    title: group.title ?? "",
+    rows: (group.rows ?? []).map((row) => ({
+      name: row.name ?? "",
+      value: row.value ?? "",
+    })),
+  }));
+const cloneOptionGroupsWithoutImages = (groups?: OptionGroup[]) =>
+  (groups ?? []).map((group) => ({
+    ...group,
+    id: copyId("group"),
+    options: (group.options ?? []).map((option) => ({
+      ...option,
+      id: copyId("option"),
+      image: "",
+    })),
+  }));
 const slugify = (value: string) =>
   value
     .normalize("NFD")
@@ -151,6 +178,7 @@ const statusLabel = {
 
 const navItems = [
   ["images", Images, "Ảnh sản phẩm"],
+  ["copyContent", Copy, "Copy content"],
   ["basic", Info, "Thông tin cơ bản"],
   ["pricing", Tag, "Giá & tồn kho"],
   ["stages", Layers, "Ảnh giai đoạn"],
@@ -487,6 +515,8 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
   const productId = initial?._id;
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [stageProducts, setStageProducts] = useState<StageProductOption[]>([]);
+  const [copyProducts, setCopyProducts] = useState<CopySourceProduct[]>([]);
+  const [copySourceId, setCopySourceId] = useState("");
   const [name, setName] = useState(initial?.name ?? "");
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(Boolean(initial?.slug));
@@ -594,9 +624,15 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
   useEffect(() => {
     fetch("/api/commerce/products?status=all")
       .then((response) => response.json())
-      .then((body) =>
+      .then((body) => {
+        const products = (body.data ?? []) as CopySourceProduct[];
+        setCopyProducts(
+          products.filter(
+            (product) => String(product._id ?? product.id) !== productId,
+          ),
+        );
         setStageProducts(
-          (body.data ?? [])
+          products
             .map(
               (product: {
                 _id?: string;
@@ -610,8 +646,8 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
               }),
             )
             .filter((product: StageProductOption) => product.id !== productId),
-        ),
-      );
+        );
+      });
   }, [productId]);
   function updateList(
     list: Item[],
@@ -647,6 +683,42 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
     if (original > 0 && actual > 0 && actual <= original)
       setDiscountPercent(String(Math.round((1 - actual / original) * 100)));
     if (!value) setDiscountPercent("0");
+  }
+  function copyContentFromProduct() {
+    const source = copyProducts.find(
+      (product) => String(product._id ?? product.id) === copySourceId,
+    );
+    if (!source) {
+      showToast("Vui lòng chọn sản phẩm cần copy nội dung.", "error");
+      return;
+    }
+    const copiedSpecs = source.specificationRows?.length
+      ? withoutImages(source.specificationRows)
+      : Object.entries(source.specifications ?? {}).map(([key, value]) => ({
+          ...emptyItem(),
+          name: key,
+          value: String(value),
+          type: "text",
+        }));
+
+    setShortDescription(source.shortDescription ?? "");
+    setDescription(source.description ?? "");
+    setSpecs(copiedSpecs);
+    setStageImages(withoutImages(source.stageImages));
+    setRootCauses(withoutImages(source.rootCauses));
+    setDetailHighlights(withoutImages(source.detailHighlights));
+    setTreatmentKit(withoutImages(source.treatmentKit));
+    setJourney(withoutImages(source.treatmentJourney));
+    setBlocks(withoutImages(source.contentBlocks));
+    setHowToUse({ ...(source.howToUse ?? emptyItem()), image: "" });
+    setAdditionalInfo(cloneAdditionalInfo(source.additionalInfo));
+    setGroups(cloneOptionGroupsWithoutImages(source.optionGroups));
+    setQuizTags(source.quizTags ?? emptyQuizTags());
+    setEnName(source.translations?.en?.name ?? "");
+    setEnShortDescription(source.translations?.en?.shortDescription ?? "");
+    setEnDescription(source.translations?.en?.description ?? "");
+    setEnHowToUse(source.translations?.en?.howToUseDescription ?? "");
+    showToast(`Đã copy nội dung từ "${source.name}" và bỏ toàn bộ ảnh.`, "success");
   }
   async function submit() {
     setMessage("");
@@ -776,6 +848,12 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
   );
 
   const canSave = Boolean(name && slug && sku && categoryIds.length && price);
+  const copyOptions = copyProducts.map((product) => ({
+    value: String(product._id ?? product.id),
+    label: product.name,
+    description: product.sku || product.slug,
+    keywords: `${product.slug ?? ""} ${product.sku ?? ""}`,
+  }));
 
   return (
     <div className={styles.layout}>
@@ -910,6 +988,52 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
               Chưa có ảnh nào. Bấm &quot;Chọn ảnh từ thư viện&quot; để thêm.
             </p>
           )}
+        </Section>
+
+        <Section
+          id="copyContent"
+          icon={Copy}
+          title="Copy nhanh nội dung"
+          description="Chọn một sản phẩm đã có để copy phần nội dung, không copy ảnh và thông tin bán hàng"
+          defaultOpen={!productId}
+        >
+          <div className={panel.grid2}>
+            <label style={{ gridColumn: "1 / -1" }}>
+              Sản phẩm nguồn
+              <SearchableSelect
+                value={copySourceId}
+                onChange={setCopySourceId}
+                options={copyOptions}
+                placeholder="Chọn hoặc gõ tên sản phẩm để tìm"
+                searchPlaceholder="Tìm theo tên, slug hoặc SKU..."
+                emptyLabel="Không tìm thấy sản phẩm phù hợp"
+                clearLabel="Bỏ chọn sản phẩm"
+                disabled={!copyOptions.length}
+              />
+            </label>
+            <div
+              style={{
+                gridColumn: "1 / -1",
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              <p className={styles.fieldHint} style={{ margin: 0 }}>
+                Chỉ copy mô tả, thông số, biến thể, các khối nội dung, bản EN và thẻ bài test. Ảnh sản phẩm, ảnh trong nội dung, tên, slug, SKU, giá, tồn kho và danh mục được giữ nguyên.
+              </p>
+              <button
+                type="button"
+                className={panel.secondaryButton}
+                onClick={copyContentFromProduct}
+                disabled={!copySourceId}
+              >
+                <Copy size={14} /> Copy nội dung
+              </button>
+            </div>
+          </div>
         </Section>
 
         <Section
