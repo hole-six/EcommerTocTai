@@ -43,6 +43,7 @@ export async function GET(request: Request) {
       const filter: Record<string, unknown> = {};
       if (!includeAll) filter.status = "active";
       else if (productStatus && productStatus !== "all") filter.status = productStatus;
+      else filter.status = { $ne: "archived" };
       if (categoryIds) filter.category = { $in: categoryIds };
       if (variantGroup) filter.variantGroup = variantGroup;
       if (q) {

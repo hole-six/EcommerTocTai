@@ -264,7 +264,7 @@ export default function AdminProductsPage() {
             onChange={(event) => setStatus(event.target.value)}
             aria-label="Lọc trạng thái"
           >
-            <option value="all">Tất cả trạng thái</option>
+            <option value="all">Đang bán & bản nháp</option>
             <option value="active">Đang bán</option>
             <option value="draft">Bản nháp</option>
             <option value="archived">Ngừng bán</option>

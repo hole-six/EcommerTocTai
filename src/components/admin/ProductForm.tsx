@@ -26,7 +26,7 @@ import {
   Trash2,
   type LucideIcon,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { MediaLibraryModal } from "@/components/admin/MediaLibraryModal";
 import { SearchableSelect } from "@/components/admin/SearchableSelect";
@@ -106,6 +106,35 @@ export type ProductInitial = {
   quizTags?: QuizTags;
   translations?: { en?: { name?: string; shortDescription?: string; description?: string; howToUseDescription?: string } };
 };
+type ProductFormDraft = {
+  name: string;
+  slug: string;
+  categoryIds: string[];
+  sku: string;
+  price: string;
+  salePrice: string;
+  discountPercent: string;
+  inventory: string;
+  status: ProductInitial["status"];
+  shortDescription: string;
+  description: string;
+  images: string[];
+  specs: Item[];
+  stageImages: Item[];
+  rootCauses: Item[];
+  detailHighlights: Item[];
+  treatmentKit: Item[];
+  journey: Item[];
+  additionalInfo: AdditionalInfoGroup[];
+  howToUse: Item;
+  blocks: Item[];
+  groups: OptionGroup[];
+  quizTags: QuizTags;
+  enName: string;
+  enShortDescription: string;
+  enDescription: string;
+  enHowToUse: string;
+};
 
 export const emptyItem = (): Item => ({
   title: "",
@@ -130,8 +159,8 @@ const emptyGroup = (): OptionGroup => ({
   options: [emptyOption()],
 });
 const copyId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random()}`;
-const withoutImages = <T extends { image?: string }>(items?: T[]) =>
-  (items ?? []).map((item) => ({ ...item, image: "" }));
+const cloneItems = <T extends { image?: string }>(items?: T[]) =>
+  (items ?? []).map((item) => ({ ...item }));
 const cloneAdditionalInfo = (groups?: AdditionalInfoGroup[]) =>
   (groups ?? []).map((group) => ({
     title: group.title ?? "",
@@ -140,14 +169,13 @@ const cloneAdditionalInfo = (groups?: AdditionalInfoGroup[]) =>
       value: row.value ?? "",
     })),
   }));
-const cloneOptionGroupsWithoutImages = (groups?: OptionGroup[]) =>
+const cloneOptionGroups = (groups?: OptionGroup[]) =>
   (groups ?? []).map((group) => ({
     ...group,
     id: copyId("group"),
     options: (group.options ?? []).map((option) => ({
       ...option,
       id: copyId("option"),
-      image: "",
     })),
   }));
 const slugify = (value: string) =>
@@ -175,6 +203,7 @@ const statusLabel = {
   active: "Đang bán",
   archived: "Ngừng bán",
 } as const;
+const NEW_PRODUCT_DRAFT_KEY = "toctai_admin_product_new_draft";
 
 const navItems = [
   ["images", Images, "Ảnh sản phẩm"],
@@ -525,6 +554,13 @@ function Section({
 export function ProductForm({ initial }: { initial?: ProductInitial }) {
   const router = useRouter();
   const productId = initial?._id;
+  const nameRef = useRef<HTMLInputElement>(null);
+  const slugRef = useRef<HTMLInputElement>(null);
+  const skuRef = useRef<HTMLInputElement>(null);
+  const priceRef = useRef<HTMLInputElement>(null);
+  const salePriceRef = useRef<HTMLInputElement>(null);
+  const inventoryRef = useRef<HTMLInputElement>(null);
+  const categoryRef = useRef<HTMLDivElement>(null);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [stageProducts, setStageProducts] = useState<StageProductOption[]>([]);
   const [copyProducts, setCopyProducts] = useState<CopySourceProduct[]>([]);
@@ -621,6 +657,122 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
   }
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [validationSignal, setValidationSignal] = useState(0);
+  const shouldPersistDraft = !productId;
+  const [draftReady, setDraftReady] = useState(!shouldPersistDraft);
+
+  useEffect(() => {
+    if (!shouldPersistDraft) return;
+    try {
+      const raw = localStorage.getItem(NEW_PRODUCT_DRAFT_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw) as Partial<ProductFormDraft>;
+      setName(draft.name ?? "");
+      setSlug(draft.slug ?? "");
+      setSlugTouched(Boolean(draft.slug));
+      setCategoryIds(draft.categoryIds ?? []);
+      setSku(draft.sku ?? "");
+      setSkuTouched(Boolean(draft.sku));
+      setPrice(draft.price ?? "");
+      setSalePrice(draft.salePrice ?? "");
+      setDiscountPercent(draft.discountPercent ?? "0");
+      setInventory(draft.inventory ?? "0");
+      setStatus(draft.status ?? "draft");
+      setShortDescription(draft.shortDescription ?? "");
+      setDescription(draft.description ?? "");
+      setImages(draft.images ?? []);
+      setSpecs(draft.specs ?? []);
+      setStageImages(draft.stageImages ?? []);
+      setRootCauses(draft.rootCauses ?? []);
+      setDetailHighlights(draft.detailHighlights ?? []);
+      setTreatmentKit(draft.treatmentKit ?? []);
+      setJourney(draft.journey ?? []);
+      setAdditionalInfo(draft.additionalInfo ?? []);
+      setHowToUse(draft.howToUse ?? emptyItem());
+      setBlocks(draft.blocks ?? []);
+      setGroups(draft.groups ?? []);
+      setQuizTags(draft.quizTags ?? emptyQuizTags());
+      setEnName(draft.enName ?? "");
+      setEnShortDescription(draft.enShortDescription ?? "");
+      setEnDescription(draft.enDescription ?? "");
+      setEnHowToUse(draft.enHowToUse ?? "");
+      setMessage("Đã khôi phục bản nháp sản phẩm đang tạo.");
+    } catch {
+      localStorage.removeItem(NEW_PRODUCT_DRAFT_KEY);
+    } finally {
+      setDraftReady(true);
+    }
+  }, [shouldPersistDraft]);
+
+  useEffect(() => {
+    if (!shouldPersistDraft || !draftReady) return;
+    const draft: ProductFormDraft = {
+      name,
+      slug,
+      categoryIds,
+      sku,
+      price,
+      salePrice,
+      discountPercent,
+      inventory,
+      status,
+      shortDescription,
+      description,
+      images,
+      specs,
+      stageImages,
+      rootCauses,
+      detailHighlights,
+      treatmentKit,
+      journey,
+      additionalInfo,
+      howToUse,
+      blocks,
+      groups,
+      quizTags,
+      enName,
+      enShortDescription,
+      enDescription,
+      enHowToUse,
+    };
+    try {
+      localStorage.setItem(NEW_PRODUCT_DRAFT_KEY, JSON.stringify(draft));
+    } catch {
+      // Ignore storage failures; the form should still be usable.
+    }
+  }, [
+    additionalInfo,
+    blocks,
+    categoryIds,
+    description,
+    detailHighlights,
+    discountPercent,
+    enDescription,
+    enHowToUse,
+    enName,
+    enShortDescription,
+    groups,
+    howToUse,
+    images,
+    inventory,
+    journey,
+    name,
+    price,
+    quizTags,
+    rootCauses,
+    salePrice,
+    draftReady,
+    shouldPersistDraft,
+    shortDescription,
+    sku,
+    slug,
+    specs,
+    stageImages,
+    status,
+    treatmentKit,
+  ]);
+
   useEffect(() => {
     fetch("/api/categories?tree=true")
       .then((response) => response.json())
@@ -706,7 +858,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
       return;
     }
     const copiedSpecs = source.specificationRows?.length
-      ? withoutImages(source.specificationRows)
+      ? cloneItems(source.specificationRows)
       : Object.entries(source.specifications ?? {}).map(([key, value]) => ({
           ...emptyItem(),
           name: key,
@@ -716,16 +868,17 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
 
     setShortDescription(source.shortDescription ?? "");
     setDescription(source.description ?? "");
+    setImages([...(source.images ?? [])]);
     setSpecs(copiedSpecs);
-    setStageImages(withoutImages(source.stageImages));
-    setRootCauses(withoutImages(source.rootCauses));
-    setDetailHighlights(withoutImages(source.detailHighlights));
-    setTreatmentKit(withoutImages(source.treatmentKit));
-    setJourney(withoutImages(source.treatmentJourney));
-    setBlocks(withoutImages(source.contentBlocks));
-    setHowToUse({ ...(source.howToUse ?? emptyItem()), image: "" });
+    setStageImages(cloneItems(source.stageImages));
+    setRootCauses(cloneItems(source.rootCauses));
+    setDetailHighlights(cloneItems(source.detailHighlights));
+    setTreatmentKit(cloneItems(source.treatmentKit));
+    setJourney(cloneItems(source.treatmentJourney));
+    setBlocks(cloneItems(source.contentBlocks));
+    setHowToUse({ ...(source.howToUse ?? emptyItem()) });
     setAdditionalInfo(cloneAdditionalInfo(source.additionalInfo));
-    setGroups(cloneOptionGroupsWithoutImages(source.optionGroups));
+    setGroups(cloneOptionGroups(source.optionGroups));
     setQuizTags(source.quizTags ?? emptyQuizTags());
     setEnName(source.translations?.en?.name ?? "");
     setEnShortDescription(source.translations?.en?.shortDescription ?? "");
@@ -738,10 +891,100 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
         block: "start",
       }),
     );
-    showToast(`Đã copy nội dung từ "${source.name}" và bỏ toàn bộ ảnh.`, "success");
+    showToast(`Đã copy nội dung và ảnh từ "${source.name}".`, "success");
   }
+
+  function focusValidationTarget(
+    sectionId: string,
+    target: { current: HTMLElement | null },
+  ) {
+    const nextSignal = Date.now();
+    setValidationSignal(nextSignal);
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const element = target.current ?? document.getElementById(sectionId);
+        element?.scrollIntoView({ behavior: "smooth", block: "center" });
+        target.current?.focus({ preventScroll: true });
+      });
+    });
+  }
+
+  function validateBeforeSubmit() {
+    const original = Number(price);
+    const actual = salePrice ? Number(salePrice) : undefined;
+    const stock = Number(inventory);
+    const errors: {
+      message: string;
+      sectionId: string;
+      target: { current: HTMLElement | null };
+    }[] = [];
+
+    if (name.trim().length < 2)
+      errors.push({
+        message: "Tên sản phẩm cần ít nhất 2 ký tự.",
+        sectionId: "basic",
+        target: nameRef,
+      });
+    if (!/^[a-z0-9-]+$/.test(slug.trim()))
+      errors.push({
+        message: "Slug chỉ được gồm chữ thường, số và dấu gạch ngang.",
+        sectionId: "basic",
+        target: slugRef,
+      });
+    if (sku.trim().length < 3)
+      errors.push({
+        message: "SKU cần ít nhất 3 ký tự.",
+        sectionId: "basic",
+        target: skuRef,
+      });
+    if (!categoryIds.length)
+      errors.push({
+        message: "Cần chọn ít nhất một danh mục.",
+        sectionId: "category-picker",
+        target: categoryRef,
+      });
+    if (!price || !Number.isInteger(original) || original < 0)
+      errors.push({
+        message: "Giá gốc phải là số nguyên từ 0 trở lên.",
+        sectionId: "pricing",
+        target: priceRef,
+      });
+    if (actual !== undefined && (!Number.isInteger(actual) || actual < 0))
+      errors.push({
+        message: "Giá bán thực tế phải là số nguyên từ 0 trở lên.",
+        sectionId: "pricing",
+        target: salePriceRef,
+      });
+    if (actual !== undefined && Number.isFinite(original) && actual > original)
+      errors.push({
+        message: "Giá bán thực tế không thể cao hơn giá gốc.",
+        sectionId: "pricing",
+        target: salePriceRef,
+      });
+    if (inventory === "" || !Number.isInteger(stock) || stock < 0)
+      errors.push({
+        message: "Tồn kho phải là số nguyên từ 0 trở lên.",
+        sectionId: "pricing",
+        target: inventoryRef,
+      });
+
+    setValidationErrors(errors.map((error) => error.message));
+    if (errors.length) {
+      const messageText = `Thiếu hoặc sai thông tin: ${errors
+        .map((error) => error.message)
+        .join(" ")}`;
+      setMessage(messageText);
+      showToast(messageText, "error");
+      focusValidationTarget(errors[0].sectionId, errors[0].target);
+      return false;
+    }
+    return true;
+  }
+
   async function submit() {
     setMessage("");
+    setValidationErrors([]);
+    if (!validateBeforeSubmit()) return;
     const original = Number(price);
     const actual = salePrice ? Number(salePrice) : undefined;
     if (actual !== undefined && actual > original) {
@@ -805,7 +1048,10 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
       const successMessage = productId ? "Đã cập nhật sản phẩm." : "Đã tạo sản phẩm mới.";
       setMessage(successMessage);
       showToast(successMessage, "success");
-      if (!productId) router.push(`/admin/products/${body.data._id}`);
+      if (!productId) {
+        localStorage.removeItem(NEW_PRODUCT_DRAFT_KEY);
+        router.push(`/admin/products/${body.data._id}`);
+      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Lưu sản phẩm thất bại";
@@ -832,7 +1078,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
       description={hint}
       badge={list.length ? `${list.length}` : undefined}
       defaultOpen={!productId}
-      expandSignal={contentCopySignal}
+      expandSignal={formExpandSignal}
     >
       <div
         style={{
@@ -868,7 +1114,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
     </Section>
   );
 
-  const canSave = Boolean(name && slug && sku && categoryIds.length && price);
+  const formExpandSignal = Math.max(contentCopySignal, validationSignal);
   const copyOptions = copyProducts.map((product) => ({
     value: String(product._id ?? product.id),
     label: product.name,
@@ -1014,10 +1260,10 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
         <Section
           id="copyContent"
           icon={Copy}
-          title="Copy nhanh nội dung"
-          description="Chọn một sản phẩm đã có để copy phần nội dung, không copy ảnh và thông tin bán hàng"
+          title="Copy nhanh nội dung & ảnh"
+          description="Chọn một sản phẩm đã có để copy phần nội dung, ảnh và media liên quan"
           defaultOpen={!productId}
-          expandSignal={contentCopySignal}
+          expandSignal={formExpandSignal}
         >
           <div className={panel.grid2}>
             <label style={{ gridColumn: "1 / -1" }}>
@@ -1044,7 +1290,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
               }}
             >
               <p className={styles.fieldHint} style={{ margin: 0 }}>
-                Chỉ copy mô tả, thông số, biến thể, các khối nội dung, bản EN và thẻ bài test. Ảnh sản phẩm, ảnh trong nội dung, tên, slug, SKU, giá, tồn kho và danh mục được giữ nguyên.
+                Copy mô tả, thông số, biến thể, các khối nội dung, bản EN, thẻ bài test, ảnh sản phẩm và ảnh trong nội dung. Tên, slug, SKU, giá, tồn kho và danh mục được giữ nguyên.
               </p>
               <button
                 type="button"
@@ -1052,7 +1298,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
                 onClick={copyContentFromProduct}
                 disabled={!copySourceId}
               >
-                <Copy size={14} /> Copy nội dung
+                <Copy size={14} /> Copy nội dung & ảnh
               </button>
             </div>
           </div>
@@ -1064,12 +1310,16 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           title="Thông tin cơ bản"
           description="Tên, đường dẫn và mã sản phẩm"
           defaultOpen={!productId}
-          expandSignal={contentCopySignal}
+          expandSignal={formExpandSignal}
         >
           <div className={panel.grid2}>
             <label>
               Tên sản phẩm
               <input
+                ref={nameRef}
+                aria-invalid={validationErrors.some((error) =>
+                  error.includes("Tên sản phẩm"),
+                )}
                 value={name}
                 onChange={(event) => {
                   const value = event.target.value;
@@ -1084,6 +1334,10 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
               Đường dẫn (slug)
               <div className={styles.skuRow}>
                 <input
+                  ref={slugRef}
+                  aria-invalid={validationErrors.some((error) =>
+                    error.includes("Slug"),
+                  )}
                   value={slug}
                   onChange={(event) => {
                     setSlugTouched(true);
@@ -1114,6 +1368,10 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
               SKU
               <div className={styles.skuRow}>
                 <input
+                  ref={skuRef}
+                  aria-invalid={validationErrors.some((error) =>
+                    error.includes("SKU"),
+                  )}
                   value={sku}
                   onChange={(event) => {
                     setSkuTouched(true);
@@ -1147,12 +1405,16 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           title="Giá & tồn kho"
           description="Giá gốc, giá bán thực tế và số lượng trong kho"
           defaultOpen={!productId}
-          expandSignal={contentCopySignal}
+          expandSignal={formExpandSignal}
         >
           <div className={panel.grid3}>
             <label>
               Giá gốc (đ)
               <input
+                ref={priceRef}
+                aria-invalid={validationErrors.some((error) =>
+                  error.includes("Giá gốc"),
+                )}
                 min="0"
                 type="number"
                 value={price}
@@ -1179,6 +1441,10 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
             <label>
               Giá bán thực tế (đ)
               <input
+                ref={salePriceRef}
+                aria-invalid={validationErrors.some((error) =>
+                  error.includes("Giá bán thực tế"),
+                )}
                 min="0"
                 max={price || undefined}
                 type="number"
@@ -1190,6 +1456,10 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
             <label>
               Tồn kho
               <input
+                ref={inventoryRef}
+                aria-invalid={validationErrors.some((error) =>
+                  error.includes("Tồn kho"),
+                )}
                 type="number"
                 value={inventory}
                 onChange={(event) => setInventory(event.target.value)}
@@ -1209,7 +1479,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           description="Ảnh + tên giai đoạn — bấm vào sẽ chuyển thẳng sang đúng sản phẩm của giai đoạn đó"
           badge={stageImages.length ? `${stageImages.length}` : undefined}
           defaultOpen={!productId}
-          expandSignal={contentCopySignal}
+          expandSignal={formExpandSignal}
         >
           <div
             style={{
@@ -1260,7 +1530,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           description="Ví dụ giai đoạn, độ tuổi, thời gian, quy cách gói"
           badge={groups.length ? `${groups.length}` : undefined}
           defaultOpen={!productId}
-          expandSignal={contentCopySignal}
+          expandSignal={formExpandSignal}
         >
           <div
             style={{
@@ -1540,7 +1810,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           title="Mô tả sản phẩm"
           description="Hiện trên thẻ sản phẩm và trang chi tiết"
           defaultOpen={!productId}
-          expandSignal={contentCopySignal}
+          expandSignal={formExpandSignal}
         >
           <div className={panel.grid2}>
             <label style={{ gridColumn: "1 / -1" }}>
@@ -1568,7 +1838,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           description="Tuỳ chọn — khách sẽ chuyển được VI / EN ở trang chi tiết sản phẩm. Để trống thì tự dùng bản tiếng Việt."
           badge={enName || enShortDescription || enDescription ? "Đã có" : undefined}
           defaultOpen={!productId}
-          expandSignal={contentCopySignal}
+          expandSignal={formExpandSignal}
         >
           <div className={panel.grid2}>
             <label style={{ gridColumn: "1 / -1" }}>
@@ -1615,7 +1885,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           title="Hướng dẫn sử dụng"
           description="Cách dùng sản phẩm"
           defaultOpen={!productId}
-          expandSignal={contentCopySignal}
+          expandSignal={formExpandSignal}
         >
           <ItemEditor
             item={howToUse}
@@ -1668,7 +1938,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           description="Nhiều danh mục, mỗi danh mục có bảng nhãn/giá trị riêng — khách bấm chọn danh mục để xem, hiện phía dưới phần đánh giá"
           badge={additionalInfo.length ? `${additionalInfo.length}` : undefined}
           defaultOpen={!productId}
-          expandSignal={contentCopySignal}
+          expandSignal={formExpandSignal}
         >
           <div
             style={{
@@ -1819,7 +2089,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           title="Gắn thẻ cho bài test tóc"
           description="Dùng để bài test tự động gợi ý đúng sản phẩm này — không bắt buộc, để trống nếu sản phẩm không liên quan đến rụng tóc"
           defaultOpen={!productId}
-          expandSignal={contentCopySignal}
+          expandSignal={formExpandSignal}
         >
           <p className={styles.fieldHint} style={{ marginBottom: 16 }}>
             Chọn tất cả các trường hợp mà sản phẩm này phù hợp. Không cần chọn hết mọi ô — bỏ trống
@@ -1879,7 +2149,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
             </label>
             <button
               className={panel.saveButton}
-              disabled={saving || !canSave}
+              disabled={saving}
               onClick={() => void submit()}
             >
               {saving
@@ -1903,22 +2173,30 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
                 {message}
               </p>
             )}
-            {!canSave && (
-              <p
-                style={{ fontSize: 11, color: "var(--admin-faint)", margin: 0 }}
-              >
-                Cần điền tên, slug, SKU, danh mục và giá trước khi lưu.
-              </p>
+            {validationErrors.length > 0 && (
+              <div className={styles.validationBox}>
+                <b>Cần kiểm tra lại trước khi lưu:</b>
+                <ul>
+                  {validationErrors.map((error) => (
+                    <li key={error}>{error}</li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
         </div>
 
-        <div className={styles.sidebarCard}>
+        <div className={styles.sidebarCard} id="category-picker">
           <h3>Tổ chức</h3>
           <div className={styles.saveRow}>
             <label>
               Danh mục (chọn một hoặc nhiều)
               <div
+                ref={categoryRef}
+                tabIndex={-1}
+                aria-invalid={validationErrors.some((error) =>
+                  error.includes("danh mục"),
+                )}
                 style={{
                   display: "grid",
                   gap: 6,
