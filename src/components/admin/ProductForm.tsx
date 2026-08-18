@@ -474,6 +474,7 @@ function Section({
   description,
   badge,
   defaultOpen = true,
+  expandSignal = 0,
   children,
 }: {
   id: string;
@@ -482,15 +483,26 @@ function Section({
   description?: string;
   badge?: string;
   defaultOpen?: boolean;
+  expandSignal?: number;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const [dismissedSignal, setDismissedSignal] = useState(0);
+  const isOpen = open || expandSignal > dismissedSignal;
+  function toggleOpen() {
+    if (isOpen) {
+      setOpen(false);
+      setDismissedSignal(expandSignal);
+      return;
+    }
+    setOpen(true);
+  }
   return (
     <div className={panel.panel} id={id}>
       <button
         type="button"
         className={styles.sectionHeader}
-        onClick={() => setOpen((value) => !value)}
+        onClick={toggleOpen}
       >
         <span className={styles.sectionIcon}>
           <Icon size={16} />
@@ -502,10 +514,10 @@ function Section({
         {badge && <span className={styles.sectionBadge}>{badge}</span>}
         <ChevronDown
           size={16}
-          className={`${styles.chevron} ${open ? styles.chevronOpen : ""}`}
+          className={`${styles.chevron} ${isOpen ? styles.chevronOpen : ""}`}
         />
       </button>
-      {open && <div className={styles.sectionBody}>{children}</div>}
+      {isOpen && <div className={styles.sectionBody}>{children}</div>}
     </div>
   );
 }
@@ -517,6 +529,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
   const [stageProducts, setStageProducts] = useState<StageProductOption[]>([]);
   const [copyProducts, setCopyProducts] = useState<CopySourceProduct[]>([]);
   const [copySourceId, setCopySourceId] = useState("");
+  const [contentCopySignal, setContentCopySignal] = useState(0);
   const [name, setName] = useState(initial?.name ?? "");
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(Boolean(initial?.slug));
@@ -718,6 +731,13 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
     setEnShortDescription(source.translations?.en?.shortDescription ?? "");
     setEnDescription(source.translations?.en?.description ?? "");
     setEnHowToUse(source.translations?.en?.howToUseDescription ?? "");
+    setContentCopySignal(Date.now());
+    window.requestAnimationFrame(() =>
+      document.getElementById("description")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      }),
+    );
     showToast(`Đã copy nội dung từ "${source.name}" và bỏ toàn bộ ảnh.`, "success");
   }
   async function submit() {
@@ -812,6 +832,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
       description={hint}
       badge={list.length ? `${list.length}` : undefined}
       defaultOpen={!productId}
+      expandSignal={contentCopySignal}
     >
       <div
         style={{
@@ -996,6 +1017,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           title="Copy nhanh nội dung"
           description="Chọn một sản phẩm đã có để copy phần nội dung, không copy ảnh và thông tin bán hàng"
           defaultOpen={!productId}
+          expandSignal={contentCopySignal}
         >
           <div className={panel.grid2}>
             <label style={{ gridColumn: "1 / -1" }}>
@@ -1042,6 +1064,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           title="Thông tin cơ bản"
           description="Tên, đường dẫn và mã sản phẩm"
           defaultOpen={!productId}
+          expandSignal={contentCopySignal}
         >
           <div className={panel.grid2}>
             <label>
@@ -1124,6 +1147,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           title="Giá & tồn kho"
           description="Giá gốc, giá bán thực tế và số lượng trong kho"
           defaultOpen={!productId}
+          expandSignal={contentCopySignal}
         >
           <div className={panel.grid3}>
             <label>
@@ -1185,6 +1209,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           description="Ảnh + tên giai đoạn — bấm vào sẽ chuyển thẳng sang đúng sản phẩm của giai đoạn đó"
           badge={stageImages.length ? `${stageImages.length}` : undefined}
           defaultOpen={!productId}
+          expandSignal={contentCopySignal}
         >
           <div
             style={{
@@ -1235,6 +1260,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           description="Ví dụ giai đoạn, độ tuổi, thời gian, quy cách gói"
           badge={groups.length ? `${groups.length}` : undefined}
           defaultOpen={!productId}
+          expandSignal={contentCopySignal}
         >
           <div
             style={{
@@ -1514,6 +1540,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           title="Mô tả sản phẩm"
           description="Hiện trên thẻ sản phẩm và trang chi tiết"
           defaultOpen={!productId}
+          expandSignal={contentCopySignal}
         >
           <div className={panel.grid2}>
             <label style={{ gridColumn: "1 / -1" }}>
@@ -1541,6 +1568,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           description="Tuỳ chọn — khách sẽ chuyển được VI / EN ở trang chi tiết sản phẩm. Để trống thì tự dùng bản tiếng Việt."
           badge={enName || enShortDescription || enDescription ? "Đã có" : undefined}
           defaultOpen={!productId}
+          expandSignal={contentCopySignal}
         >
           <div className={panel.grid2}>
             <label style={{ gridColumn: "1 / -1" }}>
@@ -1587,6 +1615,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           title="Hướng dẫn sử dụng"
           description="Cách dùng sản phẩm"
           defaultOpen={!productId}
+          expandSignal={contentCopySignal}
         >
           <ItemEditor
             item={howToUse}
@@ -1639,6 +1668,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           description="Nhiều danh mục, mỗi danh mục có bảng nhãn/giá trị riêng — khách bấm chọn danh mục để xem, hiện phía dưới phần đánh giá"
           badge={additionalInfo.length ? `${additionalInfo.length}` : undefined}
           defaultOpen={!productId}
+          expandSignal={contentCopySignal}
         >
           <div
             style={{
@@ -1789,6 +1819,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
           title="Gắn thẻ cho bài test tóc"
           description="Dùng để bài test tự động gợi ý đúng sản phẩm này — không bắt buộc, để trống nếu sản phẩm không liên quan đến rụng tóc"
           defaultOpen={!productId}
+          expandSignal={contentCopySignal}
         >
           <p className={styles.fieldHint} style={{ marginBottom: 16 }}>
             Chọn tất cả các trường hợp mà sản phẩm này phù hợp. Không cần chọn hết mọi ô — bỏ trống
