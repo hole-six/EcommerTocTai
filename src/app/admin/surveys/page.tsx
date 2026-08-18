@@ -13,6 +13,23 @@ import {
   type QuizQuestion,
 } from "@/lib/hairQuiz";
 
+const AUTO_VALUE_PATTERN = /^option_\d+$/;
+
+// Mã lưu vào CSDL luôn là chuỗi ngắn không dấu; admin chỉ cần gõ nhãn tiếng Việt.
+const toOptionCode = (label: string) =>
+  label
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/gi, "d")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .split("_")
+    .slice(0, 3)
+    .join("_")
+    .slice(0, 24);
+
 const newQuestion = (): QuizQuestion => ({
   id: `custom_${Date.now()}`,
   title: "",
@@ -167,9 +184,14 @@ export default function AdminSurveysPage() {
                 )}
 
                 {question.options.map((option, optionIndex) => (
-                  <div className={panel["admin-option-row"]} key={`${option.value}-${optionIndex}`}>
+                  <div
+                    className={`${panel["admin-option-row"]} ${panel["admin-option-row-code"]}`}
+                    key={`${question.id}-option-${optionIndex}`}
+                  >
                     <input
-                      placeholder="Giá trị lưu"
+                      className={panel["admin-option-code"]}
+                      placeholder="Mã lưu"
+                      title="Mã ngắn không dấu lưu vào CSDL — tự sinh từ nhãn tiếng Việt, có thể sửa lại"
                       value={option.value}
                       onChange={(event) =>
                         updateQuestion(index, {
@@ -180,15 +202,19 @@ export default function AdminSurveysPage() {
                       }
                     />
                     <input
-                      placeholder="Nhãn hiển thị"
+                      placeholder="Nhãn hiển thị (tiếng Việt)"
                       value={option.label}
-                      onChange={(event) =>
+                      onChange={(event) => {
+                        const label = event.target.value;
+                        const autoValue = !option.value.trim() || AUTO_VALUE_PATTERN.test(option.value) || option.value === toOptionCode(option.label);
                         updateQuestion(index, {
                           options: question.options.map((item, childIndex) =>
-                            childIndex === optionIndex ? { ...item, label: event.target.value } : item,
+                            childIndex === optionIndex
+                              ? { ...item, label, value: autoValue ? toOptionCode(label) || item.value : item.value }
+                              : item,
                           ),
-                        })
-                      }
+                        });
+                      }}
                     />
                     <input
                       placeholder="Gợi ý phụ"

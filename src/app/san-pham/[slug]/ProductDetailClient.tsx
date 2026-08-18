@@ -481,10 +481,61 @@ function ScrollRow({ children }: { children: ReactNode }) {
 function ProductContent({ product }: { product: Product }) {
   const specRows = (product.specificationRows ?? []).filter((item) => !isBlank(item));
   const groups: Array<[string, Item[]]> = [["Mô tả nguyên nhân", product.rootCauses], ["Bộ điều trị", product.treatmentKit], ["Lộ trình điều trị", product.treatmentJourney], ["Nội dung bổ sung", product.contentBlocks]].map(([title, items]) => [title as string, (items as Item[] | undefined ?? []).filter((item) => !isBlank(item))]);
-  return <div className={styles.contentBlocks}>
-    {specRows.length ? <section className={styles.contentSection}><h2>Thông số sản phẩm</h2><ScrollRow>{specRows.map((item, index) => <article className={styles.contentCard} key={index}>{item.image && <div className={styles.contentCardImage}><Image src={item.image} alt="" fill sizes={contentImageSizes} style={{ objectFit: "contain" }} quality={92} /></div>}{item.name && <h3>{item.name}</h3>}{item.value && <p>{item.value}</p>}</article>)}</ScrollRow></section> : null}
-    {groups.map(([title, items]) => items.length ? <section className={styles.contentSection} key={title}><h2>{title}</h2><ScrollRow>{items.map((item, index) => { const titleText = item.title || item.name || item.period; const card = <>{item.image && <div className={styles.contentCardImage}><Image src={item.image} alt="" fill sizes={contentImageSizes} style={{ objectFit: "contain" }} quality={92} /></div>}{titleText && <h3>{titleText}</h3>}{item.description && <p>{item.description}</p>}</>; return item.targetProductSlug ? <Link href={`/san-pham/${item.targetProductSlug}`} className={styles.contentCard} key={index}>{card}</Link> : <article className={styles.contentCard} key={index}>{card}</article>; })}</ScrollRow></section> : null)}
-  </div>;
+  const renderImage = (image?: string) => {
+    const src = normalizeImageSrc(image);
+    if (!src) return null;
+    return (
+      <div className={styles.contentCardImage}>
+        <Image src={src} alt="" fill sizes={contentImageSizes} style={{ objectFit: "contain" }} quality={92} unoptimized={shouldRenderUnoptimizedImage(src)} />
+      </div>
+    );
+  };
+  return (
+    <div className={styles.contentBlocks}>
+      {specRows.length ? (
+        <section className={styles.contentSection}>
+          <h2>Thông số sản phẩm</h2>
+          <ScrollRow>
+            {specRows.map((item, index) => (
+              <article className={styles.contentCard} key={index}>
+                {renderImage(item.image)}
+                {item.name && <h3>{item.name}</h3>}
+                {item.value && <p>{item.value}</p>}
+              </article>
+            ))}
+          </ScrollRow>
+        </section>
+      ) : null}
+      {groups.map(([title, items]) =>
+        items.length ? (
+          <section className={styles.contentSection} key={title}>
+            <h2>{title}</h2>
+            <ScrollRow>
+              {items.map((item, index) => {
+                const titleText = item.title || item.name || item.period;
+                const card = (
+                  <>
+                    {renderImage(item.image)}
+                    {titleText && <h3>{titleText}</h3>}
+                    {item.description && <p>{item.description}</p>}
+                  </>
+                );
+                return item.targetProductSlug ? (
+                  <Link href={`/san-pham/${item.targetProductSlug}`} className={styles.contentCard} key={index}>
+                    {card}
+                  </Link>
+                ) : (
+                  <article className={styles.contentCard} key={index}>
+                    {card}
+                  </article>
+                );
+              })}
+            </ScrollRow>
+          </section>
+        ) : null,
+      )}
+    </div>
+  );
 }
 
 function FaqSection({ items }: { items: Item[] }) {
