@@ -116,15 +116,7 @@ const optionGroup = z
       .default([]),
   })
   .passthrough();
-const quizTags = z
-  .object({
-    goals: z.array(z.string()).default([]),
-    stages: z.array(z.string()).default([]),
-    durations: z.array(z.string()).default([]),
-    formats: z.array(z.string()).default([]),
-    priorities: z.array(z.string()).default([]),
-  })
-  .default(() => ({ goals: [], stages: [], durations: [], formats: [], priorities: [] }));
+const quizTags = z.record(z.string(), z.array(z.string()).default([])).default({});
 const productBaseSchema = z.object({
     category: z.array(z.string().length(24)).min(1),
     name: z.string().min(2).max(180),

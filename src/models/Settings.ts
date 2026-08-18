@@ -7,6 +7,7 @@ const settings = new Schema(
     freeShippingThreshold: { type: Number, default: 200000 },
     faqs: { type: [Schema.Types.Mixed], default: [] },
     whyChooseUs: { type: [Schema.Types.Mixed], default: [] },
+    quizConfig: { type: Schema.Types.Mixed, default: {} },
   },
   { timestamps: true },
 );

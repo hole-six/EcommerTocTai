@@ -35,12 +35,10 @@ import styles from "@/components/admin/product-form.module.css";
 import { showToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/lib/client/errors";
 import {
+  DEFAULT_QUIZ_CONFIG,
   emptyQuizTags,
-  QUIZ_DURATIONS,
-  QUIZ_FORMATS,
-  QUIZ_GOALS,
-  QUIZ_PRIORITIES,
-  QUIZ_STAGES,
+  normalizeQuizConfig,
+  type QuizConfig,
   type QuizTags,
 } from "@/lib/hairQuiz";
 
@@ -644,9 +642,10 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
   const [quizTags, setQuizTags] = useState<QuizTags>(
     initial?.quizTags ?? emptyQuizTags(),
   );
+  const [quizConfig, setQuizConfig] = useState<QuizConfig>(DEFAULT_QUIZ_CONFIG);
   function toggleQuizTag(dimension: keyof QuizTags, value: string) {
     setQuizTags((current) => {
-      const list = current[dimension];
+      const list = current[dimension] ?? [];
       return {
         ...current,
         [dimension]: list.includes(value)
@@ -785,6 +784,12 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
         }
         setCategories(options);
       });
+  }, []);
+  useEffect(() => {
+    fetch("/api/settings", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((body) => setQuizConfig(normalizeQuizConfig(body.data?.quizConfig)))
+      .catch(() => setQuizConfig(DEFAULT_QUIZ_CONFIG));
   }, []);
   useEffect(() => {
     fetch("/api/commerce/products?status=all")
@@ -2095,36 +2100,19 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
             Chọn tất cả các trường hợp mà sản phẩm này phù hợp. Không cần chọn hết mọi ô — bỏ trống
             một mục nghĩa là mục đó không ảnh hưởng đến việc gợi ý, không phải là loại trừ sản phẩm.
           </p>
-          <TagChipGroup
-            title="Mục tiêu phù hợp"
-            options={QUIZ_GOALS}
-            selected={quizTags.goals}
-            onToggle={(value) => toggleQuizTag("goals", value)}
-          />
-          <TagChipGroup
-            title="Giai đoạn rụng tóc phù hợp"
-            options={QUIZ_STAGES}
-            selected={quizTags.stages}
-            onToggle={(value) => toggleQuizTag("stages", value)}
-          />
-          <TagChipGroup
-            title="Thời gian rụng tóc phù hợp"
-            options={QUIZ_DURATIONS}
-            selected={quizTags.durations}
-            onToggle={(value) => toggleQuizTag("durations", value)}
-          />
-          <TagChipGroup
-            title="Hình thức điều trị"
-            options={QUIZ_FORMATS}
-            selected={quizTags.formats}
-            onToggle={(value) => toggleQuizTag("formats", value)}
-          />
-          <TagChipGroup
-            title="Phù hợp ưu tiên của khách"
-            options={QUIZ_PRIORITIES}
-            selected={quizTags.priorities}
-            onToggle={(value) => toggleQuizTag("priorities", value)}
-          />
+          {quizConfig.questions.map((question) => (
+            <TagChipGroup
+              key={question.id}
+              title={question.title}
+              hint={question.hint}
+              options={question.options}
+              selected={quizTags[question.id] ?? []}
+              onToggle={(value) => toggleQuizTag(question.id, value)}
+            />
+          ))}
+          <a href="/admin/surveys" className={styles.previewLink} style={{ justifyContent: "flex-start" }}>
+            Chỉnh bộ câu hỏi khảo sát <ExternalLink size={12} />
+          </a>
         </Section>
       </div>
 

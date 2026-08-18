@@ -6,14 +6,18 @@ import { ArrowLeft, Check, CheckCircle2, Loader2, PhoneCall, Sparkles } from "lu
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  DEFAULT_QUIZ_CONFIG,
   QUIZ_DURATIONS,
   QUIZ_FORMATS,
   QUIZ_GOALS,
   QUIZ_PRIORITIES,
   QUIZ_STAGES,
+  answerKey,
   hasAnyQuizTags,
+  normalizeQuizConfig,
   scoreProduct,
   type QuizAnswers,
+  type QuizConfig,
   type QuizOption,
   type QuizTags,
 } from "@/lib/hairQuiz";
@@ -22,6 +26,7 @@ import styles from "./hair-loss-quiz.module.css";
 
 type Answers = QuizAnswers & { noticed?: string; triedBefore?: string; triedResult?: string };
 type StepKey =
+  | string
   | "goal"
   | "stage"
   | "stageVisual"
@@ -65,10 +70,13 @@ const TRUST_ROWS = [
   "Để lại số điện thoại, đội ngũ CareWise phản hồi tư vấn trong vài phút.",
 ];
 
-function buildSteps(answers: Answers): StepKey[] {
-  const steps: StepKey[] = ["goal", "stage", "stageVisual", "duration", "noticed", "triedBefore"];
+function buildSteps(answers: Answers, config: QuizConfig = DEFAULT_QUIZ_CONFIG): StepKey[] {
+  const steps: StepKey[] = config.questions.map((question) => answerKey(question.id) as StepKey);
+  const stageIndex = config.questions.findIndex((question) => question.id === "stages");
+  if (stageIndex >= 0) steps.splice(stageIndex + 1, 0, "stageVisual");
+  steps.push("noticed", "triedBefore");
   if (answers.triedBefore === "yes") steps.push("triedResult");
-  steps.push("proof", "format", "priority", "trust", "summary", "matching", "finalizing", "result");
+  steps.push("proof", "trust", "summary", "matching", "finalizing", "result");
   return steps;
 }
 
@@ -76,14 +84,13 @@ function labelOf(options: QuizOption[], value?: string) {
   return options.find((option) => option.value === value)?.label ?? "—";
 }
 
-function explainMatch(tags: Partial<QuizTags> | undefined, answers: Answers) {
+function explainMatch(tags: Partial<QuizTags> | undefined, answers: Answers, config: QuizConfig = DEFAULT_QUIZ_CONFIG) {
   const parts: string[] = [];
   if (tags) {
-    if (answers.goal && tags.goals?.includes(answers.goal)) parts.push(`mục tiêu "${labelOf(QUIZ_GOALS, answers.goal)}"`);
-    if (answers.stage && tags.stages?.includes(answers.stage)) parts.push(`giai đoạn "${labelOf(QUIZ_STAGES, answers.stage)}"`);
-    if (answers.duration && tags.durations?.includes(answers.duration)) parts.push(`thời gian rụng tóc "${labelOf(QUIZ_DURATIONS, answers.duration)}"`);
-    if (answers.format && tags.formats?.includes(answers.format)) parts.push(`hình thức "${labelOf(QUIZ_FORMATS, answers.format)}"`);
-    if (answers.priority && tags.priorities?.includes(answers.priority)) parts.push(`ưu tiên "${labelOf(QUIZ_PRIORITIES, answers.priority)}"`);
+    for (const question of config.questions) {
+      const answer = answers[answerKey(question.id)];
+      if (answer && tags[question.id]?.includes(answer)) parts.push(`"${labelOf(question.options, answer)}"`);
+    }
   }
   if (!parts.length) return "Sản phẩm phù hợp với nhu cầu chăm sóc tóc mà bạn vừa mô tả.";
   return `Phù hợp với ${parts.join(", ")} mà bạn vừa chọn.`;
@@ -147,6 +154,7 @@ export function HairLossQuiz() {
   const [checklistDone, setChecklistDone] = useState(0);
   const [products, setProducts] = useState<ProductCandidate[]>([]);
   const [productsLoaded, setProductsLoaded] = useState(false);
+  const [quizConfig, setQuizConfig] = useState<QuizConfig>(DEFAULT_QUIZ_CONFIG);
   const [sessionUser, setSessionUser] = useState<SessionUser>(null);
   const [leadName, setLeadName] = useState("");
   const [leadPhone, setLeadPhone] = useState("");
@@ -159,19 +167,31 @@ export function HairLossQuiz() {
   useEffect(() => {
     fetch("/api/commerce/products").then((response) => response.json()).then((body) => setProducts(body.data ?? [])).finally(() => setProductsLoaded(true));
   }, []);
+  useEffect(() => {
+    fetch("/api/settings", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((body) => setQuizConfig(normalizeQuizConfig(body.data?.quizConfig)))
+      .catch(() => setQuizConfig(DEFAULT_QUIZ_CONFIG));
+  }, []);
 
-  const steps = useMemo(() => buildSteps(answers), [answers]);
+  const steps = useMemo(() => buildSteps(answers, quizConfig), [answers, quizConfig]);
+  const currentQuestion = quizConfig.questions.find((question) => answerKey(question.id) === stepKey);
   const currentIndex = Math.max(0, steps.indexOf(stepKey));
   const progress = Math.round(((currentIndex + 1) / steps.length) * 100);
+
+  useEffect(() => {
+    if (!steps.includes(stepKey)) setStepKey(steps[0] ?? "result");
+  }, [stepKey, steps]);
 
   const scored = useMemo(() => {
     return products
       .filter((product) => hasAnyQuizTags(product.quizTags))
-      .map((product) => ({ product, score: scoreProduct(product.quizTags, answers) }))
+      .map((product) => ({ product, score: scoreProduct(product.quizTags, answers, quizConfig) }))
       .sort((a, b) => b.score - a.score);
-  }, [products, answers]);
+  }, [products, answers, quizConfig]);
   const best = scored[0];
   const hasMatch = Boolean(best && best.score > 0);
+  const recommended = scored.filter((entry) => entry.score > 0).slice(0, 6);
 
   async function submitLead(fullName: string, phone: string) {
     setLeadStatus("saving");
@@ -235,12 +255,12 @@ export function HairLossQuiz() {
   }, [stepKey]);
 
   function goNext() {
-    const seq = buildSteps(answers);
+    const seq = buildSteps(answers, quizConfig);
     const idx = seq.indexOf(stepKey);
     setStepKey(seq[idx + 1] ?? stepKey);
   }
   function goBack() {
-    const seq = buildSteps(answers);
+    const seq = buildSteps(answers, quizConfig);
     const idx = seq.indexOf(stepKey);
     if (idx <= 0) {
       router.push("/");
@@ -251,7 +271,7 @@ export function HairLossQuiz() {
   function selectAndAdvance(patch: Partial<Answers>) {
     const nextAnswers = { ...answers, ...patch };
     setAnswers(nextAnswers);
-    const seq = buildSteps(nextAnswers);
+    const seq = buildSteps(nextAnswers, quizConfig);
     const idx = seq.indexOf(stepKey);
     window.setTimeout(() => setStepKey(seq[idx + 1] ?? stepKey), 260);
   }
@@ -273,7 +293,7 @@ export function HairLossQuiz() {
           ) : hasMatch && best ? (
             <>
               <h1>Đã tìm được sản phẩm phù hợp nhất với bạn.</h1>
-              <p className={styles.resultLead}>{explainMatch(best.product.quizTags, answers)}</p>
+              <p className={styles.resultLead}>{explainMatch(best.product.quizTags, answers, quizConfig)}</p>
               <div className={styles.productCard}>
                 <div className={styles.productImage}>
                   {best.product.images[0] && (
@@ -292,6 +312,29 @@ export function HairLossQuiz() {
                   </Link>
                 </div>
               </div>
+              {recommended.length > 1 && (
+                <div className={styles.recommendations}>
+                  <p className={styles.resultEyebrow}>SẢN PHẨM PHÙ HỢP KHÁC</p>
+                  <div className={styles.recommendationGrid}>
+                    {recommended.slice(1).map(({ product, score }) => (
+                      <article key={product._id} className={styles.recommendationCard}>
+                        <div className={styles.recommendationImage}>
+                          {product.images[0] && (
+                            <Image src={product.images[0]} alt={product.name} fill sizes="160px" style={{ objectFit: "cover" }} />
+                          )}
+                        </div>
+                        <div>
+                          <b>{product.name}</b>
+                          {product.shortDescription && <p>{product.shortDescription}</p>}
+                          <span>{money.format(product.salePrice ?? product.price)}</span>
+                        </div>
+                        <Link href={`/san-pham/${product.slug}`}>Xem sản phẩm</Link>
+                        <small>{score} điểm phù hợp</small>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -301,11 +344,15 @@ export function HairLossQuiz() {
           )}
 
           <div className={styles.summaryTable}>
-            <div className={styles.summaryRow}><span>Mục tiêu</span><b>{labelOf(QUIZ_GOALS, answers.goal)}</b></div>
-            <div className={styles.summaryRow}><span>Giai đoạn rụng tóc</span><b>{labelOf(QUIZ_STAGES, answers.stage)}</b></div>
-            <div className={styles.summaryRow}><span>Thời gian</span><b>{labelOf(QUIZ_DURATIONS, answers.duration)}</b></div>
-            <div className={styles.summaryRow}><span>Hình thức điều trị</span><b>{answers.format ? labelOf(QUIZ_FORMATS, answers.format) : "Chưa xác định"}</b></div>
-            <div className={styles.summaryRow}><span>Ưu tiên</span><b>{labelOf(QUIZ_PRIORITIES, answers.priority)}</b></div>
+            {quizConfig.questions.map((question) => {
+              const value = answers[answerKey(question.id)];
+              return (
+                <div className={styles.summaryRow} key={question.id}>
+                  <span>{question.title}</span>
+                  <b>{value ? labelOf(question.options, value) : "Chưa xác định"}</b>
+                </div>
+              );
+            })}
           </div>
 
           <div className={styles.leadBox}>
@@ -369,7 +416,23 @@ export function HairLossQuiz() {
         <div className={styles.progressFill} style={{ width: `${progress}%` }} />
       </div>
 
-      {stepKey === "goal" && (
+      {currentQuestion && (
+        <ChoiceStep
+          eyebrow={currentQuestion.eyebrow}
+          title={currentQuestion.title}
+          hint={currentQuestion.hint}
+          options={currentQuestion.options}
+          value={answers[answerKey(currentQuestion.id)]}
+          onSelect={(value) => selectAndAdvance({ [answerKey(currentQuestion.id)]: value })}
+          onNotSure={
+            currentQuestion.allowSkip
+              ? () => selectAndAdvance({ [answerKey(currentQuestion.id)]: currentQuestion.skipValue || undefined })
+              : undefined
+          }
+        />
+      )}
+
+      {false && stepKey === "goal" && (
         <ChoiceStep
           eyebrow="BƯỚC 1"
           title="Mục tiêu của bạn với mái tóc là gì?"
@@ -379,7 +442,7 @@ export function HairLossQuiz() {
           onSelect={(value) => selectAndAdvance({ goal: value })}
         />
       )}
-      {stepKey === "stage" && (
+      {false && stepKey === "stage" && (
         <ChoiceStep
           eyebrow="BƯỚC 2"
           title="Bạn mô tả tình trạng rụng tóc hiện tại như thế nào?"
@@ -413,7 +476,7 @@ export function HairLossQuiz() {
           </div>
         </div>
       )}
-      {stepKey === "duration" && (
+      {false && stepKey === "duration" && (
         <ChoiceStep
           eyebrow="BƯỚC 3"
           title="Tình trạng này đã kéo dài bao lâu?"
@@ -466,7 +529,7 @@ export function HairLossQuiz() {
           <button type="button" className={styles.continueButton} onClick={goNext}>Tiếp tục</button>
         </div>
       )}
-      {stepKey === "format" && (
+      {false && stepKey === "format" && (
         <ChoiceStep
           eyebrow="BƯỚC 4"
           title="Bạn muốn điều trị theo hình thức nào?"
@@ -476,7 +539,7 @@ export function HairLossQuiz() {
           onNotSure={() => selectAndAdvance({ format: undefined })}
         />
       )}
-      {stepKey === "priority" && (
+      {false && stepKey === "priority" && (
         <ChoiceStep
           eyebrow="BƯỚC 5"
           title="Ưu tiên hàng đầu của bạn là gì?"
@@ -506,11 +569,15 @@ export function HairLossQuiz() {
           <h1>Phân tích của bạn đã hoàn tất.</h1>
           <p className={styles.stepHint}>Hồ sơ tóc của bạn:</p>
           <div className={styles.summaryTable}>
-            <div className={styles.summaryRow}><span>Mục tiêu</span><b>{labelOf(QUIZ_GOALS, answers.goal)}</b></div>
-            <div className={styles.summaryRow}><span>Giai đoạn rụng tóc</span><b>{labelOf(QUIZ_STAGES, answers.stage)}</b></div>
-            <div className={styles.summaryRow}><span>Thời gian</span><b>{labelOf(QUIZ_DURATIONS, answers.duration)}</b></div>
-            <div className={styles.summaryRow}><span>Hình thức điều trị</span><b>{answers.format ? labelOf(QUIZ_FORMATS, answers.format) : "Chưa xác định"}</b></div>
-            <div className={styles.summaryRow}><span>Ưu tiên</span><b>{labelOf(QUIZ_PRIORITIES, answers.priority)}</b></div>
+            {quizConfig.questions.map((question) => {
+              const value = answers[answerKey(question.id)];
+              return (
+                <div className={styles.summaryRow} key={question.id}>
+                  <span>{question.title}</span>
+                  <b>{value ? labelOf(question.options, value) : "Chưa xác định"}</b>
+                </div>
+              );
+            })}
           </div>
           <button type="button" className={styles.continueButton} onClick={goNext}>Tiếp tục</button>
         </div>
