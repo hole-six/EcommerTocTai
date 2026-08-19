@@ -644,6 +644,24 @@ a.menVideoLink {
   line-height: 1.7;
 }
 
+@media (max-width: 1059px) {
+  /* The base .product rule is a row flex (image left ~45%, text right)
+     inherited from desktop, which crams name/price/buttons into a narrow
+     strip on phones. Stack it image-on-top instead so each field has the
+     full card width to breathe. */
+  .product {
+    flex-direction: column;
+  }
+  .productImage {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+  .productImage img {
+    min-height: 0;
+    aspect-ratio: 1;
+  }
+}
+
 @media (min-width: 1060px) {
   .productGrid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
