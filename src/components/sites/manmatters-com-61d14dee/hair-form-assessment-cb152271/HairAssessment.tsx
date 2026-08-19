@@ -1,13 +1,11 @@
 "use client";
 
-import { Check, ChevronLeft, ChevronRight, Loader2, PhoneCall, RotateCcw, Sparkles } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Check, ChevronLeft, ChevronRight, RotateCcw, Sparkles } from "lucide-react";
+import { useMemo, useState } from "react";
 import { SiteHeader } from "../shared/SiteHeader";
 import styles from "./HairAssessment.module.css";
 import Image from "next/image";
-import { extractApiError } from "@/lib/client/errors";
 
-type SessionUser = { _id: string; fullName: string; phone: string } | null;
 
 type Option = { label: string; image?: string; id: string };
 type Question = { id: string; title: string; helper: string; options: Option[] };
@@ -108,50 +106,6 @@ export function HairAssessment({ embedded = false }: { embedded?: boolean }) {
   const complete = step === questions.length;
   const current = questions[step];
   const progress = complete ? 100 : ((step + 1) / questions.length) * 100;
-
-  const [sessionUser, setSessionUser] = useState<SessionUser>(null);
-  const [sessionChecked, setSessionChecked] = useState(false);
-  const [leadName, setLeadName] = useState("");
-  const [leadPhone, setLeadPhone] = useState("");
-  const [leadStatus, setLeadStatus] = useState<"idle" | "saving" | "done" | "error">("idle");
-  const [leadError, setLeadError] = useState("");
-
-  useEffect(() => {
-    fetch("/api/auth/me")
-      .then((response) => response.json())
-      .then((body) => setSessionUser(body.data ?? null))
-      .finally(() => setSessionChecked(true));
-  }, []);
-
-  async function submitLead(fullName: string, phone: string) {
-    setLeadStatus("saving");
-    setLeadError("");
-    try {
-      const response = await fetch("/api/consultations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customer: { fullName, phone },
-          category: "hair",
-          answers: { ...answers, diagnosis: analysis?.diagnosis ?? "" },
-          appointment: { mode: "now" },
-        }),
-      });
-      const body = await response.json();
-      if (!response.ok) throw new Error(extractApiError(body, "Không thể gửi thông tin, vui lòng thử lại."));
-      setLeadStatus("done");
-    } catch (error) {
-      setLeadStatus("error");
-      setLeadError(error instanceof Error ? error.message : "Không thể gửi thông tin, vui lòng thử lại.");
-    }
-  }
-
-  useEffect(() => {
-    if (complete && sessionChecked && sessionUser?.phone && leadStatus === "idle") {
-      void submitLead(sessionUser.fullName, sessionUser.phone);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [complete, sessionChecked, sessionUser]);
 
   // Personalized Diagnosis Engine
   const analysis = useMemo(() => {
@@ -287,60 +241,6 @@ export function HairAssessment({ embedded = false }: { embedded?: boolean }) {
                 <p className={styles.eyebrow}>HOÀN THÀNH ĐÁNH GIÁ</p>
                 <h2>Phác đồ chăm sóc dành riêng cho bạn</h2>
                 <p>Hệ thống đã phân tích các yếu tố từ độ tuổi, thói quen sinh hoạt đến tình trạng da đầu của bạn để đưa ra chẩn đoán dưới đây.</p>
-              </div>
-
-              <div className={styles.leadBox}>
-                {sessionUser?.phone ? (
-                  <p className={styles.leadNote}>
-                    <PhoneCall size={16} />
-                    {leadStatus === "saving" && "Đang ghi nhận thông tin của bạn…"}
-                    {leadStatus === "done" &&
-                      `Đã ghi nhận! Chuyên gia sẽ gọi tới số ${sessionUser.phone} để tư vấn cho bạn trong ít phút.`}
-                    {leadStatus === "error" && (
-                      <>
-                        {leadError}{" "}
-                        <button type="button" onClick={() => void submitLead(sessionUser.fullName, sessionUser.phone)}>
-                          Thử lại
-                        </button>
-                      </>
-                    )}
-                  </p>
-                ) : leadStatus === "done" ? (
-                  <p className={styles.leadNote}>
-                    <PhoneCall size={16} /> Cảm ơn bạn! Chuyên gia sẽ gọi tới số {leadPhone} trong ít phút để tư vấn lộ trình phù hợp.
-                  </p>
-                ) : (
-                  <form
-                    className={styles.leadForm}
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      if (!leadName.trim() || !leadPhone.trim()) return;
-                      void submitLead(leadName.trim(), leadPhone.trim());
-                    }}
-                  >
-                    <p className={styles.leadTitle}>Để lại số điện thoại để chuyên gia gọi tư vấn miễn phí theo đúng phác đồ này</p>
-                    <div className={styles.leadFields}>
-                      <input
-                        placeholder="Họ và tên"
-                        value={leadName}
-                        onChange={(event) => setLeadName(event.target.value)}
-                        required
-                      />
-                      <input
-                        placeholder="Số điện thoại"
-                        inputMode="tel"
-                        value={leadPhone}
-                        onChange={(event) => setLeadPhone(event.target.value)}
-                        required
-                      />
-                      <button type="submit" disabled={leadStatus === "saving"}>
-                        {leadStatus === "saving" ? <Loader2 size={16} className={styles.spin} /> : <PhoneCall size={16} />}
-                        {leadStatus === "saving" ? "Đang gửi…" : "Gửi cho tôi"}
-                      </button>
-                    </div>
-                    {leadStatus === "error" && <p className={styles.leadError}>{leadError}</p>}
-                  </form>
-                )}
               </div>
 
               <div className={styles.diagnosisBox}>

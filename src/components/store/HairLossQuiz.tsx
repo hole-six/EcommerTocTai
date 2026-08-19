@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Check, CheckCircle2, Loader2, PhoneCall, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, CheckCircle2, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -21,7 +21,6 @@ import {
   type QuizOption,
   type QuizTags,
 } from "@/lib/hairQuiz";
-import { extractApiError } from "@/lib/client/errors";
 import styles from "./hair-loss-quiz.module.css";
 
 type Answers = QuizAnswers & { noticed?: string; triedBefore?: string; triedResult?: string };
@@ -53,7 +52,6 @@ type ProductCandidate = {
   shortDescription?: string;
   quizTags?: QuizTags;
 };
-type SessionUser = { fullName: string; phone: string } | null;
 
 const money = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 });
 
@@ -155,15 +153,7 @@ export function HairLossQuiz() {
   const [products, setProducts] = useState<ProductCandidate[]>([]);
   const [productsLoaded, setProductsLoaded] = useState(false);
   const [quizConfig, setQuizConfig] = useState<QuizConfig>(DEFAULT_QUIZ_CONFIG);
-  const [sessionUser, setSessionUser] = useState<SessionUser>(null);
-  const [leadName, setLeadName] = useState("");
-  const [leadPhone, setLeadPhone] = useState("");
-  const [leadStatus, setLeadStatus] = useState<"idle" | "saving" | "done" | "error">("idle");
-  const [leadError, setLeadError] = useState("");
 
-  useEffect(() => {
-    fetch("/api/auth/me").then((response) => response.json()).then((body) => setSessionUser(body.data ?? null));
-  }, []);
   useEffect(() => {
     fetch("/api/commerce/products").then((response) => response.json()).then((body) => setProducts(body.data ?? [])).finally(() => setProductsLoaded(true));
   }, []);
@@ -180,6 +170,7 @@ export function HairLossQuiz() {
   const progress = Math.round(((currentIndex + 1) / steps.length) * 100);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- đưa về bước hợp lệ khi cấu hình khảo sát đổi
     if (!steps.includes(stepKey)) setStepKey(steps[0] ?? "result");
   }, [stepKey, steps]);
 
@@ -193,37 +184,9 @@ export function HairLossQuiz() {
   const hasMatch = Boolean(best && best.score > 0);
   const recommended = scored.filter((entry) => entry.score > 0).slice(0, 6);
 
-  async function submitLead(fullName: string, phone: string) {
-    setLeadStatus("saving");
-    setLeadError("");
-    try {
-      const response = await fetch("/api/consultations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customer: { fullName, phone },
-          category: "hair",
-          answers,
-          appointment: { mode: "now" },
-        }),
-      });
-      const body = await response.json();
-      if (!response.ok) throw new Error(extractApiError(body, "Không thể gửi thông tin, vui lòng thử lại."));
-      setLeadStatus("done");
-    } catch (error) {
-      setLeadStatus("error");
-      setLeadError(error instanceof Error ? error.message : "Không thể gửi thông tin, vui lòng thử lại.");
-    }
-  }
-  useEffect(() => {
-    if (stepKey === "result" && sessionUser?.phone && leadStatus === "idle") {
-      void submitLead(sessionUser.fullName, sessionUser.phone);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stepKey, sessionUser]);
-
   useEffect(() => {
     if (stepKey !== "matching") return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset thanh tiến trình mỗi lần vào bước ghép sản phẩm
     setMatchProgress(0);
     const start = Date.now();
     const duration = 2000;
@@ -240,6 +203,7 @@ export function HairLossQuiz() {
 
   useEffect(() => {
     if (stepKey !== "finalizing") return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset checklist mỗi lần vào bước tổng hợp
     setChecklistDone(0);
     const timer = window.setInterval(() => {
       setChecklistDone((value) => {
@@ -278,9 +242,6 @@ export function HairLossQuiz() {
   function restart() {
     setAnswers({});
     setStepKey("goal");
-    setLeadStatus("idle");
-    setLeadName("");
-    setLeadPhone("");
   }
 
   if (stepKey === "result") {
@@ -339,7 +300,8 @@ export function HairLossQuiz() {
           ) : (
             <>
               <h1>Chưa tìm được sản phẩm khớp hoàn toàn hồ sơ của bạn.</h1>
-              <p className={styles.resultLead}>Để lại số điện thoại, đội ngũ CareWise sẽ tư vấn trực tiếp sản phẩm phù hợp nhất với bạn.</p>
+              <p className={styles.resultLead}>Bạn có thể xem toàn bộ sản phẩm CareWise hoặc làm lại bài test với lựa chọn khác để hệ thống gợi ý chính xác hơn.</p>
+              <Link href="/shop/all" className={styles.primaryCta}>Xem tất cả sản phẩm</Link>
             </>
           )}
 
@@ -353,46 +315,6 @@ export function HairLossQuiz() {
                 </div>
               );
             })}
-          </div>
-
-          <div className={styles.leadBox}>
-            {sessionUser?.phone ? (
-              <p className={styles.leadNote}>
-                <PhoneCall size={16} />
-                {leadStatus === "saving" && "Đang ghi nhận thông tin của bạn…"}
-                {leadStatus === "done" && `Đã ghi nhận! Chuyên gia sẽ gọi tới số ${sessionUser.phone} để tư vấn thêm.`}
-                {leadStatus === "error" && (
-                  <>
-                    {leadError}{" "}
-                    <button type="button" onClick={() => void submitLead(sessionUser.fullName, sessionUser.phone)}>Thử lại</button>
-                  </>
-                )}
-              </p>
-            ) : leadStatus === "done" ? (
-              <p className={styles.leadNote}>
-                <PhoneCall size={16} /> Cảm ơn bạn! Chuyên gia sẽ gọi tới số {leadPhone} trong ít phút để tư vấn thêm.
-              </p>
-            ) : (
-              <form
-                className={styles.leadForm}
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  if (!leadName.trim() || !leadPhone.trim()) return;
-                  void submitLead(leadName.trim(), leadPhone.trim());
-                }}
-              >
-                <p className={styles.leadTitle}>Muốn chuyên gia gọi tư vấn trực tiếp theo đúng hồ sơ này?</p>
-                <div className={styles.leadFields}>
-                  <input placeholder="Họ và tên" value={leadName} onChange={(event) => setLeadName(event.target.value)} required />
-                  <input placeholder="Số điện thoại" inputMode="tel" value={leadPhone} onChange={(event) => setLeadPhone(event.target.value)} required />
-                  <button type="submit" disabled={leadStatus === "saving"}>
-                    {leadStatus === "saving" ? <Loader2 size={16} className={styles.spin} /> : <PhoneCall size={16} />}
-                    {leadStatus === "saving" ? "Đang gửi…" : "Gửi cho tôi"}
-                  </button>
-                </div>
-                {leadStatus === "error" && <p className={styles.leadError}>{leadError}</p>}
-              </form>
-            )}
           </div>
 
           <button type="button" className={styles.restartLink} onClick={restart}>Làm lại bài test</button>
