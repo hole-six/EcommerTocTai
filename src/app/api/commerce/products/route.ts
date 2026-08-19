@@ -73,7 +73,7 @@ export async function GET(request: Request) {
     };
     const sort: Record<string, 1 | -1> = variantGroup
       ? { variantOrder: 1 }
-      : { createdAt: -1 };
+      : { isBestSeller: -1, createdAt: -1 };
     const products = await Product.find(filter)
       .populate("category", "name slug parent")
       .sort(sort)

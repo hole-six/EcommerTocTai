@@ -165,7 +165,7 @@ export default function AdminBannersPage() {
 
   useEffect(() => {
     void load();
-    fetch("/api/commerce/products?status=all")
+    fetch("/api/commerce/products")
       .then((response) => response.json())
       .then((body) =>
         setProductOptions(

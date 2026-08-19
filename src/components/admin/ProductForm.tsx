@@ -98,6 +98,7 @@ export type ProductInitial = {
   treatmentJourney?: Item[];
   additionalInfo?: AdditionalInfoGroup[];
   status: "draft" | "active" | "archived";
+  isBestSeller?: boolean;
   variantGroup?: string;
   variantLabel?: string;
   variantOrder?: number;
@@ -594,6 +595,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
   const [status, setStatus] = useState<ProductInitial["status"]>(
     initial?.status ?? "draft",
   );
+  const [isBestSeller, setIsBestSeller] = useState(Boolean(initial?.isBestSeller));
   const [shortDescription, setShortDescription] = useState(
     initial?.shortDescription ?? "",
   );
@@ -803,6 +805,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
         );
         setStageProducts(
           products
+            .filter((product) => product.status === "active")
             .map(
               (product: {
                 _id?: string;
@@ -1034,6 +1037,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
         optionGroups: groups,
         quizTags,
         status,
+        isBestSeller,
         variantGroup: initial?.variantGroup ?? "",
         variantLabel: initial?.variantLabel ?? "",
         variantOrder: initial?.variantOrder ?? 0,
@@ -2134,6 +2138,15 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
                   </option>
                 ))}
               </select>
+            </label>
+            <label className={panel["admin-checkbox"]}>
+              <input
+                type="checkbox"
+                checked={isBestSeller}
+                onChange={(event) => setIsBestSeller(event.target.checked)}
+              />{" "}
+              ⭐ Sản phẩm bán chạy — ưu tiên hiển thị lên đầu ở mọi trang có
+              sản phẩm (trang chủ, danh mục...)
             </label>
             <button
               className={panel.saveButton}

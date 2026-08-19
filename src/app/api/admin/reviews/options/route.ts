@@ -16,7 +16,7 @@ export async function GET() {
         .sort({ fullName: 1, createdAt: -1 })
         .limit(2000)
         .lean(),
-      Product.find({ status: { $ne: "archived" } })
+      Product.find({ status: "active" })
         .select("name sku slug status")
         .sort({ name: 1, createdAt: -1 })
         .limit(2000)

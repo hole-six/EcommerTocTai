@@ -151,6 +151,7 @@ const productBaseSchema = z.object({
     treatmentJourney: z.array(imageItem).default([]),
     additionalInfo: z.array(additionalInfoGroup).default([]),
     status: z.enum(["draft", "active", "archived"]).default("draft"),
+    isBestSeller: z.boolean().default(false),
     translations: z
       .object({
         en: z
