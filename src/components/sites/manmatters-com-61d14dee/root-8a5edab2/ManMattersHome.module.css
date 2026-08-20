@@ -656,6 +656,11 @@ a.menVideoLink {
   .productImage {
     flex: 0 0 auto;
     width: auto;
+    /* Quy tắc gốc đặt min-height:100% cho bố cục ảnh-trái-chữ-phải ở desktop.
+       Trong CSS min-height thắng max-height, nên nếu không đưa về 0 thì ô ảnh
+       vẫn giãn hết chiều cao thẻ, đẩy tên/giá/nút ra ngoài và bị
+       overflow:hidden của .product cắt mất — chỉ còn thấy mỗi ảnh. */
+    min-height: 0;
     max-height: 168px;
     box-sizing: border-box;
     margin: 10px 10px 0;
