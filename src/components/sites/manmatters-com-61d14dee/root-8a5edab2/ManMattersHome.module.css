@@ -748,7 +748,7 @@ a.menVideoLink {
 
   .productGrid {
     display: grid;
-    grid-auto-columns: minmax(47vw, 215px);
+    grid-auto-columns: min(47vw, 215px);
     grid-auto-flow: column;
     grid-template-columns: none;
     margin-right: -12px;
@@ -877,7 +877,7 @@ a.menVideoLink {
   }
 
   .productGrid {
-    grid-auto-columns: minmax(46vw, 200px);
+    grid-auto-columns: min(46vw, 200px);
     margin-right: -10px;
     margin-left: -10px;
     padding-right: 10px;
