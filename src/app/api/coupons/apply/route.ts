@@ -6,15 +6,19 @@ import { apiError } from "@/lib/server/http";
 import { resolveCoupon } from "@/lib/server/coupons";
 import { getShippingSettings } from "@/lib/server/settings";
 
-const applySchema = z.object({ code: z.string().min(1), subtotal: z.number().min(0) });
+const applySchema = z.object({
+  code: z.string().min(1),
+  subtotal: z.number().min(0),
+  phone: z.string().max(20).optional(),
+});
 
 export async function POST(request: Request) {
   try {
-    const { code, subtotal } = applySchema.parse(await request.json());
+    const { code, subtotal, phone } = applySchema.parse(await request.json());
     await connectDb();
     const session = await currentUser();
     const { shippingFee } = await getShippingSettings();
-    const result = await resolveCoupon(code, subtotal, shippingFee, session?.id);
+    const result = await resolveCoupon(code, subtotal, shippingFee, session?.id, phone);
     if ("error" in result) return NextResponse.json({ error: result.error }, { status: 400 });
     return NextResponse.json({ data: { code: result.coupon.code, discount: result.discount, type: result.coupon.type, value: result.coupon.value } });
   } catch (error) { return apiError(error); }

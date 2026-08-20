@@ -304,11 +304,21 @@ và không có `isDefault`. Gồm `recipientName`, `phone`, `province`, `distric
 | `expiresAt` | Date | — | `null` (không hết hạn) |
 | `isActive` | Boolean | — | `true` |
 | `customers` | ObjectId[] → `User` | index | `[]` |
+| `customerPhones` | String[] | index | `[]` |
 
-`customers` rỗng = mã dùng chung cho mọi khách. Có phần tử = mã riêng, chỉ khách trong
-danh sách và **đã đăng nhập** mới áp được; khách vãng lai luôn bị từ chối. Kiểm tra nằm ở
-`isCouponForCustomer()` trong `src/lib/server/coupons.ts`, áp dụng cho cả lúc bấm áp mã
-(`/api/coupons/apply`), lúc tạo đơn (`/api/orders`) và lúc liệt kê mã khả dụng (`/api/coupons`).
+**Cả hai rỗng = mã dùng chung cho mọi khách.** Có phần tử = mã riêng, khớp theo một trong
+hai đường: `customers` khớp tài khoản đang đăng nhập, `customerPhones` khớp số điện thoại
+đặt hàng (dành cho khách vãng lai không có tài khoản). Khi admin chọn một khách đã đăng ký,
+hệ thống lưu cả `_id` lẫn số điện thoại nên khách đó mua kiểu nào cũng dùng được mã.
+
+Số điện thoại được chuẩn hoá về dạng `0xxxxxxxxx` bằng `normalizePhone()` trước khi so sánh,
+vì DB lưu lẫn lộn `0912...` và `+84912...`. Kiểm tra nằm ở `isCouponForCustomer()` trong
+`src/lib/server/coupons.ts`, áp dụng cho cả lúc bấm áp mã (`/api/coupons/apply`), lúc tạo đơn
+(`/api/orders`) và lúc liệt kê mã khả dụng (`/api/coupons?phone=`).
+
+> **Lưu ý bảo mật:** nhận diện theo số điện thoại không có xác thực OTP — ai biết số của khách
+> khác đều có thể dùng mã riêng của người đó. Chấp nhận được với voucher giá trị nhỏ; voucher
+> giá trị lớn nên chỉ định theo tài khoản (`customers`).
 
 Đơn hàng chỉ lưu `couponCode` dạng chuỗi + `discount` đã tính, không tham chiếu `_id` của coupon.
 
@@ -629,7 +639,7 @@ Giá trị mặc định nằm ở `DEFAULT_QUIZ_CONFIG` trong `src/lib/hairQuiz
 | `orders` | `paymentCode` | unique + sparse |
 | `orders` | `user`, `customer.phone`, `inventoryState`, `paymentTransactionId` | thường |
 | `coupons` | `code` | unique |
-| `coupons` | `customers` | thường |
+| `coupons` | `customers`, `customerPhones` | thường |
 | `paymentwebhooks` | `transactionId` | unique |
 | `paymentwebhooks` | `paymentCode` | thường |
 | `reviews` | `{ product, order }` | **compound unique** |

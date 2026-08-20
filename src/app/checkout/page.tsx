@@ -103,11 +103,14 @@ export default function CheckoutPage() {
   const [profileLoading, setProfileLoading] = useState(true);
   const [verifiedPhone, setVerifiedPhone] = useState("");
   const [phoneInput, setPhoneInput] = useState("");
+  // Mã giảm giá riêng nhận diện khách vãng lai theo số điện thoại, nên trang
+  // thanh toán phải gửi kèm số khách vừa xác nhận.
   const [contact, setContact] = useState({
     fullName: "",
     phone: "",
     email: "",
   });
+  const couponPhone = contact.phone || verifiedPhone;
   const [addressMode, setAddressMode] = useState<"saved" | "new">("new");
   const [recipientDifferent, setRecipientDifferent] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
@@ -183,11 +186,12 @@ export default function CheckoutPage() {
     }
   }, []);
   useEffect(() => {
-    fetch("/api/coupons")
+    const query = couponPhone ? `?phone=${encodeURIComponent(couponPhone)}` : "";
+    fetch(`/api/coupons${query}`)
       .then((response) => response.json())
       .then((body) => setAvailableCoupons(body.data ?? []))
       .catch(() => {});
-  }, []);
+  }, [couponPhone]);
   useEffect(() => {
     fetch("/api/settings")
       .then((response) => response.json())
@@ -349,7 +353,7 @@ export default function CheckoutPage() {
       fetch("/api/coupons/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: appliedCouponCode, subtotal }),
+        body: JSON.stringify({ code: appliedCouponCode, subtotal, phone: couponPhone }),
       })
         .then((response) =>
           response.json().then((body) => ({ response, body })),
@@ -370,7 +374,7 @@ export default function CheckoutPage() {
         .catch(() => undefined);
     }, 250);
     return () => window.clearTimeout(timer);
-  }, [subtotal, appliedCouponCode]);
+  }, [subtotal, appliedCouponCode, couponPhone]);
   useEffect(() => {
     if (!orderNumber || !transferPayment || transferPaid) return;
     if ("gateway" in transferPayment && transferPayment.gateway === "sepay_pg") return;
@@ -469,7 +473,7 @@ export default function CheckoutPage() {
     const response = await fetch("/api/coupons/apply", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: code.trim(), subtotal }),
+      body: JSON.stringify({ code: code.trim(), subtotal, phone: couponPhone }),
     });
     const body = await response.json();
     if (!response.ok) {

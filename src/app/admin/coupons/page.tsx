@@ -12,7 +12,12 @@ import { showToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/lib/client/errors";
 import styles from "./coupons.module.css";
 
-type CustomerRef = { id: string; fullName: string; phone: string };
+// Khách vãng lai chỉ có số điện thoại (gom từ đơn hàng), không có tài khoản nên
+// không có id. Dùng phone làm khoá phụ để chọn được cả hai loại trong một danh sách.
+type CustomerRef = { id?: string; fullName: string; phone: string };
+const refKey = (customer: CustomerRef) => customer.id ?? `phone:${customer.phone}`;
+const samePhone = (a: string, b: string) =>
+  a.replace(/[^0-9]/g, "").slice(-9) === b.replace(/[^0-9]/g, "").slice(-9);
 
 type Coupon = {
   _id: string;
@@ -26,6 +31,7 @@ type Coupon = {
   expiresAt?: string | null;
   isActive: boolean;
   customers?: { _id: string; fullName?: string; phone?: string }[];
+  customerPhones?: string[];
 };
 
 type Form = {
@@ -90,22 +96,35 @@ export default function AdminCouponsPage() {
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       setCustomerLoading(true);
-      const params = new URLSearchParams({ tab: "registered", page: "1", limit: "50" });
-      if (customerQuery.trim()) params.set("q", customerQuery.trim());
-      fetch(`/api/admin/customers?${params}`, { signal: controller.signal })
-        .then((response) => response.json())
-        .then((body) =>
-          setCustomerOptions(
-            (body.data?.registered ?? []).map(
-              (customer: { id: string; fullName?: string; phone?: string }) => ({
-                id: customer.id,
-                fullName: customer.fullName ?? "Khách hàng",
-                phone: customer.phone ?? "",
-              }),
-            ),
-          ),
-        )
-        .catch(() => undefined)
+      const search = customerQuery.trim();
+      const load = (tab: "registered" | "guests") => {
+        const params = new URLSearchParams({ tab, page: "1", limit: "40" });
+        if (search) params.set("q", search);
+        return fetch(`/api/admin/customers?${params}`, { signal: controller.signal })
+          .then((response) => response.json())
+          .then((body) => body.data?.[tab] ?? [])
+          .catch(() => []);
+      };
+      Promise.all([load("registered"), load("guests")])
+        .then(([registered, guests]) => {
+          const list: CustomerRef[] = registered.map(
+            (customer: { id: string; fullName?: string; phone?: string }) => ({
+              id: customer.id,
+              fullName: customer.fullName ?? "Khách hàng",
+              phone: customer.phone ?? "",
+            }),
+          );
+          for (const guest of guests as { phone?: string; fullName?: string }[]) {
+            const guestPhone = guest.phone;
+            if (!guestPhone) continue;
+            // Khách vãng lai trùng số với tài khoản đã có thì bỏ, tránh hai dòng
+            // cho cùng một người.
+            if (list.some((entry) => entry.phone && samePhone(entry.phone, guestPhone)))
+              continue;
+            list.push({ fullName: guest.fullName || "Khách vãng lai", phone: guestPhone });
+          }
+          setCustomerOptions(list);
+        })
         .finally(() => setCustomerLoading(false));
     }, 250);
     return () => {
@@ -117,8 +136,8 @@ export default function AdminCouponsPage() {
   function toggleCustomer(customer: CustomerRef) {
     setForm((current) => ({
       ...current,
-      customers: current.customers.some((entry) => entry.id === customer.id)
-        ? current.customers.filter((entry) => entry.id !== customer.id)
+      customers: current.customers.some((entry) => refKey(entry) === refKey(customer))
+        ? current.customers.filter((entry) => refKey(entry) !== refKey(customer))
         : [...current.customers, customer],
     }));
   }
@@ -167,11 +186,22 @@ export default function AdminCouponsPage() {
       usageLimit: coupon.usageLimit ? String(coupon.usageLimit) : "",
       expiresAt: coupon.expiresAt ? coupon.expiresAt.slice(0, 10) : "",
       isActive: coupon.isActive,
-      customers: (coupon.customers ?? []).map((customer) => ({
-        id: customer._id,
-        fullName: customer.fullName ?? "Khách hàng",
-        phone: customer.phone ?? "",
-      })),
+      customers: [
+        ...(coupon.customers ?? []).map((customer) => ({
+          id: customer._id,
+          fullName: customer.fullName ?? "Khách hàng",
+          phone: customer.phone ?? "",
+        })),
+        // Số điện thoại không thuộc tài khoản nào là khách vãng lai được chỉ định riêng.
+        ...(coupon.customerPhones ?? [])
+          .filter(
+            (phone) =>
+              !(coupon.customers ?? []).some(
+                (customer) => customer.phone && samePhone(customer.phone, phone),
+              ),
+          )
+          .map((phone) => ({ fullName: "Khách vãng lai", phone })),
+      ],
     });
     setEditingId(coupon._id);
     setDrawerOpen(true);
@@ -191,7 +221,14 @@ export default function AdminCouponsPage() {
         usageLimit: form.usageLimit ? Number(form.usageLimit) : undefined,
         expiresAt: form.expiresAt || undefined,
         isActive: form.isActive,
-        customers: form.customers.map((customer) => customer.id),
+        // Lưu cả hai: id để khớp khách đã đăng nhập, số điện thoại để khớp khách
+        // vãng lai. Khách có tài khoản lưu cả hai nên mua kiểu nào cũng dùng được mã.
+        customers: form.customers
+          .map((customer) => customer.id)
+          .filter((id): id is string => Boolean(id)),
+        customerPhones: form.customers
+          .map((customer) => customer.phone)
+          .filter(Boolean),
       };
       const response = await fetch(
         editingId ? `/api/admin/coupons/${editingId}` : "/api/admin/coupons",
@@ -316,8 +353,11 @@ export default function AdminCouponsPage() {
                       : "Không giới hạn"}
                   </td>
                   <td data-label="Đối tượng">
-                    {coupon.customers?.length
-                      ? `${coupon.customers.length} khách chỉ định`
+                    {coupon.customerPhones?.length || coupon.customers?.length
+                      ? `${Math.max(
+                          coupon.customerPhones?.length ?? 0,
+                          coupon.customers?.length ?? 0,
+                        )} khách chỉ định`
                       : "Tất cả khách"}
                   </td>
                   <td data-label="Trạng thái">
@@ -497,14 +537,15 @@ export default function AdminCouponsPage() {
             <p className={styles.audienceTitle}>Áp dụng cho khách hàng</p>
             <p className={styles.audienceHint}>
               Chọn khách hàng cụ thể nếu muốn mã này là ưu đãi riêng cho họ.
-              <b> Không chọn ai thì mọi khách đều dùng được.</b> Khách chưa đăng
-              nhập không dùng được mã riêng.
+              <b> Không chọn ai thì mọi khách đều dùng được.</b> Danh sách gồm cả
+              khách đã có tài khoản lẫn khách vãng lai (nhận diện theo số điện
+              thoại đặt hàng).
             </p>
 
             {form.customers.length > 0 && (
               <div className={styles.chips}>
                 {form.customers.map((customer) => (
-                  <span className={styles.chip} key={customer.id}>
+                  <span className={styles.chip} key={refKey(customer)}>
                     {customer.fullName}
                     {customer.phone ? ` · ${customer.phone}` : ""}
                     <button
@@ -534,18 +575,23 @@ export default function AdminCouponsPage() {
               )}
               {!customerLoading &&
                 customerOptions.map((customer) => {
-                  const picked = form.customers.some((entry) => entry.id === customer.id);
+                  const picked = form.customers.some(
+                    (entry) => refKey(entry) === refKey(customer),
+                  );
                   return (
                     <button
                       type="button"
-                      key={customer.id}
+                      key={refKey(customer)}
                       className={`${styles.customerRow} ${picked ? styles.customerRowActive : ""}`}
                       onClick={() => toggleCustomer(customer)}
                     >
                       <span>
                         {customer.fullName}
                         <br />
-                        <small>{customer.phone}</small>
+                        <small>
+                          {customer.phone}
+                          {customer.id ? "" : " · chưa có tài khoản"}
+                        </small>
                       </span>
                       {picked && <Check size={15} />}
                     </button>
