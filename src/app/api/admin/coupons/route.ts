@@ -15,7 +15,6 @@ export async function GET(request: Request) {
     const { page, limit, skip } = parsePagination(url);
     const [data, total] = await Promise.all([
       Coupon.find()
-        .populate({ path: "customers", select: "fullName phone" })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)

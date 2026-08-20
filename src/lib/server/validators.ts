@@ -240,8 +240,7 @@ export const couponSchema = z.object({
   usageLimit: z.number().int().min(1).optional(),
   expiresAt: z.string().optional(),
   isActive: z.boolean().default(true),
-  customers: z.array(z.string().length(24)).max(500).default([]),
-  customerPhones: z.array(z.string().min(6).max(20)).max(500).default([]),
+  isHidden: z.boolean().default(false),
 });
 export const profileSchema = z.object({
   fullName: z.string().min(2).max(80).optional(),

@@ -303,22 +303,17 @@ và không có `isDefault`. Gồm `recipientName`, `phone`, `province`, `distric
 | `usedCount` | Number | — | `0` |
 | `expiresAt` | Date | — | `null` (không hết hạn) |
 | `isActive` | Boolean | — | `true` |
-| `customers` | ObjectId[] → `User` | index | `[]` |
-| `customerPhones` | String[] | index | `[]` |
+| `isHidden` | Boolean | index | `false` |
 
-**Cả hai rỗng = mã dùng chung cho mọi khách.** Có phần tử = mã riêng, khớp theo một trong
-hai đường: `customers` khớp tài khoản đang đăng nhập, `customerPhones` khớp số điện thoại
-đặt hàng (dành cho khách vãng lai không có tài khoản). Khi admin chọn một khách đã đăng ký,
-hệ thống lưu cả `_id` lẫn số điện thoại nên khách đó mua kiểu nào cũng dùng được mã.
+`isHidden: false` = **mã công khai**: được liệt kê ở `GET /api/coupons` nên khách thấy sẵn
+trong danh sách gợi ý ở bước thanh toán. `isHidden: true` = **mã ẩn**: cố tình không xuất
+hiện trong danh sách đó, khách phải tự gõ mã mới dùng được — bản thân việc biết mã là điều
+kiện duy nhất. Ngoài chuyện có được liệt kê hay không, hai loại xác thực giống hệt nhau
+(`resolveCoupon()` trong `src/lib/server/coupons.ts` kiểm `isActive`, hạn dùng, số lượt và
+giá trị đơn tối thiểu).
 
-Số điện thoại được chuẩn hoá về dạng `0xxxxxxxxx` bằng `normalizePhone()` trước khi so sánh,
-vì DB lưu lẫn lộn `0912...` và `+84912...`. Kiểm tra nằm ở `isCouponForCustomer()` trong
-`src/lib/server/coupons.ts`, áp dụng cho cả lúc bấm áp mã (`/api/coupons/apply`), lúc tạo đơn
-(`/api/orders`) và lúc liệt kê mã khả dụng (`/api/coupons?phone=`).
-
-> **Lưu ý bảo mật:** nhận diện theo số điện thoại không có xác thực OTP — ai biết số của khách
-> khác đều có thể dùng mã riêng của người đó. Chấp nhận được với voucher giá trị nhỏ; voucher
-> giá trị lớn nên chỉ định theo tài khoản (`customers`).
+> Cơ chế cũ giới hạn mã theo danh sách khách hàng (`customers`, `customerPhones`) đã bị bỏ.
+> Dữ liệu cũ chuyển sang mã ẩn bằng `node scripts/hide-targeted-coupons.mjs --apply`.
 
 Đơn hàng chỉ lưu `couponCode` dạng chuỗi + `discount` đã tính, không tham chiếu `_id` của coupon.
 
@@ -639,7 +634,7 @@ Giá trị mặc định nằm ở `DEFAULT_QUIZ_CONFIG` trong `src/lib/hairQuiz
 | `orders` | `paymentCode` | unique + sparse |
 | `orders` | `user`, `customer.phone`, `inventoryState`, `paymentTransactionId` | thường |
 | `coupons` | `code` | unique |
-| `coupons` | `customers`, `customerPhones` | thường |
+| `coupons` | `isHidden` | thường |
 | `paymentwebhooks` | `transactionId` | unique |
 | `paymentwebhooks` | `paymentCode` | thường |
 | `reviews` | `{ product, order }` | **compound unique** |

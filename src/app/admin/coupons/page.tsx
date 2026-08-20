@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Edit3, Plus, Trash2, X } from "lucide-react";
+import { Edit3, EyeOff, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import {
@@ -11,13 +11,6 @@ import panel from "@/components/admin/admin-panel.module.css";
 import { showToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/lib/client/errors";
 import styles from "./coupons.module.css";
-
-// Khách vãng lai chỉ có số điện thoại (gom từ đơn hàng), không có tài khoản nên
-// không có id. Dùng phone làm khoá phụ để chọn được cả hai loại trong một danh sách.
-type CustomerRef = { id?: string; fullName: string; phone: string };
-const refKey = (customer: CustomerRef) => customer.id ?? `phone:${customer.phone}`;
-const samePhone = (a: string, b: string) =>
-  a.replace(/[^0-9]/g, "").slice(-9) === b.replace(/[^0-9]/g, "").slice(-9);
 
 type Coupon = {
   _id: string;
@@ -30,8 +23,7 @@ type Coupon = {
   usedCount: number;
   expiresAt?: string | null;
   isActive: boolean;
-  customers?: { _id: string; fullName?: string; phone?: string }[];
-  customerPhones?: string[];
+  isHidden?: boolean;
 };
 
 type Form = {
@@ -43,7 +35,7 @@ type Form = {
   usageLimit: string;
   expiresAt: string;
   isActive: boolean;
-  customers: CustomerRef[];
+  isHidden: boolean;
 };
 
 const emptyForm: Form = {
@@ -55,7 +47,7 @@ const emptyForm: Form = {
   usageLimit: "",
   expiresAt: "",
   isActive: true,
-  customers: [],
+  isHidden: false,
 };
 const money = new Intl.NumberFormat("vi-VN", {
   style: "currency",
@@ -75,9 +67,6 @@ export default function AdminCouponsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
-  const [customerQuery, setCustomerQuery] = useState("");
-  const [customerOptions, setCustomerOptions] = useState<CustomerRef[]>([]);
-  const [customerLoading, setCustomerLoading] = useState(false);
 
   function load() {
     setLoading(true);
@@ -88,59 +77,6 @@ export default function AdminCouponsPage() {
   }
 
   useEffect(load, []);
-
-  // Chỉ nạp khách hàng khi form đang mở, và tìm ở phía server để không bị giới
-  // hạn bởi số bản ghi tải sẵn khi cửa hàng có nhiều khách.
-  useEffect(() => {
-    if (!drawerOpen) return;
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => {
-      setCustomerLoading(true);
-      const search = customerQuery.trim();
-      const load = (tab: "registered" | "guests") => {
-        const params = new URLSearchParams({ tab, page: "1", limit: "40" });
-        if (search) params.set("q", search);
-        return fetch(`/api/admin/customers?${params}`, { signal: controller.signal })
-          .then((response) => response.json())
-          .then((body) => body.data?.[tab] ?? [])
-          .catch(() => []);
-      };
-      Promise.all([load("registered"), load("guests")])
-        .then(([registered, guests]) => {
-          const list: CustomerRef[] = registered.map(
-            (customer: { id: string; fullName?: string; phone?: string }) => ({
-              id: customer.id,
-              fullName: customer.fullName ?? "Khách hàng",
-              phone: customer.phone ?? "",
-            }),
-          );
-          for (const guest of guests as { phone?: string; fullName?: string }[]) {
-            const guestPhone = guest.phone;
-            if (!guestPhone) continue;
-            // Khách vãng lai trùng số với tài khoản đã có thì bỏ, tránh hai dòng
-            // cho cùng một người.
-            if (list.some((entry) => entry.phone && samePhone(entry.phone, guestPhone)))
-              continue;
-            list.push({ fullName: guest.fullName || "Khách vãng lai", phone: guestPhone });
-          }
-          setCustomerOptions(list);
-        })
-        .finally(() => setCustomerLoading(false));
-    }, 250);
-    return () => {
-      controller.abort();
-      window.clearTimeout(timer);
-    };
-  }, [drawerOpen, customerQuery]);
-
-  function toggleCustomer(customer: CustomerRef) {
-    setForm((current) => ({
-      ...current,
-      customers: current.customers.some((entry) => refKey(entry) === refKey(customer))
-        ? current.customers.filter((entry) => refKey(entry) !== refKey(customer))
-        : [...current.customers, customer],
-    }));
-  }
 
   const filtered = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("vi-VN");
@@ -166,14 +102,12 @@ export default function AdminCouponsPage() {
     setForm(emptyForm);
     setEditingId(null);
     setDrawerOpen(false);
-    setCustomerQuery("");
   }
 
   function openCreate() {
     setForm(emptyForm);
     setEditingId(null);
     setDrawerOpen(true);
-    setCustomerQuery("");
   }
 
   function edit(coupon: Coupon) {
@@ -186,26 +120,10 @@ export default function AdminCouponsPage() {
       usageLimit: coupon.usageLimit ? String(coupon.usageLimit) : "",
       expiresAt: coupon.expiresAt ? coupon.expiresAt.slice(0, 10) : "",
       isActive: coupon.isActive,
-      customers: [
-        ...(coupon.customers ?? []).map((customer) => ({
-          id: customer._id,
-          fullName: customer.fullName ?? "Khách hàng",
-          phone: customer.phone ?? "",
-        })),
-        // Số điện thoại không thuộc tài khoản nào là khách vãng lai được chỉ định riêng.
-        ...(coupon.customerPhones ?? [])
-          .filter(
-            (phone) =>
-              !(coupon.customers ?? []).some(
-                (customer) => customer.phone && samePhone(customer.phone, phone),
-              ),
-          )
-          .map((phone) => ({ fullName: "Khách vãng lai", phone })),
-      ],
+      isHidden: Boolean(coupon.isHidden),
     });
     setEditingId(coupon._id);
     setDrawerOpen(true);
-    setCustomerQuery("");
   }
 
   async function submit() {
@@ -221,14 +139,7 @@ export default function AdminCouponsPage() {
         usageLimit: form.usageLimit ? Number(form.usageLimit) : undefined,
         expiresAt: form.expiresAt || undefined,
         isActive: form.isActive,
-        // Lưu cả hai: id để khớp khách đã đăng nhập, số điện thoại để khớp khách
-        // vãng lai. Khách có tài khoản lưu cả hai nên mua kiểu nào cũng dùng được mã.
-        customers: form.customers
-          .map((customer) => customer.id)
-          .filter((id): id is string => Boolean(id)),
-        customerPhones: form.customers
-          .map((customer) => customer.phone)
-          .filter(Boolean),
+        isHidden: form.isHidden,
       };
       const response = await fetch(
         editingId ? `/api/admin/coupons/${editingId}` : "/api/admin/coupons",
@@ -317,7 +228,7 @@ export default function AdminCouponsPage() {
                 <th>Đơn tối thiểu</th>
                 <th>Đã dùng</th>
                 <th>Hết hạn</th>
-                <th>Đối tượng</th>
+                <th>Hiển thị</th>
                 <th>Trạng thái</th>
                 <th className={panel.rightCell}>Thao tác</th>
               </tr>
@@ -352,13 +263,14 @@ export default function AdminCouponsPage() {
                       ? new Date(coupon.expiresAt).toLocaleDateString("vi-VN")
                       : "Không giới hạn"}
                   </td>
-                  <td data-label="Đối tượng">
-                    {coupon.customerPhones?.length || coupon.customers?.length
-                      ? `${Math.max(
-                          coupon.customerPhones?.length ?? 0,
-                          coupon.customers?.length ?? 0,
-                        )} khách chỉ định`
-                      : "Tất cả khách"}
+                  <td data-label="Hiển thị">
+                    {coupon.isHidden ? (
+                      <span className={styles.hiddenTag}>
+                        <EyeOff size={12} /> Mã ẩn
+                      </span>
+                    ) : (
+                      "Công khai"
+                    )}
                   </td>
                   <td data-label="Trạng thái">
                     <span
@@ -534,70 +446,31 @@ export default function AdminCouponsPage() {
           </div>
 
           <section className={styles.audience}>
-            <p className={styles.audienceTitle}>Áp dụng cho khách hàng</p>
+            <p className={styles.audienceTitle}>Cách phát mã</p>
+            <label className={styles.hiddenToggle}>
+              <input
+                type="checkbox"
+                checked={form.isHidden}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    isHidden: event.target.checked,
+                  }))
+                }
+              />
+              <span>
+                <b>Mã ẩn</b>
+                <small>
+                  Không hiện trong danh sách gợi ý ở trang thanh toán. Chỉ khách
+                  biết mã (thấy trên quảng cáo, bài đăng, tin nhắn...) tự gõ vào
+                  mới dùng được.
+                </small>
+              </span>
+            </label>
             <p className={styles.audienceHint}>
-              Chọn khách hàng cụ thể nếu muốn mã này là ưu đãi riêng cho họ.
-              <b> Không chọn ai thì mọi khách đều dùng được.</b> Danh sách gồm cả
-              khách đã có tài khoản lẫn khách vãng lai (nhận diện theo số điện
-              thoại đặt hàng).
+              Bỏ chọn thì mã là <b>công khai</b>: mọi khách đều thấy trong danh
+              sách mã khả dụng ở bước thanh toán và bấm chọn được ngay.
             </p>
-
-            {form.customers.length > 0 && (
-              <div className={styles.chips}>
-                {form.customers.map((customer) => (
-                  <span className={styles.chip} key={refKey(customer)}>
-                    {customer.fullName}
-                    {customer.phone ? ` · ${customer.phone}` : ""}
-                    <button
-                      type="button"
-                      onClick={() => toggleCustomer(customer)}
-                      aria-label={`Bỏ chọn ${customer.fullName}`}
-                    >
-                      <X size={12} />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-
-            <input
-              type="search"
-              className={styles.customerSearch}
-              value={customerQuery}
-              onChange={(event) => setCustomerQuery(event.target.value)}
-              placeholder="Tìm khách theo tên, số điện thoại hoặc email..."
-            />
-
-            <div className={styles.customerList}>
-              {customerLoading && <p className={styles.audienceEmpty}>Đang tải khách hàng...</p>}
-              {!customerLoading && customerOptions.length === 0 && (
-                <p className={styles.audienceEmpty}>Không tìm thấy khách hàng phù hợp.</p>
-              )}
-              {!customerLoading &&
-                customerOptions.map((customer) => {
-                  const picked = form.customers.some(
-                    (entry) => refKey(entry) === refKey(customer),
-                  );
-                  return (
-                    <button
-                      type="button"
-                      key={refKey(customer)}
-                      className={`${styles.customerRow} ${picked ? styles.customerRowActive : ""}`}
-                      onClick={() => toggleCustomer(customer)}
-                    >
-                      <span>
-                        {customer.fullName}
-                        <br />
-                        <small>
-                          {customer.phone}
-                          {customer.id ? "" : " · chưa có tài khoản"}
-                        </small>
-                      </span>
-                      {picked && <Check size={15} />}
-                    </button>
-                  );
-                })}
-            </div>
           </section>
         </div>
         <footer className={styles.drawerFooter}>
