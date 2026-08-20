@@ -834,6 +834,11 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
       ),
     );
   }
+  // Storefront (ProductDetailClient) và API tạo đơn đều tính giá lựa chọn theo
+  // công thức (salePrice ?? price) + priceAdjustment. Form phải quy đổi trên
+  // đúng nền giá đó, nếu không admin gõ 350.000 mà khách lại thấy giá khác.
+  const optionBasePrice = Number(salePrice || price || 0);
+
   function updateOriginalPrice(value: string) {
     setPrice(value);
     const original = Number(value);
@@ -1672,7 +1677,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
               <p className={styles.fieldHint}>
                 {(group.pricingMode ?? "replace") === "addon"
                   ? "Nhập số tiền (đ) sẽ được CỘNG THÊM vào giá gốc khi khách chọn lựa chọn đó. Để trống hoặc 0 nếu lựa chọn đó không cộng thêm gì (VD: \"Không có\")."
-                  : "Nhập giá riêng (đ) cho từng lựa chọn nếu lựa chọn đó có giá khác giá gốc — ví dụ chai 100ml giữ nguyên, chai 500ml nhập giá riêng cao hơn. Để trống ô giá nếu lựa chọn đó dùng đúng giá gốc, hệ thống sẽ không ép bạn phải điền."}
+                  : `Ô giá là SỐ TIỀN KHÁCH PHẢI TRẢ khi chọn lựa chọn đó — nhập đúng con số bạn muốn khách thấy. Mặc định bằng giá bán hiện tại${optionBasePrice > 0 ? ` (${optionBasePrice.toLocaleString("vi-VN")}đ)` : ""}; ví dụ 1 hộp giữ nguyên, 2 hộp nhập giá cao hơn. Lưu ý: sửa giá gốc hoặc giá khuyến mãi phía trên sẽ kéo theo giá của các lựa chọn, kiểm tra lại các ô này sau khi đổi giá.`}
               </p>
               {group.options.map((option, optionIndex) => (
                 <div className={panel["admin-option-row"]} key={option.id}>
@@ -1707,18 +1712,18 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
                     placeholder={
                       (group.pricingMode ?? "replace") === "addon"
                         ? "Giá cộng thêm"
-                        : "Giá riêng"
+                        : "Giá khách trả"
                     }
                     title={
                       (group.pricingMode ?? "replace") === "addon"
-                        ? "Số tiền cộng thêm vào giá gốc khi chọn lựa chọn này — để trống nếu không cộng thêm"
-                        : "Giá riêng cho lựa chọn này — để trống nếu dùng đúng giá gốc phía trên"
+                        ? "Số tiền cộng thêm vào giá bán khi chọn lựa chọn này — để trống nếu không cộng thêm"
+                        : "Giá khách phải trả khi chọn lựa chọn này"
                     }
                     value={
                       (group.pricingMode ?? "replace") === "addon"
                         ? option.priceAdjustment || ""
-                        : option.priceAdjustment
-                          ? Math.round(Number(price || 0) + option.priceAdjustment)
+                        : optionBasePrice > 0
+                          ? Math.round(optionBasePrice + option.priceAdjustment)
                           : ""
                     }
                     onChange={(event) => {
@@ -1728,7 +1733,7 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
                         ? 0
                         : addonMode
                           ? Number(raw)
-                          : Number(raw) - Number(price || 0);
+                          : Number(raw) - optionBasePrice;
                       setGroups(
                         groups.map((item, index) =>
                           index === groupIndex
