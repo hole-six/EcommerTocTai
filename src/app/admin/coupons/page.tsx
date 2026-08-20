@@ -1,6 +1,6 @@
 "use client";
 
-import { Edit3, Plus, Trash2, X } from "lucide-react";
+import { Check, Edit3, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import {
@@ -11,6 +11,8 @@ import panel from "@/components/admin/admin-panel.module.css";
 import { showToast } from "@/components/ui/Toast";
 import { extractApiError } from "@/lib/client/errors";
 import styles from "./coupons.module.css";
+
+type CustomerRef = { id: string; fullName: string; phone: string };
 
 type Coupon = {
   _id: string;
@@ -23,6 +25,7 @@ type Coupon = {
   usedCount: number;
   expiresAt?: string | null;
   isActive: boolean;
+  customers?: { _id: string; fullName?: string; phone?: string }[];
 };
 
 type Form = {
@@ -34,6 +37,7 @@ type Form = {
   usageLimit: string;
   expiresAt: string;
   isActive: boolean;
+  customers: CustomerRef[];
 };
 
 const emptyForm: Form = {
@@ -45,6 +49,7 @@ const emptyForm: Form = {
   usageLimit: "",
   expiresAt: "",
   isActive: true,
+  customers: [],
 };
 const money = new Intl.NumberFormat("vi-VN", {
   style: "currency",
@@ -64,6 +69,9 @@ export default function AdminCouponsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
+  const [customerQuery, setCustomerQuery] = useState("");
+  const [customerOptions, setCustomerOptions] = useState<CustomerRef[]>([]);
+  const [customerLoading, setCustomerLoading] = useState(false);
 
   function load() {
     setLoading(true);
@@ -74,6 +82,46 @@ export default function AdminCouponsPage() {
   }
 
   useEffect(load, []);
+
+  // Chỉ nạp khách hàng khi form đang mở, và tìm ở phía server để không bị giới
+  // hạn bởi số bản ghi tải sẵn khi cửa hàng có nhiều khách.
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      setCustomerLoading(true);
+      const params = new URLSearchParams({ tab: "registered", page: "1", limit: "50" });
+      if (customerQuery.trim()) params.set("q", customerQuery.trim());
+      fetch(`/api/admin/customers?${params}`, { signal: controller.signal })
+        .then((response) => response.json())
+        .then((body) =>
+          setCustomerOptions(
+            (body.data?.registered ?? []).map(
+              (customer: { id: string; fullName?: string; phone?: string }) => ({
+                id: customer.id,
+                fullName: customer.fullName ?? "Khách hàng",
+                phone: customer.phone ?? "",
+              }),
+            ),
+          ),
+        )
+        .catch(() => undefined)
+        .finally(() => setCustomerLoading(false));
+    }, 250);
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [drawerOpen, customerQuery]);
+
+  function toggleCustomer(customer: CustomerRef) {
+    setForm((current) => ({
+      ...current,
+      customers: current.customers.some((entry) => entry.id === customer.id)
+        ? current.customers.filter((entry) => entry.id !== customer.id)
+        : [...current.customers, customer],
+    }));
+  }
 
   const filtered = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("vi-VN");
@@ -99,12 +147,14 @@ export default function AdminCouponsPage() {
     setForm(emptyForm);
     setEditingId(null);
     setDrawerOpen(false);
+    setCustomerQuery("");
   }
 
   function openCreate() {
     setForm(emptyForm);
     setEditingId(null);
     setDrawerOpen(true);
+    setCustomerQuery("");
   }
 
   function edit(coupon: Coupon) {
@@ -117,9 +167,15 @@ export default function AdminCouponsPage() {
       usageLimit: coupon.usageLimit ? String(coupon.usageLimit) : "",
       expiresAt: coupon.expiresAt ? coupon.expiresAt.slice(0, 10) : "",
       isActive: coupon.isActive,
+      customers: (coupon.customers ?? []).map((customer) => ({
+        id: customer._id,
+        fullName: customer.fullName ?? "Khách hàng",
+        phone: customer.phone ?? "",
+      })),
     });
     setEditingId(coupon._id);
     setDrawerOpen(true);
+    setCustomerQuery("");
   }
 
   async function submit() {
@@ -135,6 +191,7 @@ export default function AdminCouponsPage() {
         usageLimit: form.usageLimit ? Number(form.usageLimit) : undefined,
         expiresAt: form.expiresAt || undefined,
         isActive: form.isActive,
+        customers: form.customers.map((customer) => customer.id),
       };
       const response = await fetch(
         editingId ? `/api/admin/coupons/${editingId}` : "/api/admin/coupons",
@@ -223,6 +280,7 @@ export default function AdminCouponsPage() {
                 <th>Đơn tối thiểu</th>
                 <th>Đã dùng</th>
                 <th>Hết hạn</th>
+                <th>Đối tượng</th>
                 <th>Trạng thái</th>
                 <th className={panel.rightCell}>Thao tác</th>
               </tr>
@@ -256,6 +314,11 @@ export default function AdminCouponsPage() {
                     {coupon.expiresAt
                       ? new Date(coupon.expiresAt).toLocaleDateString("vi-VN")
                       : "Không giới hạn"}
+                  </td>
+                  <td data-label="Đối tượng">
+                    {coupon.customers?.length
+                      ? `${coupon.customers.length} khách chỉ định`
+                      : "Tất cả khách"}
                   </td>
                   <td data-label="Trạng thái">
                     <span
@@ -429,6 +492,67 @@ export default function AdminCouponsPage() {
               Đang áp dụng
             </label>
           </div>
+
+          <section className={styles.audience}>
+            <p className={styles.audienceTitle}>Áp dụng cho khách hàng</p>
+            <p className={styles.audienceHint}>
+              Chọn khách hàng cụ thể nếu muốn mã này là ưu đãi riêng cho họ.
+              <b> Không chọn ai thì mọi khách đều dùng được.</b> Khách chưa đăng
+              nhập không dùng được mã riêng.
+            </p>
+
+            {form.customers.length > 0 && (
+              <div className={styles.chips}>
+                {form.customers.map((customer) => (
+                  <span className={styles.chip} key={customer.id}>
+                    {customer.fullName}
+                    {customer.phone ? ` · ${customer.phone}` : ""}
+                    <button
+                      type="button"
+                      onClick={() => toggleCustomer(customer)}
+                      aria-label={`Bỏ chọn ${customer.fullName}`}
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <input
+              type="search"
+              className={styles.customerSearch}
+              value={customerQuery}
+              onChange={(event) => setCustomerQuery(event.target.value)}
+              placeholder="Tìm khách theo tên, số điện thoại hoặc email..."
+            />
+
+            <div className={styles.customerList}>
+              {customerLoading && <p className={styles.audienceEmpty}>Đang tải khách hàng...</p>}
+              {!customerLoading && customerOptions.length === 0 && (
+                <p className={styles.audienceEmpty}>Không tìm thấy khách hàng phù hợp.</p>
+              )}
+              {!customerLoading &&
+                customerOptions.map((customer) => {
+                  const picked = form.customers.some((entry) => entry.id === customer.id);
+                  return (
+                    <button
+                      type="button"
+                      key={customer.id}
+                      className={`${styles.customerRow} ${picked ? styles.customerRowActive : ""}`}
+                      onClick={() => toggleCustomer(customer)}
+                    >
+                      <span>
+                        {customer.fullName}
+                        <br />
+                        <small>{customer.phone}</small>
+                      </span>
+                      {picked && <Check size={15} />}
+                    </button>
+                  );
+                })}
+            </div>
+          </section>
         </div>
         <footer className={styles.drawerFooter}>
           <button className={styles.cancelButton} onClick={resetForm}>

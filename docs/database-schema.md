@@ -303,6 +303,12 @@ và không có `isDefault`. Gồm `recipientName`, `phone`, `province`, `distric
 | `usedCount` | Number | — | `0` |
 | `expiresAt` | Date | — | `null` (không hết hạn) |
 | `isActive` | Boolean | — | `true` |
+| `customers` | ObjectId[] → `User` | index | `[]` |
+
+`customers` rỗng = mã dùng chung cho mọi khách. Có phần tử = mã riêng, chỉ khách trong
+danh sách và **đã đăng nhập** mới áp được; khách vãng lai luôn bị từ chối. Kiểm tra nằm ở
+`isCouponForCustomer()` trong `src/lib/server/coupons.ts`, áp dụng cho cả lúc bấm áp mã
+(`/api/coupons/apply`), lúc tạo đơn (`/api/orders`) và lúc liệt kê mã khả dụng (`/api/coupons`).
 
 Đơn hàng chỉ lưu `couponCode` dạng chuỗi + `discount` đã tính, không tham chiếu `_id` của coupon.
 
@@ -623,6 +629,7 @@ Giá trị mặc định nằm ở `DEFAULT_QUIZ_CONFIG` trong `src/lib/hairQuiz
 | `orders` | `paymentCode` | unique + sparse |
 | `orders` | `user`, `customer.phone`, `inventoryState`, `paymentTransactionId` | thường |
 | `coupons` | `code` | unique |
+| `coupons` | `customers` | thường |
 | `paymentwebhooks` | `transactionId` | unique |
 | `paymentwebhooks` | `paymentCode` | thường |
 | `reviews` | `{ product, order }` | **compound unique** |

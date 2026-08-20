@@ -10,5 +10,7 @@ const coupon = new Schema({
   usedCount: { type: Number, default: 0 },
   expiresAt: { type: Date, default: null },
   isActive: { type: Boolean, default: true },
+  // Danh sách khách hàng được dùng mã. Mảng rỗng = mã dùng chung cho tất cả.
+  customers: { type: [{ type: Schema.Types.ObjectId, ref: "User" }], default: [], index: true },
 }, { timestamps: true });
 export const Coupon = models.Coupon || model("Coupon", coupon);

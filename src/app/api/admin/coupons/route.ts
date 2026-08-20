@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Coupon } from "@/models/Coupon";
+import "@/models/User";
 import { requireAdmin } from "@/lib/server/auth";
 import { connectDb } from "@/lib/server/db";
 import { apiError } from "@/lib/server/http";
@@ -13,7 +14,12 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const { page, limit, skip } = parsePagination(url);
     const [data, total] = await Promise.all([
-      Coupon.find().sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      Coupon.find()
+        .populate({ path: "customers", select: "fullName phone" })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
       Coupon.countDocuments(),
     ]);
     return NextResponse.json({ data, pagination: paginationMeta(page, limit, total) });

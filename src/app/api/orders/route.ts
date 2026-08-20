@@ -207,7 +207,12 @@ export async function POST(request: Request) {
     const shippingFee = subtotal >= freeShippingThreshold ? 0 : baseShippingFee;
     let discount = 0;
     if (data.couponCode) {
-      const result = await resolveCoupon(data.couponCode, subtotal, shippingFee);
+      const result = await resolveCoupon(
+        data.couponCode,
+        subtotal,
+        shippingFee,
+        session?.id,
+      );
       if ("error" in result)
         return NextResponse.json({ error: result.error }, { status: 400 });
       discount = result.discount;
