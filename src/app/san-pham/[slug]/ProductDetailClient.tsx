@@ -135,7 +135,15 @@ export function ProductDetailClient({ slug }: { slug: string }) {
     );
   }
   function renderSteps() {
-    return groups.map((group, index) => (
+    return groups.map((group, index) => {
+      // Nhóm "thay giá gốc" chỉ hiện giá khi các lựa chọn thực sự khác giá nhau.
+      // Xét cả nhóm chứ không xét từng lựa chọn: lựa chọn có giá đúng bằng giá
+      // bán hiện tại được lưu với priceAdjustment = 0, nếu xét lẻ thì nó bị coi
+      // là "không có giá" và bị giấu mất, trong khi lựa chọn đắt hơn lại hiện giá.
+      const groupHasPricing = group.options.some(
+        (option) => (option.priceAdjustment ?? 0) !== 0,
+      );
+      return (
       <div className={styles.step} key={group.id}>
         <h2>Bước {index + 1}{group.title ? `: ${group.title}` : ""}</h2>
         <div className={styles.optionRow}>
@@ -155,12 +163,15 @@ export function ProductDetailClient({ slug }: { slug: string }) {
               );
             }
             const isAddon = group.pricingMode === "addon";
-            const absolutePrice = (currentProduct.salePrice ?? currentProduct.price) + (option.priceAdjustment ?? 0);
-            const priceLabel = option.priceAdjustment
-              ? isAddon
-                ? ` – +${money.format(option.priceAdjustment)}`
-                : ` – ${money.format(absolutePrice)}`
-              : "";
+            const adjustment = option.priceAdjustment ?? 0;
+            const absolutePrice = (currentProduct.salePrice ?? currentProduct.price) + adjustment;
+            const priceLabel = isAddon
+              ? adjustment
+                ? ` – +${money.format(adjustment)}`
+                : ""
+              : groupHasPricing
+                ? ` – ${money.format(absolutePrice)}`
+                : "";
             return (
               <button type="button" key={option.id} className={`${styles.option} ${isSelected ? styles.selected : ""}`} onClick={() => choose(group, option)}>
                 {option.label}{priceLabel}
@@ -169,7 +180,8 @@ export function ProductDetailClient({ slug }: { slug: string }) {
           })}
         </div>
       </div>
-    ));
+      );
+    });
   }
   const stageImages = (product.stageImages ?? []).filter((item) => !isBlank(item));
   const fallbackGroups: OptionGroup[] = stageImages.length ? [{ id: "stages", title: "Chọn tình trạng tóc / loại da đầu", code: "stage", displayType: "card", options: stageImages.map((item, index) => ({ id: `stage-${index}`, label: item.title || item.label || `Giai đoạn ${index + 1}`, value: item.label || item.title || `stage-${index}`, image: item.image, targetProductId: item.targetProductId, targetProductSlug: item.targetProductSlug })) }] : [];
