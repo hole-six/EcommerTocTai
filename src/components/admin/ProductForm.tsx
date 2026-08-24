@@ -62,6 +62,7 @@ type OptionGroup = {
   title: string;
   code: string;
   required: boolean;
+  multiple?: boolean;
   displayType: "card" | "button" | "radio" | "dropdown";
   pricingMode?: "replace" | "addon";
   options: Option[];
@@ -154,6 +155,7 @@ const emptyGroup = (): OptionGroup => ({
   title: "",
   code: "",
   required: false,
+  multiple: false,
   displayType: "card",
   options: [emptyOption()],
 });
@@ -1674,6 +1676,32 @@ export function ProductForm({ initial }: { initial?: ProductInitial }) {
                 />{" "}
                 Bắt buộc chọn
               </label>
+              {(group.pricingMode ?? "replace") === "addon" && (
+                <>
+                  <label className={panel["admin-checkbox"]}>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(group.multiple)}
+                      onChange={(event) =>
+                        setGroups(
+                          groups.map((item, index) =>
+                            index === groupIndex
+                              ? { ...item, multiple: event.target.checked }
+                              : item,
+                          ),
+                        )
+                      }
+                    />{" "}
+                    Cho phép chọn nhiều
+                  </label>
+                  <p className={styles.fieldHint} style={{ marginTop: -6 }}>
+                    Khách tick được nhiều lựa chọn trong nhóm này cùng lúc (VD: vừa
+                    lăn kim vừa viên uống), tiền của từng lựa chọn được cộng dồn hết
+                    vào tổng. Chỉ dùng được cho nhóm cộng thêm — nhóm thay giá gốc
+                    thì mỗi lần chỉ một gói.
+                  </p>
+                </>
+              )}
               <p className={styles.fieldHint}>
                 {(group.pricingMode ?? "replace") === "addon"
                   ? "Nhập số tiền (đ) sẽ được CỘNG THÊM vào giá gốc khi khách chọn lựa chọn đó. Để trống hoặc 0 nếu lựa chọn đó không cộng thêm gì (VD: \"Không có\")."

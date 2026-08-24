@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Loader2, MapPin, X } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Loader2, MapPin, X, ZoomIn } from "lucide-react";
 import { Children, useEffect, useRef, useState, type ReactNode } from "react";
 import { notFound, useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/sites/manmatters-com-61d14dee/shared/SiteHeader";
@@ -23,16 +23,18 @@ type Item = { targetProductId?: string; targetProductSlug?: string; title?: stri
 type AdditionalInfoRow = { name?: string; value?: string };
 type AdditionalInfoGroup = { title?: string; rows?: AdditionalInfoRow[] };
 type Option = { id: string; targetProductSlug?: string; targetProductId?: string; label?: string; value?: string; image?: string; priceAdjustment?: number };
-type OptionGroup = { id: string; title: string; code: string; displayType?: string; required?: boolean; pricingMode?: "replace" | "addon"; options: Option[] };
+type OptionGroup = { id: string; title: string; code: string; displayType?: string; required?: boolean; multiple?: boolean; pricingMode?: "replace" | "addon"; options: Option[] };
 type Product = { _id?: string; id?: string; name: string; slug: string; price: number; salePrice?: number; compareAtPrice?: number; rating?: number; images: string[]; shortDescription: string; description: string; specifications?: Record<string, string | number | boolean>; specificationRows?: Item[]; category?: { name: string; slug: string }; variantGroup?: string; variantLabel?: string; optionGroups?: OptionGroup[]; stageImages?: Item[]; howToUse?: Item; rootCauses?: Item[]; detailHighlights?: Item[]; treatmentKit?: Item[]; treatmentJourney?: Item[]; contentBlocks?: Item[]; additionalInfo?: AdditionalInfoGroup[]; translations?: { en?: { name?: string; shortDescription?: string; description?: string; howToUseDescription?: string } } };
 type Review = { _id: string; rating: number; title: string; body: string; createdAt: string; user?: { fullName: string }; guestName?: string };
 const money = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 });
+const allowsMultiple = (group: OptionGroup) =>
+  group.multiple === true && (group.pricingMode ?? "replace") === "addon";
 function splitOptionLabel(label: string) { const match = label.match(/^(.*?)\s*(\(.*\))\s*$/); return match ? { main: match[1].trim(), sub: match[2].trim() } : { main: label, sub: "" }; }
 function isBlank(item?: { title?: string; label?: string; name?: string; period?: string; description?: string; value?: string; image?: string }) { if (!item) return true; return !item.image && !item.title?.trim() && !item.label?.trim() && !item.name?.trim() && !item.period?.trim() && !item.description?.trim() && !item.value?.trim(); }
 
 export function ProductDetailClient({ slug }: { slug: string }) {
   const router = useRouter(); const { addItem } = useCart();
-  const [product, setProduct] = useState<Product | null>(null); const [loading, setLoading] = useState(true); const [failed, setFailed] = useState(false); const [activeImage, setActiveImage] = useState(0); const [selected, setSelected] = useState<Record<string, string>>({}); const [reviews, setReviews] = useState<Review[]>([]); const [loggedIn, setLoggedIn] = useState(false); const [showReviewModal, setShowReviewModal] = useState(false); const [showAllReviews, setShowAllReviews] = useState(false); const [tab, setTab] = useState<"details" | "howToUse">("details"); const [added, setAdded] = useState(false);
+  const [product, setProduct] = useState<Product | null>(null); const [loading, setLoading] = useState(true); const [failed, setFailed] = useState(false); const [activeImage, setActiveImage] = useState(0); const [selected, setSelected] = useState<Record<string, string[]>>({}); const [zoomOpen, setZoomOpen] = useState(false); const [reviews, setReviews] = useState<Review[]>([]); const [loggedIn, setLoggedIn] = useState(false); const [showReviewModal, setShowReviewModal] = useState(false); const [showAllReviews, setShowAllReviews] = useState(false); const [tab, setTab] = useState<"details" | "howToUse">("details"); const [added, setAdded] = useState(false);
   const [variantModalOpen, setVariantModalOpen] = useState(false); const [variantModalBuyNow, setVariantModalBuyNow] = useState(false);
   const [stickyVisible, setStickyVisible] = useState(false); const actionsRef = useRef<HTMLDivElement>(null);
   const [locationChecking, setLocationChecking] = useState(false); const [deliveryEstimate, setDeliveryEstimate] = useState(""); const [locationError, setLocationError] = useState("");
@@ -47,11 +49,11 @@ export function ProductDetailClient({ slug }: { slug: string }) {
     const stages = (product.stageImages ?? []).filter((item) => !isBlank(item));
     const stageGroup = stages.length ? [{ code: "stage", options: stages.map((item, index) => ({ value: item.label || item.title || `stage-${index}`, label: item.label || item.title, targetProductSlug: item.targetProductSlug })) }] : [];
     const optionGroups = (product.optionGroups ?? []).map((group) => ({ code: group.code, options: (group.options ?? []).map((option) => ({ value: option.value ?? option.label ?? "", label: option.label, targetProductSlug: option.targetProductSlug })) }));
-    const initial: Record<string, string> = {};
+    const initial: Record<string, string[]> = {};
     [...stageGroup, ...optionGroups].forEach((group) => {
       if (!group.code) return;
       const selfOption = group.options.find((option) => option.targetProductSlug === slug);
-      if (selfOption) initial[group.code] = selfOption.value;
+      if (selfOption) initial[group.code] = [selfOption.value];
     });
     if (Object.keys(initial).length) setSelected((current) => ({ ...initial, ...current }));
   }, [product, slug]);
@@ -69,6 +71,21 @@ export function ProductDetailClient({ slug }: { slug: string }) {
     }
   }, [product]);
   useEffect(() => {
+    if (!zoomOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setZoomOpen(false);
+      if (event.key === "ArrowLeft") setActiveImage((current) => Math.max(0, current - 1));
+      if (event.key === "ArrowRight") setActiveImage((current) => current + 1);
+    };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [zoomOpen]);
+  useEffect(() => {
     const node = actionsRef.current;
     if (!node) return;
     const observer = new IntersectionObserver(([entry]) => setStickyVisible(!entry.isIntersecting), { rootMargin: "-72px 0px 0px 0px" });
@@ -76,7 +93,21 @@ export function ProductDetailClient({ slug }: { slug: string }) {
     return () => observer.disconnect();
   }, [product]);
   if (failed) notFound(); if (loading || !product) return <><SiteHeader compact /><p style={{ padding: 80, textAlign: "center" }}>Đang tải sản phẩm...</p></>;
-  const selectedOptions = (product.optionGroups ?? []).map((group) => { const option = group.options.find((entry) => (entry.value ?? entry.label ?? "") === selected[group.code]); return option ? { groupCode: group.code, groupTitle: group.title, optionValue: option.value ?? option.label ?? "", optionLabel: option.label ?? option.value ?? "", priceAdjustment: option.priceAdjustment ?? 0 } : null; }).filter(Boolean) as { groupCode: string; groupTitle: string; optionValue: string; optionLabel: string; priceAdjustment: number }[];
+  // Nhóm cho phép chọn nhiều nên mỗi mã nhóm giữ một mảng giá trị; nhóm chọn một
+  // vẫn dùng mảng nhưng chỉ có một phần tử, để phần tính tiền và gửi đơn dùng chung
+  // một đường.
+  const selectedOptions = (product.optionGroups ?? []).flatMap((group) =>
+    (selected[group.code] ?? [])
+      .map((value) => group.options.find((entry) => (entry.value ?? entry.label ?? "") === value))
+      .filter(Boolean)
+      .map((option) => ({
+        groupCode: group.code,
+        groupTitle: group.title,
+        optionValue: option!.value ?? option!.label ?? "",
+        optionLabel: option!.label ?? option!.value ?? "",
+        priceAdjustment: option!.priceAdjustment ?? 0,
+      })),
+  );
   const price = (product.salePrice ?? product.price) + selectedOptions.reduce((total, option) => total + option.priceAdjustment, 0);
   const currentProduct = product;
   const productId = currentProduct._id ?? currentProduct.id ?? "";
@@ -95,10 +126,21 @@ export function ProductDetailClient({ slug }: { slug: string }) {
       router.push(`/san-pham/${option.targetProductSlug}`);
       return;
     }
-    setSelected((current) => ({ ...current, [group.code]: option.value ?? option.label ?? "" }));
+    const value = option.value ?? option.label ?? "";
+    setSelected((current) => {
+      const picked = current[group.code] ?? [];
+      if (!allowsMultiple(group)) return { ...current, [group.code]: [value] };
+      // Nhóm chọn nhiều: bấm lần nữa để bỏ chọn.
+      return {
+        ...current,
+        [group.code]: picked.includes(value)
+          ? picked.filter((entry) => entry !== value)
+          : [...picked, value],
+      };
+    });
   }
   function addToCart(buyNow: boolean) {
-    const missing = groups.find((group) => group.required && !selected[group.code]);
+    const missing = groups.find((group) => group.required && !(selected[group.code] ?? []).length);
     if (missing) { setVariantModalBuyNow(buyNow); setVariantModalOpen(true); return; }
     if (!productId) { setLocationError("Không xác định được mã sản phẩm. Vui lòng tải lại trang."); return; }
     addItem({ productId, name: currentProduct.name, price, image: primaryImage, variantTitle: selectedOptions.map((option) => option.optionLabel).join(" / "), options: selectedOptions });
@@ -145,11 +187,11 @@ export function ProductDetailClient({ slug }: { slug: string }) {
       );
       return (
       <div className={styles.step} key={group.id}>
-        <h2>Bước {index + 1}{group.title ? `: ${group.title}` : ""}</h2>
+        <h2>Bước {index + 1}{group.title ? `: ${group.title}` : ""}{allowsMultiple(group) ? <span className={styles.stepHint}>Chọn được nhiều</span> : null}</h2>
         <div className={styles.optionRow}>
           {group.options.map((option) => {
             const value = option.value ?? option.label ?? "";
-            const isSelected = selected[group.code] === value;
+            const isSelected = (selected[group.code] ?? []).includes(value);
             const optionImage = normalizeImageSrc(option.image);
             if (optionImage && group.displayType === "card") {
               const { main, sub } = splitOptionLabel(option.label ?? "");
@@ -192,6 +234,29 @@ export function ProductDetailClient({ slug }: { slug: string }) {
 
   return (
     <div className={styles.page}>
+      {zoomOpen && activeProductImage && (
+        <div className={styles.zoomOverlay} role="dialog" aria-modal="true" aria-label="Ảnh sản phẩm phóng to" onClick={() => setZoomOpen(false)}>
+          <button type="button" className={styles.zoomClose} onClick={() => setZoomOpen(false)} aria-label="Đóng">
+            <X size={20} />
+          </button>
+          {productImages.length > 1 && (
+            <button type="button" className={`${styles.zoomNav} ${styles.zoomPrev}`} aria-label="Ảnh trước" onClick={(event) => { event.stopPropagation(); setActiveImage((current) => (current - 1 + productImages.length) % productImages.length); }}>
+              <ChevronLeft size={22} />
+            </button>
+          )}
+          <div className={styles.zoomFrame} onClick={(event) => event.stopPropagation()}>
+            <Image src={activeProductImage} alt={displayName} fill sizes="100vw" style={{ objectFit: "contain" }} quality={95} unoptimized={shouldRenderUnoptimizedImage(activeProductImage)} />
+          </div>
+          {productImages.length > 1 && (
+            <button type="button" className={`${styles.zoomNav} ${styles.zoomNext}`} aria-label="Ảnh sau" onClick={(event) => { event.stopPropagation(); setActiveImage((current) => (current + 1) % productImages.length); }}>
+              <ChevronRight size={22} />
+            </button>
+          )}
+          {productImages.length > 1 && (
+            <span className={styles.zoomCount}>{activeImage + 1} / {productImages.length}</span>
+          )}
+        </div>
+      )}
       <SiteHeader compact />
       <main className={styles.main}>
         <div className={styles.crumbs}>
@@ -213,13 +278,16 @@ export function ProductDetailClient({ slug }: { slug: string }) {
               ))}
               {productImages.length > 4 && <span className={styles.thumbMore}>↓</span>}
             </div>
-            <div className={styles.hero}>
-              {activeProductImage ? (
+            {activeProductImage ? (
+              <button type="button" className={styles.hero} onClick={() => setZoomOpen(true)} aria-label="Phóng to ảnh sản phẩm">
                 <Image src={activeProductImage} alt={displayName} fill priority sizes="(max-width: 900px) 100vw, 50vw" unoptimized={shouldRenderUnoptimizedImage(activeProductImage)} />
-              ) : (
+                <span className={styles.zoomHint}><ZoomIn size={15} /> Nhấn để phóng to</span>
+              </button>
+            ) : (
+              <div className={styles.hero}>
                 <div className={styles.heroFallback}>{product.category?.name}</div>
-              )}
-            </div>
+              </div>
+            )}
           </section>
           <section className={styles.summary}>
             {displayShortDescription && <p className={styles.eyebrow}>{displayShortDescription}</p>}

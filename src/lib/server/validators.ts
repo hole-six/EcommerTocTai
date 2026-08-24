@@ -102,6 +102,8 @@ const optionGroup = z
     title: z.string(),
     code: z.string(),
     required: z.boolean().default(false),
+    // Nhóm cộng thêm (phụ kiện) có thể cho khách chọn nhiều lựa chọn cùng lúc.
+    multiple: z.boolean().default(false),
     displayType: z
       .enum(["card", "button", "radio", "dropdown"])
       .default("card"),

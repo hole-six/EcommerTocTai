@@ -539,6 +539,7 @@ sang sản phẩm khác). `specificationRows` có thêm `type`: `text` | `number
   "title": "Dung tích",
   "code": "dung_tich",
   "required": false,
+  "multiple": false,           // chỉ có tác dụng khi pricingMode = addon
   "displayType": "card",       // card | button | radio | dropdown
   "pricingMode": "replace",    // replace = giá riêng | addon = cộng thêm vào giá gốc
   "options": [
@@ -548,7 +549,12 @@ sang sản phẩm khác). `specificationRows` có thêm `type`: `text` | `number
 ```
 
 `priceAdjustment` hiểu theo `pricingMode`: `addon` là số tiền cộng thêm, `replace` là
-chênh lệch so với `price` gốc.
+chênh lệch so với giá bán hiện tại (`salePrice ?? price`).
+
+`multiple: true` cho khách chọn nhiều lựa chọn trong cùng một nhóm (VD: vừa lăn kim vừa
+viên uống), tiền của từng lựa chọn được cộng dồn. **Chỉ có tác dụng với `pricingMode: "addon"`** —
+nhóm `replace` mà chọn nhiều thì sẽ cộng dồn nhiều mức giá trọn gói nên client cưỡng chế
+về chọn một, bất kể cờ này.
 
 ### 4.3 `products.additionalInfo` — bảng thông tin bổ sung
 
